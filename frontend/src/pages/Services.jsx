@@ -1,65 +1,67 @@
-import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { FaCar, FaClock, FaMapMarkerAlt, FaShieldAlt, FaStar, FaUsers } from 'react-icons/fa';
 
 const Services = () => {
+  const navigate = useNavigate();
+
   const services = [
     {
       id: 1,
       title: "Personal Driver",
       description: "Professional drivers for your daily commute, shopping trips, or personal errands.",
-      icon: <FaCar className="text-4xl text-blue-600" />,
+      icon: <FaCar className="text-4xl text-gold" />,
       features: [
         "Experienced drivers",
         "Flexible scheduling",
         "Safe and reliable",
         "Competitive rates"
       ],
-      price: "Starting from $25/hour"
+      price: "Starting from ₹1,875/hour"
     },
     {
       id: 2,
       title: "Airport Transfer",
       description: "Comfortable and punctual airport pickup and drop-off services.",
-      icon: <FaMapMarkerAlt className="text-4xl text-green-600" />,
+      icon: <FaMapMarkerAlt className="text-4xl text-emerald" />,
       features: [
         "Flight tracking",
         "Meet & greet service",
         "Luggage assistance",
         "24/7 availability"
       ],
-      price: "Starting from $45"
+      price: "Starting from ₹3,375"
     },
     {
       id: 3,
       title: "Event Transportation",
       description: "Special occasion transportation for weddings, parties, and corporate events.",
-      icon: <FaStar className="text-4xl text-purple-600" />,
+      icon: <FaStar className="text-4xl text-electric" />,
       features: [
         "Luxury vehicles",
         "Professional attire",
         "Event coordination",
         "Group bookings"
       ],
-      price: "Starting from $60/hour"
+      price: "Starting from ₹4,500/hour"
     },
     {
       id: 4,
       title: "Hourly Service",
       description: "Book a driver for multiple stops and extended periods throughout the day.",
-      icon: <FaClock className="text-4xl text-orange-600" />,
+      icon: <FaClock className="text-4xl text-gold" />,
       features: [
         "Multiple destinations",
         "Wait time included",
         "Flexible itinerary",
         "Cost-effective"
       ],
-      price: "Starting from $35/hour"
+      price: "Starting from ₹2,625/hour"
     },
     {
       id: 5,
       title: "Corporate Services",
       description: "Business transportation solutions for executives and corporate teams.",
-      icon: <FaUsers className="text-4xl text-red-600" />,
+      icon: <FaUsers className="text-4xl text-electric" />,
       features: [
         "Executive vehicles",
         "Corporate accounts",
@@ -72,7 +74,7 @@ const Services = () => {
       id: 6,
       title: "Safety First",
       description: "All our drivers are thoroughly vetted and trained for maximum safety.",
-      icon: <FaShieldAlt className="text-4xl text-indigo-600" />,
+      icon: <FaShieldAlt className="text-4xl text-emerald" />,
       features: [
         "Background checks",
         "Insurance coverage",
@@ -83,167 +85,130 @@ const Services = () => {
     }
   ];
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.5
-      }
-    }
-  };
+  const stats = [
+    { value: "500+", label: "Verified Drivers", color: "text-electric" },
+    { value: "4.9★", label: "Average Rating", color: "text-gold" },
+    { value: "24/7", label: "Available Support", color: "text-emerald" },
+    { value: "100%", label: "Satisfaction", color: "text-electric" }
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
-        >
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+    <div className="min-h-screen bg-bg-base">
+      {/* Hero Section */}
+      <section className="relative py-20 bg-bg-surface border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <span className="inline-block px-4 py-1.5 bg-gold/10 text-gold text-sm font-medium rounded-full mb-6">
             Our Services
+          </span>
+          <h1 className="font-heading text-4xl md:text-5xl font-bold text-text-primary mb-6">
+            Premium Transportation <span className="text-gold">Solutions</span>
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Professional driving services tailored to meet your every transportation need. 
+          <p className="text-text-secondary text-lg max-w-3xl mx-auto">
+            Professional driving services tailored to meet your every transportation need.
             Safe, reliable, and convenient solutions for all occasions.
           </p>
-        </motion.div>
+        </div>
+      </section>
 
-        {/* Services Grid */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-        >
-          {services.map((service) => (
-            <motion.div
-              key={service.id}
-              variants={itemVariants}
-              className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow duration-300"
-            >
-              <div className="text-center mb-6">
-                {service.icon}
-                <h3 className="text-2xl font-bold text-gray-900 mt-4 mb-2">
-                  {service.title}
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  {service.description}
-                </p>
-                <div className="text-lg font-semibold text-blue-600">
-                  {service.price}
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                {service.features.map((feature, index) => (
-                  <div key={index} className="flex items-center">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
-                    <span className="text-gray-700">{feature}</span>
+      {/* Services Grid */}
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {services.map((service) => (
+              <div
+                key={service.id}
+                className="bg-bg-surface border border-border rounded-2xl p-8 hover:border-gold/30 hover:shadow-card transition-all duration-300"
+              >
+                <div className="text-center mb-6">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-bg-elevated mb-4">
+                    {service.icon}
                   </div>
-                ))}
-              </div>
-
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-full mt-6 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-                onClick={() => window.location.href = '/drivers'}
-              >
-                Book Now
-              </motion.button>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Why Choose Us Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-20 text-center"
-        >
-          <h2 className="text-3xl font-bold text-gray-900 mb-8">
-            Why Choose Our Service?
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600 mb-2">500+</div>
-              <div className="text-gray-600">Verified Drivers</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-green-600 mb-2">4.9★</div>
-              <div className="text-gray-600">Average Rating</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-purple-600 mb-2">24/7</div>
-              <div className="text-gray-600">Available Support</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-orange-600 mb-2">100%</div>
-              <div className="text-gray-600">Satisfaction</div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* CTA Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-20 bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl overflow-hidden text-white relative"
-        >
-          <div className="absolute inset-0 bg-black/20"></div>
-          <div className="grid md:grid-cols-2 relative z-10">
-            <div className="p-12 flex flex-col justify-center">
-              <h2 className="text-3xl font-bold mb-4">
-                Ready to Book Your Driver?
-              </h2>
-              <p className="text-xl mb-8 opacity-90">
-                Choose from our verified professional drivers and enjoy a safe, comfortable ride.
-              </p>
-              <div className="flex items-center mb-6">
-                <div className="flex -space-x-2">
-                  <img className="w-8 h-8 rounded-full border-2 border-white" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt="Happy customer" />
-                  <img className="w-8 h-8 rounded-full border-2 border-white" src="https://images.unsplash.com/photo-1494790108755-2616b612b739?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt="Happy customer" />
-                  <img className="w-8 h-8 rounded-full border-2 border-white" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt="Happy customer" />
+                  <h3 className="font-heading text-xl font-bold text-text-primary mb-2">
+                    {service.title}
+                  </h3>
+                  <p className="text-text-secondary text-sm mb-4">
+                    {service.description}
+                  </p>
+                  <div className="text-lg font-semibold text-gold">
+                    {service.price}
+                  </div>
                 </div>
-                <span className="ml-3 text-sm opacity-90">Trusted by 1000+ customers</span>
+
+                <div className="space-y-3 mb-6">
+                  {service.features.map((feature, index) => (
+                    <div key={index} className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-gold rounded-full flex-shrink-0" />
+                      <span className="text-text-secondary text-sm">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => navigate('/pilots')}
+                  className="w-full py-3 bg-gradient-gold text-bg-base font-semibold rounded-xl hover:shadow-glow-gold hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                >
+                  Book Now
+                </button>
               </div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-white text-blue-600 py-4 px-8 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors w-max"
-                onClick={() => window.location.href = '/drivers'}
-              >
-                Find Your Driver
-              </motion.button>
-            </div>
-            <div className="relative h-64 md:h-auto">
-              <img 
-                src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
-                alt="Professional driver with luxury car" 
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-l from-blue-600/30 to-transparent"></div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-16 bg-bg-surface border-y border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="font-heading text-3xl font-bold text-text-primary mb-4">
+              Why Choose Our Service?
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center">
+                <div className={`text-3xl font-bold ${stat.color} mb-2`}>{stat.value}</div>
+                <div className="text-text-secondary text-sm">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-bg-surface border border-border rounded-3xl overflow-hidden">
+            <div className="grid md:grid-cols-2">
+              <div className="p-12 flex flex-col justify-center">
+                <h2 className="font-heading text-3xl font-bold text-text-primary mb-4">
+                  Ready to Book Your Driver?
+                </h2>
+                <p className="text-text-secondary mb-8">
+                  Choose from our verified professional drivers and enjoy a safe, comfortable ride.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <button
+                    onClick={() => navigate('/pilots')}
+                    className="px-8 py-3 bg-gradient-gold text-bg-base font-semibold rounded-xl hover:shadow-glow-gold hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                  >
+                    Find a Pilot
+                  </button>
+                </div>
+              </div>
+              <div className="relative h-64 md:h-auto bg-bg-elevated">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center p-8">
+                    <div className="w-20 h-20 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FaCar className="text-gold text-3xl" />
+                    </div>
+                    <p className="text-text-secondary text-sm">Trusted by 10,000+ riders</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </motion.div>
-      </div>
+        </div>
+      </section>
     </div>
   );
 };

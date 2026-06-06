@@ -1,7 +1,6 @@
 import axios from 'axios';
 
-// Base URL - update this with your actual backend URL
-const BASE_URL = 'http://localhost:4000/api';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
 // Create Axios instance
 const api = axios.create({
@@ -44,10 +43,10 @@ api.interceptors.response.use(
   }
 );
 
-// Auth endpoints
+// Auth endpoints — uses shared /auth/login (admin role is checked client-side)
 export const authAPI = {
-  login: (credentials) => api.post('/admin/auth/login', credentials),
-  logout: () => api.post('/admin/auth/logout'),
+  login: (credentials) => api.post('/auth/login', credentials),
+  logout: () => api.post('/auth/logout'),
   getProfile: () => api.get('/admin/profile'),
 };
 
@@ -55,7 +54,7 @@ export const authAPI = {
 export const userAPI = {
   getAll: (params) => api.get('/admin/users', { params }),
   getById: (id) => api.get(`/admin/users/${id}`),
-  create: (userData) => api.post('/admin/users', userData),
+  create: (userData) => api.post('/users', userData),
   update: (id, userData) => api.put(`/admin/users/${id}`, userData),
   delete: (id) => api.delete(`/admin/users/${id}`),
 };
@@ -64,7 +63,8 @@ export const userAPI = {
 export const driverAPI = {
   getAll: (params) => api.get('/admin/drivers', { params }),
   getById: (id) => api.get(`/admin/drivers/${id}`),
-  verify: (id, status, comments) => api.put(`/admin/drivers/${id}/verify`, { status, comments }),
+  verify: (id) => api.patch(`/admin/drivers/${id}/approve`),
+  suspend: (id) => api.patch(`/admin/drivers/${id}/suspend`),
   update: (id, driverData) => api.put(`/admin/drivers/${id}`, driverData),
   delete: (id) => api.delete(`/admin/drivers/${id}`),
 };
@@ -73,17 +73,16 @@ export const driverAPI = {
 export const bookingAPI = {
   getAll: (params) => api.get('/admin/bookings', { params }),
   getById: (id) => api.get(`/admin/bookings/${id}`),
-  updateStatus: (id, status) => api.put(`/admin/bookings/${id}/status`, { status }),
-  create: (bookingData) => api.post('/admin/bookings', bookingData),
-  delete: (id) => api.delete(`/admin/bookings/${id}`),
+  updateStatus: (id, status) => api.patch(`/admin/bookings/${id}/status`, { status }),
+  delete: (id) => api.delete(`/bookings/${id}`),
 };
 
-// Dashboard endpoints
+// Dashboard endpoints — mapped to actual backend routes
 export const dashboardAPI = {
-  getSummary: () => api.get('/admin/dashboard/summary'),
-  getRecentBookings: () => api.get('/admin/dashboard/recent-bookings'),
-  getRevenue: (period) => api.get(`/admin/dashboard/revenue?period=${period}`),
-  getUserGrowth: (period) => api.get(`/admin/dashboard/user-growth?period=${period}`),
+  getSummary: () => api.get('/admin/dashboard/stats'),
+  getRecentBookings: () => api.get('/admin/bookings?limit=10'),
+  getRevenue: (period) => api.get(`/admin/analytics?type=revenue&period=${period}`),
+  getUserGrowth: (period) => api.get(`/admin/analytics?type=users&period=${period}`),
 };
 
 // Export the full API instance as default

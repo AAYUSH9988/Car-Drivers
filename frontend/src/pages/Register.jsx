@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { FaEnvelope, FaFacebook, FaGoogle, FaLock, FaPhone, FaUser } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../hooks/useAuth';
+import { FaEnvelope, FaLock, FaPhone, FaUser, FaEye, FaEyeSlash } from 'react-icons/fa';
+import logo from '../assets/images/logo/GoPilot-logo.png';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -14,257 +15,261 @@ const Register = () => {
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
 
   const validateForm = () => {
-    // Password must be at least 6 characters (backend requirement)
-    const passwordRegex = /^.{6,}$/;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  
-    if (!formData.fullName.trim()) {
-      setError('Full name is required');
-      return false;
-    }
-  
-    if (!emailRegex.test(formData.email)) {
-      setError('Please enter a valid email address');
-      return false;
-    }
-  
-    if (!passwordRegex.test(formData.password)) {
-      setError('Password must be at least 6 characters long');
-      return false;
-    }
-  
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return false;
-    }
-  
+    if (!formData.fullName.trim()) { setError('Full name is required'); return false; }
+    if (!emailRegex.test(formData.email)) { setError('Please enter a valid email address'); return false; }
+    if (formData.password.length < 6) { setError('Password must be at least 6 characters'); return false; }
+    if (formData.password !== formData.confirmPassword) { setError('Passwords do not match'); return false; }
     return true;
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({
-      ...prevState,
-      [name]: value
-    }));
-    // Clear error when user starts typing
+    setFormData(prev => ({ ...prev, [name]: value }));
     if (error) setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsLoading(true);
     setError('');
 
     try {
-      const userData = {
+      await register({
         name: formData.fullName,
         email: formData.email,
         phone: formData.phone,
         password: formData.password
-      };
-
-      await register(userData);
+      });
       toast.success('Registration successful! Please log in.');
       navigate('/login');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
-      toast.error(err.response?.data?.message || 'Registration failed');
+      const msg = err.response?.data?.message || 'Registration failed';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSocialRegistration = (provider) => {
-    toast.info(`${provider} registration will be available soon`);
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg">
-        <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900">Create an account</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link to="/login" className="font-medium text-primary hover:text-primary/80">
-              Sign in
-            </Link>
-          </p>
-        </div>
-        
-        {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <FaUser className="h-5 w-5 text-red-500" />
+    <div className="min-h-screen bg-bg-base flex items-center">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Left Panel — Branding */}
+          <div className="hidden lg:flex flex-col justify-center">
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <img src={logo} alt="GoPilot" className="h-10 w-auto" />
+                <span className="font-heading font-bold text-2xl text-text-primary">
+                  Go<span className="text-gold">Pilot</span>
+                </span>
               </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
+              <h1 className="font-heading text-4xl font-bold text-text-primary leading-tight">
+                Join the<br />
+                <span className="text-gold">GoPilot</span> family
+              </h1>
+              <p className="text-text-secondary text-lg max-w-md">
+                Create an account to book professional drivers, track your rides,
+                and enjoy exclusive benefits.
+              </p>
+              <div className="flex items-center gap-8 pt-4">
+                <StatBadge value="4.9" label="Avg Rating" />
+                <StatBadge value="50K+" label="Trips" />
+                <StatBadge value="10K+" label="Riders" />
               </div>
             </div>
           </div>
-        )}
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaUser className="h-5 w-5 text-gray-400" />
+
+          {/* Right Panel — Form */}
+          <div className="bg-bg-surface border border-border rounded-2xl p-8 md:p-10">
+            <div className="text-center mb-8">
+              <div className="lg:hidden flex items-center justify-center gap-2 mb-4">
+                <img src={logo} alt="GoPilot" className="h-8 w-auto" />
+                <span className="font-heading font-bold text-xl text-text-primary">
+                  Go<span className="text-gold">Pilot</span>
+                </span>
               </div>
-              <input
-                id="fullName"
+              <h2 className="font-heading text-2xl font-bold text-text-primary">
+                Create an account
+              </h2>
+              <p className="mt-2 text-sm text-text-secondary">
+                Already have an account?{' '}
+                <Link to="/login" className="text-gold hover:text-gold-light font-medium transition-colors">
+                  Sign in
+                </Link>
+              </p>
+            </div>
+
+            {error && (
+              <div className="mb-6 p-3 bg-rose/10 border border-rose/20 rounded-xl text-rose text-sm">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <InputField
+                label="Full Name"
                 name="fullName"
                 type="text"
-                autoComplete="name"
-                required
-                className="appearance-none rounded-t-md relative block w-full px-3 py-3 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                placeholder="Full Name"
+                icon={<FaUser className="text-text-muted" />}
+                placeholder="John Doe"
                 value={formData.fullName}
                 onChange={handleChange}
+                error={error}
+                required
               />
-            </div>
-            
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaEnvelope className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                id="email"
+
+              <InputField
+                label="Email Address"
                 name="email"
                 type="email"
-                autoComplete="email"
-                required
-                className="appearance-none relative block w-full px-3 py-3 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                placeholder="Email address"
+                icon={<FaEnvelope className="text-text-muted" />}
+                placeholder="you@example.com"
                 value={formData.email}
                 onChange={handleChange}
+                error={error}
+                required
               />
-            </div>
 
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaPhone className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                id="phone"
+              <InputField
+                label="Phone Number"
                 name="phone"
                 type="tel"
-                autoComplete="tel"
-                className="appearance-none relative block w-full px-3 py-3 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                placeholder="Phone Number (Optional)"
+                icon={<FaPhone className="text-text-muted" />}
+                placeholder="+91 98765 43210 (Optional)"
                 value={formData.phone}
                 onChange={handleChange}
+                error={error}
               />
-            </div>
 
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaLock className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                id="password"
+              <PasswordField
+                label="Password"
                 name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                className="appearance-none relative block w-full px-3 py-3 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                placeholder="Password"
                 value={formData.password}
+                show={showPassword}
+                setShow={setShowPassword}
                 onChange={handleChange}
-              />
-            </div>
-
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaLock className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
+                error={error}
                 required
-                className="appearance-none rounded-b-md relative block w-full px-3 py-3 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                placeholder="Confirm Password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
               />
-            </div>
-          </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-70 disabled:cursor-not-allowed transition-colors duration-300"
-            >
-              {isLoading ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Creating account...
-                </>
-              ) : (
-                "Create Account"
-              )}
-            </button>
-          </div>
-        </form>
-        
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
-            </div>
-          </div>
+              <PasswordField
+                label="Confirm Password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                show={showConfirm}
+                setShow={setShowConfirm}
+                onChange={handleChange}
+                error={error}
+                required
+              />
 
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => handleSocialRegistration('Google')}
-              className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center justify-center transition duration-300"
-            >
-              <FaGoogle className="h-5 w-5 text-red-500 mr-2" />
-              Google
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSocialRegistration('Facebook')}
-              className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center justify-center transition duration-300"
-            >
-              <FaFacebook className="h-5 w-5 text-blue-600 mr-2" />
-              Facebook
-            </button>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3.5 bg-gradient-gold text-bg-base font-semibold rounded-xl
+                  hover:shadow-glow-gold hover:scale-[1.01] active:scale-[0.99]
+                  transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+              >
+                {isLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Spinner /> Creating account...
+                  </span>
+                ) : (
+                  'Create Account'
+                )}
+              </button>
+            </form>
+
+            <div className="text-center text-xs text-text-muted mt-6">
+              By creating an account, you agree to our{' '}
+              <Link to="/terms" className="text-gold hover:text-gold-light transition-colors">Terms</Link>
+              {' '}and{' '}
+              <Link to="/privacy" className="text-gold hover:text-gold-light transition-colors">Privacy Policy</Link>
+            </div>
           </div>
-        </div>
-        
-        <div className="text-center text-xs text-gray-500 mt-6">
-          By creating an account, you agree to our{' '}
-          <Link to="/terms" className="text-primary hover:text-primary/80">
-            Terms of Service
-          </Link>{' '}
-          and{' '}
-          <Link to="/privacy" className="text-primary hover:text-primary/80">
-            Privacy Policy
-          </Link>
         </div>
       </div>
     </div>
   );
 };
+
+const InputField = ({ label, name, type, icon, placeholder, value, onChange, error, required }) => (
+  <div>
+    <label htmlFor={name} className="block text-sm text-text-secondary mb-1.5">
+      {label} {required && <span className="text-rose">*</span>}
+    </label>
+    <div className="relative">
+      <span className="absolute left-4 top-1/2 -translate-y-1/2">{icon}</span>
+      <input
+        id={name}
+        name={name}
+        type={type}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        aria-invalid={!!error}
+        required={required}
+        className="w-full bg-bg-elevated border border-border rounded-xl pl-10 pr-4 py-3
+          text-text-primary placeholder:text-text-muted
+          focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors"
+      />
+    </div>
+  </div>
+);
+
+const PasswordField = ({ label, name, value, show, setShow, onChange, error, required }) => (
+  <div>
+    <label htmlFor={name} className="block text-sm text-text-secondary mb-1.5">
+      {label} {required && <span className="text-rose">*</span>}
+    </label>
+    <div className="relative">
+      <span className="absolute left-4 top-1/2 -translate-y-1/2"><FaLock className="text-text-muted" /></span>
+      <input
+        id={name}
+        name={name}
+        type={show ? 'text' : 'password'}
+        value={value}
+        onChange={onChange}
+        aria-invalid={!!error}
+        required={required}
+        className="w-full bg-bg-elevated border border-border rounded-xl pl-10 pr-12 py-3
+          text-text-primary
+          focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors"
+      />
+      <button
+        type="button"
+        onClick={() => setShow(!show)}
+        className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary transition-colors"
+        aria-label={show ? 'Hide password' : 'Show password'}
+      >
+        {show ? <FaEyeSlash /> : <FaEye />}
+      </button>
+    </div>
+  </div>
+);
+
+const StatBadge = ({ value, label }) => (
+  <div>
+    <div className="text-2xl font-bold text-gold">{value}</div>
+    <div className="text-xs text-text-secondary">{label}</div>
+  </div>
+);
+
+const Spinner = () => (
+  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+  </svg>
+);
 
 export default Register;

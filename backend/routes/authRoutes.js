@@ -1,30 +1,30 @@
 import express from 'express';
-import rateLimit from 'express-rate-limit';
 import {
+  forgotPassword,
   getCurrentUser,
   login,
   logout,
+  refreshToken,
   register,
-  updateProfile
+  resetPassword,
+  updateProfile,
+  verifyEmail
 } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
+import { authLimiter } from '../middleware/rateLimit.js';
+import { validateUserRegistration } from '../middleware/validation.js';
 
 const router = express.Router();
 
-// Stricter rate limiting for auth routes
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 attempts per windowMs
-  message: 'Too many authentication attempts, please try again after 15 minutes',
-  standardHeaders: true,
-  legacyHeaders: false
-});
-
-// ✅ PUBLIC ROUTES
-router.post('/register', authLimiter, register);
+// Public
+router.post('/register', authLimiter, validateUserRegistration, register);
 router.post('/login', authLimiter, login);
+router.get('/verify-email/:token', verifyEmail);
+router.post('/forgot-password', authLimiter, forgotPassword);
+router.put('/reset-password/:token', authLimiter, resetPassword);
+router.post('/refresh', refreshToken);
 
-// ✅ PROTECTED ROUTES
+// Protected
 router.post('/logout', protect, logout);
 router.get('/me', protect, getCurrentUser);
 router.put('/profile', protect, updateProfile);

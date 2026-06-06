@@ -1,6 +1,7 @@
 // filepath: d:\VS CODE\Car Driver\backend\routes\bookingRoutes.js
 import express from 'express';
 import {
+  addReview,
   cancelBooking,
   createBooking,
   deleteBooking,
@@ -27,5 +28,6 @@ router.route('/:id')
   .delete(deleteBooking);
 
 router.patch('/:id/cancel', cancelBooking);
+router.post('/:id/review', addReview);
 
 export default router;

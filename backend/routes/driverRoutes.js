@@ -5,6 +5,7 @@ import {
   getAllDrivers,
   getAvailableDrivers,
   getDriver,
+  getDriverAvailability,
   getDriverBookings,
   getDriverEarnings,
   getDriverRatings,
@@ -46,6 +47,7 @@ router.patch('/:id/availability', protect, toggleDriverAvailability);
 router.put('/:id/vehicle', protect, updateDriverVehicle);
 
 // ✅ PROTECTED ROUTES - Driver data
+router.get('/:id/availability', getDriverAvailability);
 router.get('/:id/bookings', protect, getDriverBookings);
 router.get('/:id/earnings', protect, getDriverEarnings);
 router.get('/:id/ratings', protect, getDriverRatings);

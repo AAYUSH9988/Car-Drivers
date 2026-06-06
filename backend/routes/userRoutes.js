@@ -12,24 +12,25 @@ import {
     updateProfilePhoto,
     updateUser
 } from '../controllers/userController.js';
-import { protect } from '../middleware/auth.js';
+import { authorize, protect } from '../middleware/auth.js';
+import { authLimiter } from '../middleware/rateLimit.js';
 import upload from '../utils/fileUpload.js';
 
 const router = express.Router();
 
-// Public routes
-router.get('/', getAllUsers);
-router.get('/search', searchUsers);
-router.get('/:id', getUser);
-
-// Protected routes - profile management
+// Protected routes - profile (must be BEFORE /:id to avoid route masking)
 router.get('/profile/me', protect, getProfile);
 router.put('/profile/me', protect, updateProfile);
 
+// Admin-only routes - list/search users
+router.get('/', protect, authorize('admin'), getAllUsers);
+router.get('/search', protect, authorize('admin'), searchUsers);
+
 // Protected routes - user management
+router.get('/:id', protect, getUser);
 router.put('/:id', protect, updateUser);
-router.delete('/:id', protect, deleteUser);
-router.put('/:id/password', protect, updatePassword);
+router.delete('/:id', protect, authorize('admin'), deleteUser);
+router.put('/:id/password', protect, authLimiter, updatePassword);
 router.put('/:id/photo', protect, upload.single('profilePhoto'), updateProfilePhoto);
 
 // Protected routes - user data

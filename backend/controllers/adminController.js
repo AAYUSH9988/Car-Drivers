@@ -1,15 +1,24 @@
 import mongoose from 'mongoose';
+import NodeCache from 'node-cache';
 import Booking from '../models/Booking.js';
 import Driver from '../models/Driver.js';
 import User from '../models/User.js';
 
+const cache = new NodeCache({ stdTTL: 300, checkperiod: 60 });
+
+const isDev = process.env.NODE_ENV === 'development';
+
 // Dashboard Statistics
 export const getDashboardStats = async (req, res) => {
     try {
-        const today = new Date();
-        const startOfDay = new Date(today.setHours(0, 0, 0, 0));
-        const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
-        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const cached = cache.get('dashboard_stats');
+        if (cached) {
+            return res.status(200).json({ success: true, data: cached, cached: true });
+        }
+        const now = new Date();
+        const startOfDay = new Date(now); startOfDay.setHours(0, 0, 0, 0);
+        const startOfWeek = new Date(now); startOfWeek.setDate(now.getDate() - now.getDay()); startOfWeek.setHours(0, 0, 0, 0);
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
         // Basic counts
         const [
@@ -53,7 +62,7 @@ export const getDashboardStats = async (req, res) => {
             {
                 $match: {
                     status: 'completed',
-                    createdAt: { $gte: new Date(today.getFullYear(), 0, 1) }
+                    createdAt: { $gte: new Date(now.getFullYear(), 0, 1) }
                 }
             },
             {
@@ -122,10 +131,11 @@ export const getDashboardStats = async (req, res) => {
             }
         };
         
+        cache.set('dashboard_stats', stats);
         res.status(200).json({ success: true, data: stats });
     } catch (error) {
         console.error('Dashboard stats error:', error);
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
 
@@ -135,7 +145,7 @@ export const getAllUsers = async (req, res) => {
         const users = await User.find({ role: 'user' }).select('-password');
         res.status(200).json({ success: true, data: users });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
 
@@ -147,7 +157,7 @@ export const getUser = async (req, res) => {
         }
         res.status(200).json({ success: true, data: user });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
 
@@ -157,7 +167,7 @@ export const getAllDrivers = async (req, res) => {
         const drivers = await Driver.find().populate('user', '-password');
         res.status(200).json({ success: true, data: drivers });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
 
@@ -173,7 +183,7 @@ export const approveDriver = async (req, res) => {
         }
         res.status(200).json({ success: true, data: driver });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
 
@@ -185,7 +195,7 @@ export const getAllBookings = async (req, res) => {
             .populate('driver', 'name');
         res.status(200).json({ success: true, data: bookings });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
 
@@ -202,7 +212,7 @@ export const updateBookingStatus = async (req, res) => {
         }
         res.status(200).json({ success: true, data: booking });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
 
@@ -212,20 +222,21 @@ export const getAdminProfile = async (req, res) => {
         const admin = await User.findById(req.user.id).select('-password');
         res.status(200).json({ success: true, data: admin });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
 
 export const updateAdminProfile = async (req, res) => {
     try {
+        const { name, email, phone } = req.body;
         const admin = await User.findByIdAndUpdate(
             req.user.id,
-            req.body,
+            { name, email, phone },
             { new: true, runValidators: true }
         ).select('-password');
         res.status(200).json({ success: true, data: admin });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
 
@@ -237,7 +248,7 @@ export const deleteUser = async (req, res) => {
         }
         res.status(200).json({ success: true, message: 'User deleted successfully' });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 }
 export const getDriverDetails = async (req, res) => {
@@ -248,7 +259,7 @@ export const getDriverDetails = async (req, res) => {
         }
         res.status(200).json({ success: true, data: driver });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
 export const suspendDriver = async (req, res) => {
@@ -263,7 +274,7 @@ export const suspendDriver = async (req, res) => {
         }
         res.status(200).json({ success: true, data: driver });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
 export const updateUser = async (req, res) => {
@@ -288,7 +299,7 @@ export const updateUser = async (req, res) => {
 
         res.status(200).json({ success: true, data: user });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
 
@@ -296,7 +307,7 @@ export const getBookingDetails = async (req, res) => {
     try {
         const booking = await Booking.findById(req.params.id)
             .populate('user', 'name email phone')
-            .populate('driver', 'name phone licenseNumber');
+            .populate({ path: 'driver', select: 'licenseNumber hourlyRate', populate: { path: 'user', select: 'name phone' } });
         
         if (!booking) {
             return res.status(404).json({ success: false, message: 'Booking not found' });
@@ -304,7 +315,7 @@ export const getBookingDetails = async (req, res) => {
         
         res.status(200).json({ success: true, data: booking });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
 
@@ -337,7 +348,7 @@ export const getAnalytics = async (req, res) => {
 
         res.status(200).json({ success: true, data: analytics });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
 
@@ -617,7 +628,7 @@ export const generateReport = async (req, res) => {
 
         res.status(200).json({ success: true, data: report });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
 
@@ -645,7 +656,7 @@ export const getSystemInfo = async (req, res) => {
 
         res.status(200).json({ success: true, data: systemInfo });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
 
@@ -653,17 +664,24 @@ export const getSystemInfo = async (req, res) => {
 export const bulkUpdateUsers = async (req, res) => {
     try {
         const { userIds, updateData } = req.body;
-        
+
         if (!Array.isArray(userIds) || userIds.length === 0) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'User IDs array is required' 
+            return res.status(400).json({
+                success: false,
+                message: 'User IDs array is required'
             });
         }
 
+        // Whitelist allowed fields to prevent mass-assignment
+        const { name, phone, isActive } = updateData || {};
+        const safeUpdate = {};
+        if (name !== undefined) safeUpdate.name = name;
+        if (phone !== undefined) safeUpdate.phone = phone;
+        if (isActive !== undefined) safeUpdate.isActive = isActive;
+
         const result = await User.updateMany(
             { _id: { $in: userIds } },
-            updateData,
+            safeUpdate,
             { runValidators: true }
         );
 
@@ -675,24 +693,30 @@ export const bulkUpdateUsers = async (req, res) => {
             } 
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
 
 export const bulkUpdateDrivers = async (req, res) => {
     try {
         const { driverIds, updateData } = req.body;
-        
+
         if (!Array.isArray(driverIds) || driverIds.length === 0) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Driver IDs array is required' 
+            return res.status(400).json({
+                success: false,
+                message: 'Driver IDs array is required'
             });
         }
 
+        // Whitelist allowed fields to prevent mass-assignment
+        const { status, isAvailable } = updateData || {};
+        const safeUpdate = {};
+        if (status !== undefined && ['pending', 'active', 'suspended', 'inactive'].includes(status)) safeUpdate.status = status;
+        if (isAvailable !== undefined) safeUpdate.isAvailable = Boolean(isAvailable);
+
         const result = await Driver.updateMany(
             { _id: { $in: driverIds } },
-            updateData,
+            safeUpdate,
             { runValidators: true }
         );
 
@@ -704,7 +728,7 @@ export const bulkUpdateDrivers = async (req, res) => {
             } 
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
 
@@ -754,7 +778,7 @@ export const getUserStats = async (req, res) => {
             } 
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
 
@@ -804,7 +828,7 @@ export const getDriverStats = async (req, res) => {
             } 
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
 
@@ -828,7 +852,7 @@ export const updateSystemSettings = async (req, res) => {
             message: 'Settings updated successfully' 
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
 
@@ -871,47 +895,50 @@ export const sendBulkNotification = async (req, res) => {
             message: 'Notification sent successfully' 
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
 
 // Data Export
 export const exportData = async (req, res) => {
     try {
-        const { type, format = 'json', filters = {} } = req.body;
-        
-        let data = [];
-        
+        const { type } = req.body;
+
+        let cursor;
         switch (type) {
             case 'users':
-                data = await User.find(filters).select('-password');
+                cursor = User.find({}).select('-password').lean().cursor();
                 break;
             case 'drivers':
-                data = await Driver.find(filters).populate('user', '-password');
+                cursor = Driver.find({}).populate('user', 'name email phone').lean().cursor();
                 break;
             case 'bookings':
-                data = await Booking.find(filters)
+                cursor = Booking.find({})
                     .populate('user', 'name email')
-                    .populate('driver', 'user');
+                    .populate({ path: 'driver', populate: { path: 'user', select: 'name phone' } })
+                    .lean().cursor();
                 break;
             default:
-                return res.status(400).json({ 
-                    success: false, 
-                    message: 'Invalid export type' 
-                });
+                return res.status(400).json({ success: false, message: 'Invalid export type. Use: users, drivers, or bookings' });
         }
 
-        res.status(200).json({ 
-            success: true, 
-            data: {
-                type,
-                format,
-                exportedAt: new Date(),
-                count: data.length,
-                data
-            }
-        });
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Disposition', `attachment; filename="${type}-export-${Date.now()}.json"`);
+
+        // Stream JSON array to response — avoids loading entire collection into memory
+        res.write('[');
+        let first = true;
+        for await (const doc of cursor) {
+            if (!first) res.write(',');
+            res.write(JSON.stringify(doc));
+            first = false;
+        }
+        res.write(']');
+        res.end();
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        console.error('Export error:', error);
+        if (!res.headersSent) {
+            res.status(500).json({ success: false, message: isDev ? error.message : 'Export failed' });
+        }
     }
 };

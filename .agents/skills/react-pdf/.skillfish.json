@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "react-pdf",
+  "owner": "trailofbits",
+  "repo": "skills-curated",
+  "path": "plugins/react-pdf/skills/react-pdf",
+  "branch": "main",
+  "sha": "2e78bfbc8f161b3bd9ef10a8b68a6970b77d2389",
+  "source": "manual"
+}

@@ -1,4 +1,3 @@
-// d:/VS CODE/Car Driver/backend/models/User.js
 import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
@@ -28,11 +27,25 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['user', 'driver', 'admin'],
     default: 'user'
-  }
-}, { 
+  },
+  isEmailVerified: {
+    type: Boolean,
+    default: false
+  },
+  emailVerificationToken: { type: String, select: false },
+  emailVerificationExpires: { type: Date, select: false },
+  passwordResetToken: { type: String, select: false },
+  passwordResetExpires: { type: Date, select: false },
+  refreshToken: { type: String, select: false },
+  profilePhoto: { type: String, default: null }
+}, {
   timestamps: true,
   strict: true
 });
+
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ role: 1 });
+userSchema.index({ createdAt: -1 });
 
 const User = mongoose.model('User', userSchema);
 export default User;

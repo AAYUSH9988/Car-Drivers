@@ -1,10 +1,14 @@
-// d:/VS CODE/Car Driver/backend/utils/generateToken.js
 import jwt from 'jsonwebtoken';
 
-const generateToken = (userId) => {
-  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-    expiresIn: '7d',
-  });
+const generateToken = (id) => {
+  try {
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRE || '7d'
+    });
+  } catch (error) {
+    console.error('Token generation error:', error);
+    throw new Error('Failed to generate token');
+  }
 };
 
 export default generateToken;

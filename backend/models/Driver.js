@@ -43,52 +43,22 @@ const driverSchema = new mongoose.Schema({
     required: [true, 'Hourly rate is required'],
     min: 0
   },
-  languages: [{
-    type: String
-  }],
-  certifications: [{
-    type: String
-  }],
+  languages: [{ type: String }],
+  certifications: [{ type: String }],
   documents: {
-    profilePhoto: {
-      type: String,
-      default: 'default-profile.jpg'
-    },
-    vehiclePhoto: {
-      type: String,
-      default: 'default-vehicle.jpg'
-    },
-    license: {
-      type: String,
-      required: [true, 'License document is required']
-    },
-    insurance: {
-      type: String
-    }
+    profilePhoto: { type: String, default: 'default-profile.jpg' },
+    vehiclePhoto: { type: String, default: 'default-vehicle.jpg' },
+    license: { type: String, required: [true, 'License document is required'] },
+    insurance: { type: String }
   },
   location: {
-    type: {
-      type: String,
-      enum: ['Point'],
-      default: 'Point'
-    },
-    coordinates: {
-      type: [Number],
-      default: [0, 0]
-    }
+    type: { type: String, enum: ['Point'], default: 'Point' },
+    coordinates: { type: [Number], default: [0, 0] }
   },
-  preferredLocations: [{
-    type: String
-  }],
+  preferredLocations: [{ type: String }],
   workingHours: {
-    start: {
-      type: String,
-      default: '09:00'
-    },
-    end: {
-      type: String,
-      default: '18:00'
-    }
+    start: { type: String, default: '09:00' },
+    end: { type: String, default: '18:00' }
   },
   status: {
     type: String,
@@ -96,52 +66,33 @@ const driverSchema = new mongoose.Schema({
     default: 'pending'
   },
   earnings: {
-    total: {
-      type: Number,
-      default: 0
-    },
-    withdrawn: {
-      type: Number,
-      default: 0
-    },
-    pending: {
-      type: Number,
-      default: 0
-    }
+    total: { type: Number, default: 0 },
+    withdrawn: { type: Number, default: 0 },
+    pending: { type: Number, default: 0 }
   },
   bankDetails: {
-    accountHolder: String,
-    accountNumber: String,
-    bankName: String,
-    ifscCode: String
+    accountHolder: { type: String, select: false },
+    accountNumber: { type: String, select: false },
+    bankName:      { type: String, select: false },
+    ifscCode:      { type: String, select: false }
   }
-}, { 
+}, {
   timestamps: true,
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });
 
 driverSchema.index({ location: '2dsphere' });
-driverSchema.index({ 'user': 1 });
-driverSchema.index({ 'licenseNumber': 1 });
-driverSchema.index({ 'isAvailable': 1 });
-driverSchema.index({ 'status': 1 });
+driverSchema.index({ user: 1 });
+driverSchema.index({ licenseNumber: 1 });
+driverSchema.index({ isAvailable: 1 });
+driverSchema.index({ status: 1 });
 
-driverSchema.virtual('reviews', {
-  ref: 'Review',
-  localField: '_id',
-  foreignField: 'driver'
-});
 driverSchema.virtual('bookings', {
   ref: 'Booking',
   localField: '_id',
   foreignField: 'driver'
 });
-
-driverSchema.methods.calculateAverageRating = function() {
-  if (this.totalRatings === 0) return 0;
-  return this.rating / this.totalRatings;
-};
 
 driverSchema.methods.updateRating = async function(newRating) {
   this.rating = (this.rating * this.totalRatings + newRating) / (this.totalRatings + 1);
@@ -149,12 +100,13 @@ driverSchema.methods.updateRating = async function(newRating) {
   await this.save();
 };
 
-driverSchema.pre('save', async function(next) {
+// Fixed: use next(err) instead of throw in async pre-save hook
+driverSchema.pre('save', function(next) {
   if (this.hourlyRate < 0) {
-    throw new Error('Hourly rate cannot be negative');
+    return next(new Error('Hourly rate cannot be negative'));
   }
   if (!this.location || !Array.isArray(this.location.coordinates) || this.location.coordinates.length !== 2) {
-    throw new Error('Invalid coordinates');
+    return next(new Error('Invalid coordinates'));
   }
   next();
 });

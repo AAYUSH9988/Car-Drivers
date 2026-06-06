@@ -3,9 +3,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 
 // ✅ Base URL
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-console.log('🔗 API Base URL:', BASE_URL);
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
 // ✅ Axios instance
 const api = axios.create({
@@ -26,7 +24,6 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    console.log(`📤 ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
   (error) => Promise.reject(error)
@@ -34,12 +31,8 @@ api.interceptors.request.use(
 
 // ✅ RESPONSE INTERCEPTOR
 api.interceptors.response.use(
-  (response) => {
-    console.log(`✅ ${response.status} ${response.config.url}`);
-    return response;
-  },
+  (response) => response,
   (error) => {
-    console.error('❌ API Error:', error);
 
     if (error.response) {
       const message = error.response.data?.message || 'Something went wrong';

@@ -3,6 +3,9 @@ import mongoose from 'mongoose';
 import Booking from '../models/Booking.js';
 import User from '../models/User.js';
 
+const BCRYPT_ROUNDS = 12;
+const isDev = process.env.NODE_ENV === 'development';
+
 // @desc    Get all users
 // @route   GET /api/users
 // @access  Public
@@ -47,8 +50,7 @@ export const getAllUsers = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error.message
+      message: isDev ? error.message : 'Internal server error'
     });
   }
 };
@@ -80,8 +82,7 @@ export const getUser = async (req, res) => {
     }
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error.message
+      message: isDev ? error.message : 'Internal server error'
     });
   }
 };
@@ -136,8 +137,7 @@ export const updateUser = async (req, res) => {
     }
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error.message
+      message: isDev ? error.message : 'Internal server error'
     });
   }
 };
@@ -188,8 +188,7 @@ export const deleteUser = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error.message
+      message: isDev ? error.message : 'Internal server error'
     });
   }
 };
@@ -231,8 +230,7 @@ export const updatePassword = async (req, res) => {
     }
 
     // Hash new password
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+    const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
     
     await User.findByIdAndUpdate(id, { password: hashedPassword });
 
@@ -243,8 +241,7 @@ export const updatePassword = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error.message
+      message: isDev ? error.message : 'Internal server error'
     });
   }
 };
@@ -275,7 +272,7 @@ export const getUserBookings = async (req, res) => {
     }
 
     const bookings = await Booking.find(query)
-      .populate('driver', 'name phone vehicleDetails')
+      .populate({ path: 'driver', populate: { path: 'user', select: 'name phone' } })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -297,8 +294,7 @@ export const getUserBookings = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error.message
+      message: isDev ? error.message : 'Internal server error'
     });
   }
 };
@@ -330,8 +326,8 @@ export const getUserStats = async (req, res) => {
           cancelledBookings: {
             $sum: { $cond: [{ $eq: ['$status', 'cancelled'] }, 1, 0] }
           },
-          totalSpent: { $sum: '$fare' },
-          averageFare: { $avg: '$fare' }
+          totalSpent: { $sum: '$totalAmount' },
+          averageFare: { $avg: '$totalAmount' }
         }
       }
     ]);
@@ -344,9 +340,12 @@ export const getUserStats = async (req, res) => {
       averageFare: 0
     };
 
-    // Get monthly booking trends
+    // Get monthly booking trends — last 12 months only
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
     const monthlyTrends = await Booking.aggregate([
-      { $match: { user: new mongoose.Types.ObjectId(id) } },
+      { $match: { user: new mongoose.Types.ObjectId(id), createdAt: { $gte: oneYearAgo } } },
       {
         $group: {
           _id: {
@@ -354,7 +353,7 @@ export const getUserStats = async (req, res) => {
             month: { $month: '$createdAt' }
           },
           count: { $sum: 1 },
-          totalSpent: { $sum: '$fare' }
+          totalSpent: { $sum: '$totalAmount' }
         }
       },
       { $sort: { '_id.year': -1, '_id.month': -1 } },
@@ -371,8 +370,7 @@ export const getUserStats = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error.message
+      message: isDev ? error.message : 'Internal server error'
     });
   }
 };
@@ -420,8 +418,7 @@ export const searchUsers = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error.message
+      message: isDev ? error.message : 'Internal server error'
     });
   }
 };
@@ -469,8 +466,7 @@ export const updateProfilePhoto = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error.message
+      message: isDev ? error.message : 'Internal server error'
     });
   }
 };
@@ -496,8 +492,7 @@ export const getProfile = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error.message
+      message: isDev ? error.message : 'Internal server error'
     });
   }
 };
@@ -543,8 +538,7 @@ export const updateProfile = async (req, res) => {
     }
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error.message
+      message: isDev ? error.message : 'Internal server error'
     });
   }
 };

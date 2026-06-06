@@ -30,7 +30,7 @@ const StatsShowcase = () => {
   const stats = [
     {
       icon: <FaUsers className="h-10 w-10 text-primary" />,
-      value: 15000,
+      value: 14000,
       label: "Happy Customers",
       suffix: "+"
     },
