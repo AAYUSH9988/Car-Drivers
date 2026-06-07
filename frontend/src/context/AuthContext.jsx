@@ -60,9 +60,10 @@ export const AuthProvider = ({ children }) => {
         password: credentials.password
       });
       
-      const { data: userData, token } = response.data;
-      
+      const { data: userData, token, refreshToken } = response.data;
+
       localStorage.setItem('token', token);
+      if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
       localStorage.setItem('user', JSON.stringify(userData));
       
       setUser(userData);
@@ -84,6 +85,7 @@ export const AuthProvider = ({ children }) => {
       setAuthError(null);
       await endpoints.auth.logout();
       localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
       setUser(null);
       toast.success('Logged out successfully');

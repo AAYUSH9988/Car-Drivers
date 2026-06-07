@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAxios } from '../../hooks/useAxios';
 
 const BookingSearch = () => {
   const navigate = useNavigate();
@@ -11,12 +10,7 @@ const BookingSearch = () => {
     date: '',
     time: '',
   });
-
-  const { fetchData: searchPilots, loading, error: apiError } = useAxios({
-    url: '/drivers/search',
-    method: 'get',
-    immediate: false
-  });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -28,30 +22,28 @@ const BookingSearch = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
-      const params = new URLSearchParams({
+      const searchParams = new URLSearchParams({
         ...formData,
         date: new Date(formData.date).toISOString(),
         time: formData.time
       });
 
-      const data = await searchPilots({ params });
-
-      if (data.success) {
-        navigate('/pilots/search', {
-          state: {
-            searchParams: formData,
-            results: data.drivers
-          }
-        });
-      }
+      navigate('/pilots/search', {
+        state: {
+          searchParams: formData,
+          results: [] // Actual results will be fetched on the search results page
+        }
+      });
     } catch (error) {
       console.error('Search error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Get today's date for min date attribute
   const today = new Date().toISOString().split('T')[0];
 
   return (
@@ -126,12 +118,6 @@ const BookingSearch = () => {
             </button>
           </div>
         </form>
-
-        {apiError && (
-          <div className="mt-6 border-t border-error pt-4">
-            <p className="font-ui-label text-ui-label text-error uppercase">{apiError}</p>
-          </div>
-        )}
       </motion.div>
     </section>
   );

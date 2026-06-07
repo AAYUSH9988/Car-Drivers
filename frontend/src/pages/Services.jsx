@@ -1,3 +1,4 @@
+import usePageTitle from '../hooks/usePageTitle';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -47,6 +48,7 @@ const stats = [
 ];
 
 const Services = () => {
+  usePageTitle('Services');
   return (
     <div className="w-full bg-background">
       {/* ── Hero ── */}

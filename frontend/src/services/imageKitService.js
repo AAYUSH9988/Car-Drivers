@@ -1,7 +1,8 @@
 // frontend/src/services/imageKitService.js
 import api from './api';
 
-const IMAGEKIT_URL = import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT;
+const IMAGEKIT_URL = import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT || 'https://ik.imagekit.io/r9naagwrj';
+const IMAGEKIT_PUBLIC_KEY = import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY || '';
 
 export const getImageKitAuth = async () => {
     const response = await api.get('/imagekit/auth');

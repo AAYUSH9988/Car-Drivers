@@ -107,7 +107,6 @@ const getRandomPhoto = () => mockPhotos[Math.floor(Math.random() * mockPhotos.le
 const driverService = {
   // ✅ GET AVAILABLE DRIVERS
   getAvailableDrivers: async () => {
-  getAvailableDrivers: async () => {
     try {
       console.log('📥 Fetching available drivers...');
       const response = await api.get('/drivers/available', {
@@ -286,6 +285,7 @@ const driverService = {
       const errorMessage = error.response?.data?.message || error.message || 'Failed to create booking';
       throw new Error(errorMessage);
     }
+  },
 };
 
 export default driverService;

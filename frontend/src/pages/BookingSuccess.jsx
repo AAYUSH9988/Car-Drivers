@@ -1,14 +1,12 @@
+import usePageTitle from '../hooks/usePageTitle';
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
-import { FiCalendar, FiCheckCircle, FiClock, FiDollarSign, FiMapPin } from 'react-icons/fi';
+import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import '../styles/BookingSuccess.css';
 
 const BookingSuccess = () => {
+  usePageTitle('Booking Confirmed');
   const navigate = useNavigate();
   const location = useLocation();
-  const [animationComplete, setAnimationComplete] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
 
   const booking = location.state?.booking;
   const driver = location.state?.driver;
@@ -27,287 +25,93 @@ const BookingSuccess = () => {
   const endDate = new Date(booking.endTime);
   const duration = Math.round((endDate - startDate) / (1000 * 60 * 60) * 10) / 10;
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.8,
-        ease: 'easeOut',
-      },
-    },
-  };
-
-  const checkmarkVariants = {
-    hidden: { scale: 0, rotate: -180 },
-    visible: {
-      scale: 1,
-      rotate: 0,
-      transition: {
-        duration: 0.8,
-        ease: 'easeOut',
-        type: 'spring',
-        stiffness: 100,
-      },
-    },
-  };
-
-  const pulseVariants = {
-    pulse: {
-      scale: [1, 1.1, 1],
-      transition: {
-        duration: 2,
-        repeat: Infinity,
-        repeatType: 'loop',
-      },
-    },
-  };
-
-  const slideInVariants = {
-    hidden: { x: -100, opacity: 0 },
-    visible: {
-      x: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.6,
-        ease: 'easeOut',
-      },
-    },
-  };
-
   return (
-    <div className="booking-success-container">
-      {/* Animated background gradient */}
-      <div className="animated-bg"></div>
-
-      <motion.div
-        className="success-content"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        {/* Main checkmark circle */}
+    <div className="w-full min-h-screen bg-surface flex items-center justify-center px-gutter md:px-margin-edge py-24">
+      <div className="max-w-2xl w-full text-center">
+        {/* Status */}
         <motion.div
-          className="checkmark-circle"
-          variants={checkmarkVariants}
-          onAnimationComplete={() => setAnimationComplete(true)}
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', stiffness: 120, delay: 0.1 }}
+          className="inline-block mb-8"
         >
-          <motion.div
-            className="checkmark-icon"
-            variants={pulseVariants}
-            animate="pulse"
-          >
-            <FiCheckCircle size={80} />
-          </motion.div>
-        </motion.div>
-
-        {/* Success message */}
-        <motion.h1 className="success-title" variants={itemVariants}>
-          🎉 Booking Confirmed!
-        </motion.h1>
-
-        <motion.p className="success-subtitle" variants={itemVariants}>
-          Your ride is confirmed and your driver is on the way
-        </motion.p>
-
-        {/* Booking ID */}
-        <motion.div className="booking-id-box" variants={itemVariants}>
-          <p>Booking ID</p>
-          <h3>{booking._id?.toString().slice(0, 12).toUpperCase()}</h3>
-        </motion.div>
-
-        {/* Driver info card */}
-        <motion.div className="driver-card" variants={itemVariants}>
-          <div className="driver-header">
-            <motion.img
-              src={driver.profilePhoto || 'https://via.placeholder.com/80'}
-              alt={driver.name}
-              className="driver-photo"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.5, duration: 0.5 }}
-            />
-            <div className="driver-info">
-              <h3>{driver.name}</h3>
-              <div className="rating">
-                {'⭐'.repeat(Math.round(driver.rating || 4.5))}
-                <span> ({driver.rating || 4.5}/5)</span>
-              </div>
-            </div>
+          <div className="w-20 h-20 bg-primary flex items-center justify-center">
+            <span className="material-symbols-outlined text-[32px] text-on-primary">check</span>
           </div>
         </motion.div>
 
-        {/* Booking details toggle button */}
-        <motion.button
-          className="details-toggle"
-          variants={itemVariants}
-          onClick={() => setShowDetails(!showDetails)}
+        {/* Title */}
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-4"
         >
-          {showDetails ? '▼' : '▶'} Booking Details
-        </motion.button>
+          Booking Confirmed
+        </motion.h1>
 
-        {/* Expandable booking details */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="font-body-lg text-body-lg text-on-surface-variant mb-12"
+        >
+          Your pilot has been notified. All details are below.
+        </motion.p>
+
+        {/* Details */}
         <motion.div
-          className="booking-details"
-          initial={{ height: 0, opacity: 0 }}
-          animate={{
-            height: showDetails ? 'auto' : 0,
-            opacity: showDetails ? 1 : 0,
-          }}
-          transition={{ duration: 0.4 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="border border-primary bg-background text-left"
         >
-          <motion.div
-            className="detail-item"
-            variants={slideInVariants}
-            initial="hidden"
-            animate={showDetails ? 'visible' : 'hidden'}
-          >
-            <FiCalendar className="detail-icon" />
-            <div>
-              <p className="label">Date & Time</p>
-              <p className="value">{startDate.toLocaleString()}</p>
-            </div>
-          </motion.div>
+          <div className="p-6 md:p-8 border-b border-primary">
+            <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-6">
+              Reservation Details
+            </span>
 
-          <motion.div
-            className="detail-item"
-            variants={slideInVariants}
-            initial="hidden"
-            animate={showDetails ? 'visible' : 'hidden'}
-            transition={{ delay: 0.1 }}
-          >
-            <FiClock className="detail-icon" />
-            <div>
-              <p className="label">Duration</p>
-              <p className="value">{duration} hours</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <DetailRow label="Booking ID" value={booking._id?.toString().slice(0, 12).toUpperCase()} />
+              <DetailRow label="Pilot" value={driver.name} />
+              <DetailRow label="Date & Time" value={startDate.toLocaleString()} />
+              <DetailRow label="Duration" value={`${duration} hours`} />
+              <DetailRow label="Pickup" value={booking.pickupLocation} />
+              <DetailRow label="Drop-off" value={booking.dropLocation || booking.dropoffLocation || 'N/A'} />
+              <DetailRow label="Total" value={`$${booking.totalAmount?.toFixed(2) || '0.00'}`} />
+              <DetailRow label="Status" value={booking.status?.toUpperCase() || 'CONFIRMED'} />
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            className="detail-item"
-            variants={slideInVariants}
-            initial="hidden"
-            animate={showDetails ? 'visible' : 'hidden'}
-            transition={{ delay: 0.2 }}
-          >
-            <FiMapPin className="detail-icon" />
-            <div>
-              <p className="label">Pickup Location</p>
-              <p className="value">{booking.pickupLocation}</p>
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="detail-item"
-            variants={slideInVariants}
-            initial="hidden"
-            animate={showDetails ? 'visible' : 'hidden'}
-            transition={{ delay: 0.3 }}
-          >
-            <FiMapPin className="detail-icon" />
-            <div>
-              <p className="label">Drop Location</p>
-              <p className="value">{booking.dropLocation}</p>
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="detail-item"
-            variants={slideInVariants}
-            initial="hidden"
-            animate={showDetails ? 'visible' : 'hidden'}
-            transition={{ delay: 0.4 }}
-          >
-            <FiDollarSign className="detail-icon" />
-            <div>
-              <p className="label">Total Amount</p>
-              <p className="value">${booking.totalAmount.toFixed(2)}</p>
-            </div>
-          </motion.div>
+          <div className="p-6 md:p-8 flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="flex-1 bg-primary text-on-primary font-ui-button text-ui-button uppercase py-4 tracking-widest hover:bg-tertiary-container transition-colors"
+            >
+              View Dashboard
+            </button>
+            <button
+              onClick={() => navigate('/pilots')}
+              className="flex-1 border border-primary text-primary font-ui-button text-ui-button uppercase py-4 tracking-widest hover:bg-primary hover:text-on-primary transition-colors"
+            >
+              Book Another
+            </button>
+          </div>
         </motion.div>
-
-        {/* Action buttons */}
-        <motion.div className="action-buttons" variants={itemVariants}>
-          <motion.button
-            className="btn btn-primary"
-            onClick={() => navigate('/my-bookings')}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            View My Bookings
-          </motion.button>
-
-          <motion.button
-            className="btn btn-secondary"
-            onClick={() => navigate('/drivers')}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Book Another Ride
-          </motion.button>
-        </motion.div>
-
-        {/* Status indicator */}
-        <motion.div
-          className="status-badge"
-          variants={itemVariants}
-          animate={animationComplete ? { scale: [1, 1.05, 1] } : {}}
-          transition={{ delay: 2, duration: 1, repeat: Infinity, repeatDelay: 3 }}
-        >
-          <span className="status-dot"></span>
-          Status: {booking.status?.toUpperCase() || 'CONFIRMED'}
-        </motion.div>
-      </motion.div>
-
-      {/* Confetti effect simulation */}
-      {animationComplete && <Confetti />}
+      </div>
     </div>
   );
 };
 
-// Confetti component
-const Confetti = () => {
-  const confettiPieces = Array.from({ length: 50 });
-
-  return (
-    <div className="confetti-container">
-      {confettiPieces.map((_, i) => (
-        <motion.div
-          key={i}
-          className="confetti"
-          initial={{
-            x: Math.random() * window.innerWidth,
-            y: -10,
-            rotate: Math.random() * 360,
-            opacity: 1,
-          }}
-          animate={{
-            y: window.innerHeight + 10,
-            rotate: Math.random() * 720,
-            opacity: 0,
-          }}
-          transition={{
-            duration: 2 + Math.random() * 1,
-            delay: Math.random() * 0.5,
-            ease: 'easeIn',
-          }}
-        />
-      ))}
-    </div>
-  );
-};
+const DetailRow = ({ label, value }) => (
+  <div>
+    <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-1">
+      {label}
+    </span>
+    <span className="font-body-md text-body-md text-primary">
+      {value}
+    </span>
+  </div>
+);
 
 export default BookingSuccess;

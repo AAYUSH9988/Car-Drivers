@@ -127,7 +127,7 @@ const EnhancedNavbar = () => {
                   </Link>
                   <Link
                     to="/register"
-                    className="inline-block bg-primary text-on-primary font-ui-button text-ui-button uppercase px-6 py-3 Hotel"
+                    className="inline-block bg-primary text-on-primary font-ui-button text-ui-button uppercase px-6 py-3 hover:bg-on-surface transition-colors"
                   >
                     Book Now
                   </Link>

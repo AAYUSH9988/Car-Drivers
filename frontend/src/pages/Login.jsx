@@ -1,8 +1,10 @@
+import usePageTitle from '../hooks/usePageTitle';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 const Login = () => {
+  usePageTitle('Sign In');
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);

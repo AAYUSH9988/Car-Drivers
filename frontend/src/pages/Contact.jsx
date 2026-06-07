@@ -1,3 +1,4 @@
+import usePageTitle from '../hooks/usePageTitle';
 import { useState } from 'react';
 
 const faqItems = [
@@ -16,6 +17,7 @@ const faqItems = [
 ];
 
 const Contact = () => {
+  usePageTitle('Contact');
   const [openFaq, setOpenFaq] = useState(null);
   const [formData, setFormData] = useState({
     name: '',

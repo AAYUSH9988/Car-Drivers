@@ -1,3 +1,4 @@
+import usePageTitle from '../hooks/usePageTitle';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -6,6 +7,7 @@ import hangarImg from '../assets/images/Homepage/Home 2.png';
 const PASSWORD_RULES = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 const Register = () => {
+  usePageTitle('Apply for Access');
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',

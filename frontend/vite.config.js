@@ -36,7 +36,7 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor':    ['framer-motion', 'react-toastify'],
+          'ui-vendor':    ['framer-motion'],
         },
         assetFileNames: 'assets/[name]-[hash][extname]',
         chunkFileNames: 'assets/js/[name]-[hash].js',

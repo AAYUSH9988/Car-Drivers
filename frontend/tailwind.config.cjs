@@ -81,6 +81,7 @@ module.exports = {
         'body-md': ['Hanken Grotesk', 'sans-serif'],
         'ui-label': ['Space Mono', 'monospace'],
         'ui-button': ['Hanken Grotesk', 'sans-serif'],
+        'numbers': ['Space Mono', 'monospace'],
         // Legacy support
         heading: ['Bodoni Moda', 'serif'],
         body: ['Hanken Grotesk', 'sans-serif'],

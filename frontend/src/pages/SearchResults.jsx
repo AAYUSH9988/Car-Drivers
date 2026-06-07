@@ -1,10 +1,11 @@
+import usePageTitle from '../hooks/usePageTitle';
 import { useEffect, useState } from 'react';
-import { FaSearch } from 'react-icons/fa';
-import { useLocation } from 'react-router-dom';
-import PilotCard from '../components/PilotCard';
+import { Link, useLocation } from 'react-router-dom';
+import PilotCard from '../components/shared/PilotCard';
 import driverService from '../services/driverService';
 
 const SearchResults = () => {
+  usePageTitle('Search Results');
   const location = useLocation();
   const [pilots, setPilots] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,23 +15,20 @@ const SearchResults = () => {
     const fetchPilots = async () => {
       try {
         setLoading(true);
-        
-        // ✅ Get search params from location.state (passed from BookingSearch)
+
         let searchParams = {};
-        
+
         if (location.state?.searchParams) {
           searchParams = location.state.searchParams;
         } else if (location.search) {
-          // Fallback to URL search params if location.state is not available
           const params = new URLSearchParams(location.search);
           for (let [key, value] of params) {
             searchParams[key] = value;
           }
         }
 
-        console.log('📍 Searching with params:', searchParams);
+        console.log('Searching with params:', searchParams);
 
-        // ✅ Use driverService to search
         const results = await driverService.searchDrivers(searchParams);
         setPilots(results);
       } catch (error) {
@@ -46,46 +44,123 @@ const SearchResults = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-primary"></div>
+      <div className="w-full bg-background min-h-screen">
+        <section className="pt-24 md:pt-section-gap pb-16 px-gutter md:px-margin-edge border-b border-outline-variant">
+          <div className="max-w-[1440px] mx-auto">
+            <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-4">
+              Results
+            </span>
+            <h1 className="font-display-xl text-[48px] leading-[44px] md:text-display-lg text-primary tracking-tighter max-w-[12ch]">
+              Available Pilots
+            </h1>
+          </div>
+        </section>
+        <section className="min-h-[40vh] flex items-center justify-center">
+          <div className="w-px h-12 bg-primary animate-pulse" />
+        </section>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="bg-red-50 border-l-4 border-red-500 p-4">
-          <p className="text-red-700">{error}</p>
-        </div>
+      <div className="w-full bg-background min-h-screen">
+        <section className="pt-24 md:pt-section-gap pb-16 px-gutter md:px-margin-edge border-b border-outline-variant">
+          <div className="max-w-[1440px] mx-auto">
+            <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-4">
+              Error
+            </span>
+            <h1 className="font-display-xl text-[48px] leading-[44px] md:text-display-lg text-primary tracking-tighter max-w-[12ch]">
+              Failed to Load
+            </h1>
+          </div>
+        </section>
+        <section className="px-gutter md:px-margin-edge py-12">
+          <div className="max-w-[1440px] mx-auto border border-error/30 bg-error-container/20 p-6">
+            <p className="font-ui-label text-ui-label uppercase tracking-widest text-error">{error}</p>
+          </div>
+        </section>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="text-center mb-12">
-        <h1 className="text-3xl font-bold">Available Pilots</h1>
-        <p className="text-gray-600 mt-2">
-          Found {pilots.length} pilots matching your criteria
-        </p>
-      </div>
-
-      {pilots.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {pilots.map(pilot => (
-            <PilotCard key={pilot._id} pilot={pilot} />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-16">
-          <FaSearch className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold">No Pilots Available</h3>
-          <p className="text-gray-600 mt-2">
-            Try adjusting your search criteria
+    <div className="w-full bg-background min-h-screen">
+      {/* ── Hero / Header ── */}
+      <section className="pt-24 md:pt-section-gap pb-16 px-gutter md:px-margin-edge border-b border-outline-variant">
+        <div className="max-w-[1440px] mx-auto">
+          <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-4">
+            Results
+          </span>
+          <h1 className="font-display-xl text-[48px] leading-[44px] md:text-display-lg text-primary tracking-tighter max-w-[12ch]">
+            Available Pilots
+          </h1>
+          <p className="font-body-lg text-body-lg text-on-surface-variant mt-6 max-w-lg">
+            Found {pilots.length} pilot{pilots.length !== 1 ? 's' : ''} matching your criteria.
           </p>
         </div>
+      </section>
+
+      {/* ── Search Params (if any) ── */}
+      {location.state?.searchParams && Object.keys(location.state.searchParams).length > 0 && (
+        <section className="px-gutter md:px-margin-edge py-4 border-b border-outline-variant">
+          <div className="max-w-[1440px] mx-auto">
+            <p className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant mb-2">
+              Search Parameters
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(location.state.searchParams).map(([key, value]) => (
+                <span
+                  key={key}
+                  className="border border-outline-variant px-3 py-1 font-ui-label text-ui-label uppercase tracking-widest text-primary"
+                >
+                  {key}: {value}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
       )}
+
+      {/* ── Results Count ── */}
+      <section className="px-gutter md:px-margin-edge py-6 border-b border-outline-variant">
+        <div className="max-w-[1440px] mx-auto flex items-center justify-between">
+          <p className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant">
+            {pilots.length} Pilot{pilots.length !== 1 ? 's' : ''} Available
+          </p>
+          {location.state?.searchParams && (
+            <p className="font-ui-label text-ui-label uppercase tracking-widest text-primary">
+              Filtered Search
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* ── Pilots Grid or Empty State ── */}
+      <section className="px-gutter md:px-margin-edge pb-section-gap">
+        <div className="max-w-[1440px] mx-auto">
+          {pilots.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
+              {pilots.map((pilot, i) => (
+                <PilotCard key={pilot._id} pilot={pilot} index={i} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-24">
+              <p className="font-display-lg text-display-lg text-primary mb-4">No matches</p>
+              <p className="font-body-lg text-body-lg text-on-surface-variant mb-8 max-w-md mx-auto">
+                Adjust your search criteria to discover more pilots.
+              </p>
+              <Link
+                to="/"
+                className="inline-block bg-primary text-on-primary font-ui-button text-ui-button uppercase px-8 py-4 tracking-widest hover:bg-tertiary-container transition-colors"
+              >
+                New Search
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 };

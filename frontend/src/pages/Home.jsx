@@ -1,6 +1,6 @@
 // frontend/src/pages/Home.jsx
 
-import Hero from '../components/Hero';
+import Hero from '../components/home/HeroSection';
 import HowItWorks from '../components/home/HowItWorks';
 import BookingSearch from '../components/home/BookingSearch';
 import ServicesGrid from '../components/home/ServicesGrid';

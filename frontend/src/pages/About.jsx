@@ -1,7 +1,9 @@
+import usePageTitle from '../hooks/usePageTitle';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 const About = () => {
+  usePageTitle('About');
   const stats = [
     { value: '500+', label: 'Elite Pilots' },
     { value: '15+', label: 'Global Cities' },
