@@ -1,48 +1,72 @@
-import React from 'react';
+import { motion } from 'framer-motion';
 import { FaShieldAlt, FaClock, FaStar, FaUserTie } from 'react-icons/fa';
 
-const Features = () => {
-  const features = [
-    {
-      icon: <FaShieldAlt className="h-6 w-6" />,
-      title: "Verified Pilots",
-      description: "All our pilots undergo rigorous background checks and verification"
-    },
-    {
-      icon: <FaClock className="h-6 w-6" />,
-      title: "24/7 Availability",
-      description: "Book your pilot any time of the day or night"
-    },
-    {
-      icon: <FaStar className="h-6 w-6" />,
-      title: "Top Rated Service",
-      description: "Consistently high-rated pilots and excellent service"
-    },
-    {
-      icon: <FaUserTie className="h-6 w-6" />,
-      title: "Professional Experience",
-      description: "Experienced and professionally trained pilots"
-    }
-  ];
+const features = [
+  {
+    number: '01',
+    icon: <FaShieldAlt className="h-5 w-5" />,
+    title: 'Verified Pilots',
+    description: 'Comprehensive background checks and verification standards ensure absolute trust.'
+  },
+  {
+    number: '02',
+    icon: <FaClock className="h-5 w-5" />,
+    title: '24/7 Availability',
+    description: 'Precision scheduling — book any time, day or night, with guaranteed response.'
+  },
+  {
+    number: '03',
+    icon: <FaStar className="h-5 w-5" />,
+    title: 'Top Rated Service',
+    description: 'Peerless standards maintained through rigorous quality control and client feedback.'
+  },
+  {
+    number: '04',
+    icon: <FaUserTie className="h-5 w-5" />,
+    title: 'Professional Training',
+    description: 'Advanced protocols in safety, discretion, and etiquette define our pilots.'
+  }
+];
 
+const Features = () => {
   return (
-    <section className="py-16 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900">Why Choose Go Pilot</h2>
-          <p className="mt-4 text-lg text-gray-600">Experience the difference with our premium pilot service</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {features.map((feature, index) => (
-            <div key={index} className="text-center p-6 rounded-lg bg-gray-50 hover:bg-gray-100 transition duration-300">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary text-white mb-4">
-                {feature.icon}
-              </div>
-              <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-              <p className="text-gray-600">{feature.description}</p>
-            </div>
-          ))}
-        </div>
+    <section className="w-full pb-section-gap">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        viewport={{ once: true }}
+        className="mb-12"
+      >
+        <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-4">
+          Standards
+        </span>
+        <h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary">
+          The Distinction
+        </h2>
+      </motion.div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-0">
+        {features.map((feature, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            viewport={{ once: true }}
+            className="border-t border-primary pt-6 pb-8 md:pr-8"
+          >
+            <span className="font-display-xl text-[32px] text-primary leading-none block mb-6">
+              {feature.number}
+            </span>
+            <h3 className="font-headline-lg text-[18px] md:text-[20px] text-primary mb-3">
+              {feature.title}
+            </h3>
+            <p className="font-body-md text-body-md text-on-surface-variant">
+              {feature.description}
+            </p>
+          </motion.div>
+        ))}
       </div>
     </section>
   );

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GoPilot - Dashboard</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration (Design System) -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#000000",
+                    "tertiary-container": "#3d0506",
+                    "error-container": "#ffdad6",
+                    "surface-container": "#efeded",
+                    "on-secondary-fixed-variant": "#464746",
+                    "on-secondary-container": "#626362",
+                    "on-tertiary-fixed-variant": "#77302d",
+                    "on-tertiary": "#ffffff",
+                    "inverse-primary": "#c9c6c5",
+                    "surface": "#fbf9f9",
+                    "on-primary": "#ffffff",
+                    "background": "#fbf9f9",
+                    "surface-variant": "#e3e2e2",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-container": "#858383",
+                    "on-surface": "#1b1c1c",
+                    "error": "#ba1a1a",
+                    "on-tertiary-container": "#c26b65",
+                    "secondary-fixed": "#e3e2e1",
+                    "on-primary-fixed-variant": "#474646",
+                    "on-secondary": "#ffffff",
+                    "surface-tint": "#5f5e5e",
+                    "outline": "#747878",
+                    "primary-fixed-dim": "#c9c6c5",
+                    "primary-container": "#1c1b1b",
+                    "on-surface-variant": "#444748",
+                    "on-background": "#1b1c1c",
+                    "surface-container-low": "#f5f3f3",
+                    "surface-bright": "#fbf9f9",
+                    "inverse-on-surface": "#f2f0f0",
+                    "surface-container-high": "#e9e8e7",
+                    "secondary": "#5e5e5e",
+                    "secondary-fixed-dim": "#c7c6c5",
+                    "tertiary-fixed": "#ffdad7",
+                    "primary-fixed": "#e5e2e1",
+                    "on-primary-fixed": "#1c1b1b",
+                    "tertiary-fixed-dim": "#ffb3ad",
+                    "on-tertiary-fixed": "#3d0506",
+                    "tertiary": "#000000",
+                    "surface-container-highest": "#e3e2e2",
+                    "on-error": "#ffffff",
+                    "inverse-surface": "#303031",
+                    "on-error-container": "#93000a",
+                    "surface-dim": "#dbdad9",
+                    "outline-variant": "#c4c7c7",
+                    "on-secondary-fixed": "#1a1c1c",
+                    "secondary-container": "#e0dfdf"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "4px",
+                    "gutter": "24px",
+                    "margin-edge": "64px",
+                    "section-gap": "160px",
+                    "asymmetric-offset": "12.5%"
+            },
+            "fontFamily": {
+                    "body-md": [
+                            "Hanken Grotesk"
+                    ],
+                    "headline-lg": [
+                            "Bodoni Moda"
+                    ],
+                    "ui-label": [
+                            "Space Mono"
+                    ],
+                    "headline-lg-mobile": [
+                            "Bodoni Moda"
+                    ],
+                    "display-xl": [
+                            "Bodoni Moda"
+                    ],
+                    "display-lg": [
+                            "Bodoni Moda"
+                    ],
+                    "body-lg": [
+                            "Hanken Grotesk"
+                    ],
+                    "ui-button": [
+                            "Hanken Grotesk"
+                    ]
+            },
+            "fontSize": {
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg": [
+                            "48px",
+                            {
+                                    "lineHeight": "52px",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "ui-label": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.1em",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "32px",
+                            {
+                                    "lineHeight": "36px",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "display-xl": [
+                            "120px",
+                            {
+                                    "lineHeight": "110px",
+                                    "letterSpacing": "-0.04em",
+                                    "fontWeight": "800"
+                            }
+                    ],
+                    "display-lg": [
+                            "80px",
+                            {
+                                    "lineHeight": "84px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "800"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "ui-button": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "600"
+                            }
+                    ]
+            }
+          }
+        }
+      }
+    </script>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&amp;family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&amp;family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.primary');
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        /* Custom scrollbar for editorial feel */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: theme('colors.background');
+        }
+        ::-webkit-scrollbar-thumb {
+            background: theme('colors.primary');
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col md:flex-row font-body-md text-body-md">
+<!-- JSON Component: SideNavBar -->
+<nav class="hidden lg:flex flex-col fixed left-0 top-0 h-full p-6 w-64 border-r border-primary bg-surface z-50">
+<div class="mb-16">
+<h1 class="font-display-xl text-primary text-4xl tracking-tighter uppercase leading-none">GO PILOT</h1>
+<p class="font-ui-label text-ui-label text-secondary mt-2 tracking-widest">ELITE STATUS</p>
+</div>
+<ul class="flex flex-col gap-6 flex-grow">
+<!-- Active State -->
+<li>
+<a class="flex items-center gap-4 text-on-tertiary-container font-bold border-l-4 border-tertiary-container pl-3 -ml-4 font-ui-label text-ui-label uppercase duration-200 ease-in-out hover:bg-surface-variant py-2" href="#">
+<span class="material-symbols-outlined text-lg">dashboard</span>
+                    DASHBOARD
+                </a>
+</li>
+<!-- Inactive States -->
+<li>
+<a class="flex items-center gap-4 text-secondary font-ui-label text-ui-label uppercase duration-200 ease-in-out hover:bg-surface-variant py-2 px-3 -ml-3" href="#">
+<span class="material-symbols-outlined text-lg">calendar_today</span>
+                    RESERVATIONS
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-4 text-secondary font-ui-label text-ui-label uppercase duration-200 ease-in-out hover:bg-surface-variant py-2 px-3 -ml-3" href="#">
+<span class="material-symbols-outlined text-lg">person_pin</span>
+                    PILOTS
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-4 text-secondary font-ui-label text-ui-label uppercase duration-200 ease-in-out hover:bg-surface-variant py-2 px-3 -ml-3" href="#">
+<span class="material-symbols-outlined text-lg">payments</span>
+                    PAYMENTS
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-4 text-secondary font-ui-label text-ui-label uppercase duration-200 ease-in-out hover:bg-surface-variant py-2 px-3 -ml-3" href="#">
+<span class="material-symbols-outlined text-lg">contact_support</span>
+                    SUPPORT
+                </a>
+</li>
+</ul>
+<div class="mt-auto pt-8 border-t border-primary">
+<button class="w-full bg-primary text-background font-ui-button text-ui-button uppercase py-3 hover:bg-tertiary-container transition-colors duration-300">
+                BOOK A PILOT
+            </button>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<div class="flex-1 lg:ml-64 flex flex-col min-h-screen">
+<!-- JSON Component: TopNavBar (Embedded as a secondary contextual header per layout rules) -->
+<header class="w-full top-0 sticky bg-surface border-b border-primary z-40 hidden md:block">
+<div class="flex justify-between items-center w-full px-gutter py-6 max-w-[1440px] mx-auto">
+<div class="flex items-center gap-8">
+<!-- Brand hidden on desktop if SideNav is present, but kept for structure -->
+<span class="font-display-lg text-primary tracking-tighter text-2xl lg:hidden">GOPILOT</span>
+<nav class="flex gap-8">
+<a class="font-ui-label text-ui-label uppercase tracking-widest text-primary line-through cursor-pointer transition-all duration-300 hover:text-primary" href="#">CONCIERGE</a>
+<a class="font-ui-label text-ui-label uppercase tracking-widest text-secondary cursor-pointer transition-all duration-300 hover:text-primary" href="#">FLEET</a>
+<a class="font-ui-label text-ui-label uppercase tracking-widest text-secondary cursor-pointer transition-all duration-300 hover:text-primary" href="#">MEMBERSHIP</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-primary hover:text-secondary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-primary hover:text-secondary transition-colors">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<main class="flex-1 px-gutter py-12 md:py-margin-edge max-w-[1440px] mx-auto w-full">
+<!-- Header Section (Asymmetric) -->
+<section class="grid grid-cols-12 gap-6 mb-section-gap items-end">
+<div class="col-span-12 md:col-span-8 lg:col-span-9">
+<p class="font-ui-label text-ui-label text-secondary mb-4 uppercase tracking-widest">Dashboard Overview</p>
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary leading-tight">Welcome,<br/>Julian</h2>
+</div>
+<div class="col-span-12 md:col-span-4 lg:col-span-3 flex md:justify-end">
+<button class="w-full md:w-auto bg-primary text-background font-ui-button text-ui-button uppercase px-8 py-4 tracking-wider hover:bg-tertiary-container transition-colors duration-300 border border-primary">
+                        BOOK NEW PILOT
+                    </button>
+</div>
+</section>
+<!-- Stats Section (Minimalist Cards) -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-16 mb-section-gap">
+<!-- Stat Card 1 -->
+<div class="border-t border-primary pt-6 pb-12 flex flex-col justify-between">
+<span class="font-ui-label text-ui-label text-secondary uppercase tracking-widest mb-12">Total Journeys</span>
+<span class="font-display-lg text-display-lg text-primary leading-none">42</span>
+</div>
+<!-- Stat Card 2 -->
+<div class="border-t border-primary pt-6 pb-12 flex flex-col justify-between">
+<span class="font-ui-label text-ui-label text-secondary uppercase tracking-widest mb-12">Active Credits</span>
+<span class="font-display-lg text-display-lg text-primary leading-none">12,500</span>
+</div>
+<!-- Stat Card 3 -->
+<div class="border-t border-primary pt-6 pb-12 flex flex-col justify-between relative overflow-hidden group">
+<div class="relative z-10">
+<span class="font-ui-label text-ui-label text-secondary uppercase tracking-widest mb-12 block">Member Status</span>
+<span class="font-display-lg text-display-lg text-primary leading-none block">Elite</span>
+</div>
+<!-- Subtle background image for the 'Elite' card to add editorial flair -->
+<div class="absolute inset-0 z-0 opacity-10 mix-blend-multiply bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Abstract architectural photography featuring stark, high-contrast monochrome geometric lines. The lighting is harsh and direct, creating deep black shadows and bright white highlights, perfectly matching a minimalist editorial aesthetic. The composition is unbalanced, emphasizing negative space and structural severity." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDhkjMr_bqJ5ECyqON-pGVdl109udmXlWBYZ_RIlYCb692JZgQChMbyBqaMjg8iVqz7bMG4m6npy_KiLQI9GJ5R3c_J03vM7tjsHXLPSPrYf7lqim-mC0Uxn1w4FDtMCRcVrJAMhbV9yOkuEprndgTogiT_uAPZ3lW2hlzTktmQBgTVpbstXEFmbZalW-xBBaou65fvrfunxIyHpDL4j7e2bG1M-d17wt5xSczr4CUAn8y55-OuKGN5m0tkSl4ATA-VTyk18vF41RU');">
+</div>
+</div>
+</section>
+<!-- Bookings Section -->
+<section class="mb-section-gap relative">
+<!-- Filter Tabs -->
+<div class="flex gap-8 border-b border-primary mb-12 relative">
+<button class="font-ui-label text-ui-label uppercase tracking-widest pb-4 text-primary relative">
+                        UPCOMING
+                        <span class="absolute bottom-0 left-0 w-full h-[2px] bg-primary"></span>
+</button>
+<button class="font-ui-label text-ui-label uppercase tracking-widest pb-4 text-secondary hover:text-primary transition-colors">
+                        PAST
+                    </button>
+<button class="font-ui-label text-ui-label uppercase tracking-widest pb-4 text-secondary hover:text-primary transition-colors">
+                        ALL
+                    </button>
+</div>
+<!-- Booking List (High-precision grid rows) -->
+<div class="flex flex-col">
+<!-- Booking Card 1 -->
+<div class="border-t border-primary py-8 grid grid-cols-1 md:grid-cols-12 gap-6 items-center hover:bg-surface-container-low transition-colors duration-300 px-4 -mx-4">
+<div class="col-span-12 md:col-span-2">
+<span class="font-ui-label text-ui-label text-secondary block mb-1">Ref ID</span>
+<span class="font-body-md text-body-md font-bold text-primary">#GP-7721</span>
+</div>
+<div class="col-span-12 md:col-span-3 flex items-center gap-4">
+<div class="w-12 h-12 bg-surface-variant rounded-full overflow-hidden flex-shrink-0">
+<img alt="Driver Profile" class="w-full h-full object-cover grayscale" data-alt="A striking black and white portrait of a professional chauffeur wearing a tailored dark suit. The lighting is dramatic and cinematic, reminiscent of high-end editorial photography, casting deep shadows that emphasize sharp facial features. The background is pure white, creating intense contrast and a minimalist, luxurious mood." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlOsy7IydhKoNA6wbHh-R9M7AHKe1KQSRqjPPibOUU_n1HrEce25PjVqTYXldN4vX2yqX9rhIERYMpaUFoB-Ka7otiYJuSV3WHcIx4fYeABX0r-nRNiUgZSckmikWV7UiQmWy0IgUmO4YvQO7tY086QqVEi_FilP9PcS8SN1P5JTbxdZ6Pqh3IvKnfm211pr0PlOwcjTWZmJcr7qLmrh6C7g-CeBhigQoUAYcJL-eM1TViQf8MCTECKFNOHbQoKdy1S13v-YAK47E"/>
+</div>
+<div>
+<span class="font-ui-label text-ui-label text-secondary block mb-1">Pilot</span>
+<span class="font-body-md text-body-md text-primary">Marcus V.</span>
+</div>
+</div>
+<div class="col-span-6 md:col-span-2">
+<span class="font-ui-label text-ui-label text-secondary block mb-1">Date &amp; Time</span>
+<span class="font-body-md text-body-md text-primary block">Oct 24, 2023</span>
+<span class="font-ui-label text-ui-label text-primary">14:30 EST</span>
+</div>
+<div class="col-span-6 md:col-span-3">
+<span class="font-ui-label text-ui-label text-secondary block mb-1">Pickup Location</span>
+<span class="font-body-md text-body-md text-primary block truncate">The Ritz-Carlton, NYC</span>
+</div>
+<div class="col-span-12 md:col-span-2 flex md:flex-col justify-between md:justify-center items-end text-right">
+<span class="font-ui-label text-ui-label text-primary bg-surface-variant px-3 py-1 mb-2">CONFIRMED</span>
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-primary">$450</span>
+</div>
+</div>
+<!-- Booking Card 2 -->
+<div class="border-t border-primary py-8 grid grid-cols-1 md:grid-cols-12 gap-6 items-center hover:bg-surface-container-low transition-colors duration-300 px-4 -mx-4">
+<div class="col-span-12 md:col-span-2">
+<span class="font-ui-label text-ui-label text-secondary block mb-1">Ref ID</span>
+<span class="font-body-md text-body-md font-bold text-primary">#GP-7745</span>
+</div>
+<div class="col-span-12 md:col-span-3 flex items-center gap-4">
+<div class="w-12 h-12 bg-surface-variant rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary">pending</span>
+</div>
+<div>
+<span class="font-ui-label text-ui-label text-secondary block mb-1">Pilot</span>
+<span class="font-body-md text-body-md text-primary italic">Assigning...</span>
+</div>
+</div>
+<div class="col-span-6 md:col-span-2">
+<span class="font-ui-label text-ui-label text-secondary block mb-1">Date &amp; Time</span>
+<span class="font-body-md text-body-md text-primary block">Nov 02, 2023</span>
+<span class="font-ui-label text-ui-label text-primary">09:00 EST</span>
+</div>
+<div class="col-span-6 md:col-span-3">
+<span class="font-ui-label text-ui-label text-secondary block mb-1">Pickup Location</span>
+<span class="font-body-md text-body-md text-primary block truncate">Teterboro Airport (TEB)</span>
+</div>
+<div class="col-span-12 md:col-span-2 flex md:flex-col justify-between md:justify-center items-end text-right">
+<span class="font-ui-label text-ui-label text-secondary border border-secondary px-3 py-1 mb-2">PENDING</span>
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-primary">$850</span>
+</div>
+</div>
+<div class="border-t border-primary"></div>
+</div>
+</section>
+<!-- Empty State (Hidden by default, structure provided for demonstration) -->
+<section class="hidden mb-section-gap flex flex-col items-center justify-center py-24 border-y border-primary">
+<span class="material-symbols-outlined text-display-lg text-surface-variant mb-8" style="font-variation-settings: 'wght' 100;">flight_takeoff</span>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-4 text-center">No Active Itineraries</h3>
+<p class="font-body-md text-body-md text-secondary max-w-md text-center mb-8">Your schedule is currently clear. Reserve a pilot to orchestrate your next journey with unparalleled precision.</p>
+<button class="bg-transparent border border-primary text-primary font-ui-button text-ui-button uppercase px-8 py-3 hover:bg-primary hover:text-background transition-colors duration-300">
+                    EXPLORE FLEET
+                </button>
+</section>
+</main>
+</div>
+<!-- JSON Component: BottomNavBar (For Mobile layout adherence) -->
+<nav class="lg:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 bg-surface border-t border-primary z-50">
+<a class="flex flex-col items-center justify-center text-primary font-bold scale-95 transition-transform active:opacity-70 font-ui-label text-ui-label uppercase" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">home</span>
+            HOME
+        </a>
+<a class="flex flex-col items-center justify-center text-secondary scale-95 transition-transform active:opacity-70 font-ui-label text-ui-label uppercase" href="#">
+<span class="material-symbols-outlined mb-1">event</span>
+            BOOKINGS
+        </a>
+<a class="flex flex-col items-center justify-center text-secondary scale-95 transition-transform active:opacity-70 font-ui-label text-ui-label uppercase" href="#">
+<span class="material-symbols-outlined mb-1">airline_seat_recline_extra</span>
+            PILOTS
+        </a>
+<a class="flex flex-col items-center justify-center text-secondary scale-95 transition-transform active:opacity-70 font-ui-label text-ui-label uppercase" href="#">
+<span class="material-symbols-outlined mb-1">person</span>
+            PROFILE
+        </a>
+</nav>
+</body></html>

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaSearch, FaMapMarkerAlt, FaClock, FaCalendarAlt, FaStar, FaShieldAlt, FaCheckCircle } from 'react-icons/fa';
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -27,108 +26,96 @@ const Hero = () => {
   };
 
   return (
-    <div className="relative min-h-[90vh] flex items-center overflow-hidden">
+    <div className="relative min-h-[90vh] flex items-center overflow-hidden bg-background">
       {/* Background with overlay */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-bg-base/95 via-bg-base/85 to-bg-surface/80" />
+        <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-background/85 to-surface/80" />
         <img
-          src="/src/assets/images/vehicles/luxury.jpg"
-          alt="Luxury car"
-          className="w-full h-full object-cover opacity-30"
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPhm3ZvX7oJW9ycwsOUjffHzXso6GtxhvhilIORrOIBVEbh2Z4-buxxbH5d8hzmB7IUjvIrchg-3LgHAFkOBmY9JhWXlGkNEJJd5GzKTA_-5Fb7F6ERY9lMgPa9qyksj9kHVJJ7bK3wsJZ2tLUbC0DTQQz--16CtH5iXZeQAAcwViHRTyMC5KXs2Hs9846HHfuGIvnGOGdPYf6lqjjq5Wg7kbbPlenIIJ9w7rz_1Xtbv7JOim9r-vhlwKts5kERxN8UKGmhsH1yVM"
+          alt keyed-upper="Luxury car"
+          className="w-full h-full object-cover opacity-30 grayscale"
         />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full pt-16">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left — Copy */}
-          <div className="space-y-8">
-            <div className="inline-flex items-center gap-2 bg-gold/10 border border-gold/20 rounded-full px-4 py-1.5">
-              <FaStar className="text-gold text-xs" />
-              <span className="text-gold text-sm font-medium">Trusted by 10,000+ riders</span>
+      <div className="max-w-7xl w-full px-gutter md:px-margin-edge relative z-10 pt-20">
+        <div className="grid lg:grid-cols-12 gap-gutter items-end">
+          {/* Left — Editorial Copy */}
+          <div className="lg:col-span-7 space-y-8">
+            <div className="inline-flex items-center gap-2 border border-primary/20 px-4 py-1.5">
+              <span className="font-ui-label text-ui-label uppercase tracking-widest text-primary">Trusted by 10,000+ riders</span>
             </div>
 
             <div>
-              <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-text-primary leading-tight">
-                Your Professional<br />
-                <span className="text-gold">Driver</span>, Anywhere.
+              <h1 className="font-display-xl text-[48px] leading-[44px] md:text-display-xl text-primary tracking-tighter -ml-1">
+                <span className="block">THE ART</span>
+                <span className="block text-outline-variant italic font-normal ml-12 md:ml-24">OF</span>
+                <span className="block text-left">ARRIVAL</span>
               </h1>
-              <p className="mt-6 text-lg md:text-xl text-text-secondary max-w-lg leading-relaxed">
-                Safe, verified, always on time. Book professional drivers for city transfers,
-                airport pickups, corporate travel and special events.
+              <p className="font-body-md text-body-md text-on-surface-variant max-w-sm mt-8 md:ml-24 border-l border-primary pl-6">
+                Curated logistical choreography for the discerning individual. Beyond transport, an aesthetic experience.
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-6">
+            <div className="flex flex-wrap items-center gap-6 pt-4">
               <button
                 onClick={handleBookNow}
-                className="px-8 py-3.5 bg-gradient-gold text-bg-base font-semibold rounded-xl
-                  hover:shadow-glow-gold hover:scale-[1.02] active:scale-[0.98]
-                  transition-all duration-200 font-heading text-base"
+                className="bg-primary text-on-primary font-ui-button text-ui-button uppercase px-8 py-4 tracking-widest hover:bg-tertiary-container transition-colors duration-300"
               >
-                Book a Driver
+                Initiate Booking
               </button>
               <button
                 onClick={() => navigate('/about')}
-                className="px-8 py-3.5 border border-electric text-electric font-semibold rounded-xl
-                  hover:bg-electric/10 active:scale-[0.98] transition-all duration-200"
+                className="border border-primary text-primary font-ui-button text-ui-button uppercase px-8 py-4 tracking-widest hover:bg-primary hover:text-on-primary transition-colors duration-300"
               >
                 Learn More
               </button>
             </div>
-
-            <div className="flex flex-wrap items-center gap-6 pt-2">
-              <TrustIcon icon={<FaCheckCircle className="text-emerald" />} text="Verified" />
-              <TrustIcon icon={<FaStar className="text-gold" />} text="4.9 Rating" />
-              <TrustIcon icon={<FaShieldAlt className="text-electric" />} text="Insured" />
-            </div>
           </div>
 
           {/* Right — Search Form */}
-          <div className="bg-bg-surface/80 backdrop-blur-xl border border-border rounded-2xl p-6 md:p-8 shadow-card">
-            <h2 className="text-2xl font-heading font-semibold text-text-primary mb-6">
-              Find Your Driver
-            </h2>
+          <div className="lg:col-span-5 mt-12 lg:mt-0">
+            <div className="border border-primary bg-surface/80 backdrop-blur-sm p-6 md:p-8">
+              <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-6">
+               霁initiate Sequence
+              </span>
 
-            <form onSubmit={handleSearch} className="space-y-5">
-              <FormField
-                label="Pickup Location"
-                icon={<FaMapMarkerAlt className="text-text-muted" />}
-                name="location"
-                type="text"
-                placeholder="Enter pickup address"
-                value={searchParams.location}
-                onChange={handleChange}
-              />
+              <form onSubmit={handleSearch} className="space-y-6">
+                <div className="space-y-4">
+                  <FormField
+                    label="Pickup Location"
+                    name="location"
+                    type="text"
+                    placeholder="Enter pickup address"
+                    value={searchParams.location}
+                    onChange={handleChange}
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      label="Date"
+                      name="date"
+                      type="date"
+                      min={today}
+                      value={searchParams.date}
+                      onChange={handleChange}
+                    />
+                    <FormField
+                      label="Time"
+                      name="time"
+                      type="time"
+                      value={searchParams.time}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  label="Date"
-                  icon={<FaCalendarAlt className="text-text-muted" />}
-                  name="date"
-                  type="date"
-                  min={today}
-                  value={searchParams.date}
-                  onChange={handleChange}
-                />
-                <FormField
-                  label="Time"
-                  icon={<FaClock className="text-text-muted" />}
-                  name="time"
-                  type="time"
-                  value={searchParams.time}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3.5 bg-gradient-gold text-bg-base font-semibold rounded-xl
-                  hover:shadow-glow-gold hover:scale-[1.01] active:scale-[0.99]
-                  transition-all duration-200 flex items-center justify-center gap-2"
-              >
-                <FaSearch /> Find Available Drivers
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  className="w-full bg-primary text-on-primary font-ui-button text-ui-button uppercase py-4 tracking-widest hover:bg-tertiary-container transition-colors duration-300"
+                >
+                  Find Available Drivers
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </div>
@@ -136,29 +123,20 @@ const Hero = () => {
   );
 };
 
-const TrustIcon = ({ icon, text }) => (
-  <div className="flex items-center gap-2 text-text-secondary text-sm">
-    {icon}
-    <span>{text}</span>
-  </div>
-);
-
-const FormField = ({ label, icon, name, type, placeholder, min, value, onChange }) => (
+const FormField = ({ label, name, type, placeholder, min, value, onChange }) => (
   <div>
-    <label className="block text-sm text-text-secondary mb-1.5">{label}</label>
-    <div className="flex items-center border border-border rounded-xl px-4 py-3 bg-bg-elevated
-      focus-within:border-gold focus-within:ring-1 focus-within:ring-gold/20 transition-colors">
-      <span className="mr-3">{icon}</span>
-      <input
-        type={type}
-        name={name}
-        min={min}
-        placeholder={placeholder}
-        className="w-full bg-transparent text-text-primary placeholder:text-text-muted focus:outline-none"
-        value={value}
-        onChange={onChange}
-      />
-    </div>
+    <label className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-2">
+      {label}
+    </label>
+    <input
+      type={type}
+      name={name}
+      min={min}
+      placeholder={placeholder}
+      className="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 font-body-md text-body-md text-primary placeholder:outfloor-variant py-3 px-0 transition-colors outline-none"
+      value={value}
+      onChange={onChange}
+    />
   </div>
 );
 

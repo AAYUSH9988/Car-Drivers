@@ -1,29 +1,25 @@
 // frontend/src/pages/Home.jsx
 
 import Hero from '../components/Hero';
-import BookingSearch from '../components/home/BookingSearch';
-import FeaturedPilots from '../components/home/FeaturedPilots';
 import HowItWorks from '../components/home/HowItWorks';
-import ServiceHighlights from '../components/home/ServiceHighlights';
-import Features from '../components/Features';
+import BookingSearch from '../components/home/BookingSearch';
+import ServicesGrid from '../components/home/ServicesGrid';
+import EditorialCTA from '../components/home/EditorialCTA';
+import FeaturedPilots from '../components/home/FeaturedPilots';
 import TestimonialCarousel from '../components/home/TestimonialCarousel';
 import StatsShowcase from '../components/home/StatsShowcase';
-import EnhancedCTA from '../components/home/EnhancedCTA';
-import CallToAction from '../components/home/CallToAction';
 
 const Home = () => {
   return (
-    <div>
+    <div className="w-full max-w-[1440px] mx-auto px-gutter md:px-margin-edge">
       <Hero />
-      <BookingSearch />
-      <ServiceHighlights />
-      <HowItWorks />
       <StatsShowcase />
+      <ServicesGrid />
+      <BookingSearch />
+      <HowItWorks />
       <FeaturedPilots />
-      <Features />
       <TestimonialCarousel />
-      <EnhancedCTA />
-      <CallToAction />
+      <EditorialCTA />
     </div>
   );
 };

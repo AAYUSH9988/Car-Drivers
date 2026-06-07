@@ -1,7 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { Toaster } from 'sonner';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import EnhancedFooter from './components/layout/EnhancedFooter';
 import EnhancedNavbar from './components/layout/EnhancedNavbar';
@@ -24,8 +23,8 @@ const BookingSuccess = lazy(() => import('./pages/BookingSuccess'));
 
 function PageLoader() {
   return (
-    <div className="min-h-screen bg-bg-base flex items-center justify-center">
-      <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+    <div className="min-h-screen bg-surface flex items-center justify-center">
+      <div className="w-px h-8 bg-primary animate-pulse" />
     </div>
   );
 }
@@ -34,9 +33,9 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen flex flex-col bg-bg-base">
+        <div className="min-h-screen flex flex-col bg-surface">
           <EnhancedNavbar />
-          <main id="main" className="flex-grow pt-16">
+          <main id="main" className="flex-grow pt-16 md:pt-20">
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 {/* Public */}
@@ -66,17 +65,19 @@ function App() {
 
           <EnhancedFooter />
 
-          <ToastContainer
+          <Toaster
             position="top-right"
-            autoClose={4000}
-            hideProgressBar={false}
-            newestOnTop
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="dark"
+            toastOptions={{
+              style: {
+                background: '#fbf9f9',
+                border: '1px solid #1b1c1c',
+                borderRadius: '0',
+                fontFamily: "'Hanken Grotesk', sans-serif",
+                fontSize: '14px',
+                color: '#1b1c1c',
+                letterSpacing: '0.02em',
+              },
+            }}
           />
         </div>
       </Router>

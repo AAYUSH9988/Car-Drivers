@@ -1,6 +1,5 @@
 import { createContext, useEffect, useState } from 'react';
-//eslint-disable-next-line
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { endpoints } from '../services/api';
 
 export const AuthContext = createContext(null);

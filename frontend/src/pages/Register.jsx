@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import { useAuth } from '../hooks/useAuth';
-import { FaEnvelope, FaLock, FaPhone, FaUser, FaEye, FaEyeSlash } from 'react-icons/fa';
-import logo from '../assets/images/logo/GoPilot-logo.png';
+import hangarImg from '../assets/images/Homepage/Home 2.png';
+
+const PASSWORD_RULES = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -11,7 +11,7 @@ const Register = () => {
     email: '',
     phone: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -21,11 +21,23 @@ const Register = () => {
   const navigate = useNavigate();
 
   const validateForm = () => {
+    if (!formData.fullName.trim()) {
+      setError('Full name is required.');
+      return false;
+    }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.fullName.trim()) { setError('Full name is required'); return false; }
-    if (!emailRegex.test(formData.email)) { setError('Please enter a valid email address'); return false; }
-    if (formData.password.length < 6) { setError('Password must be at least 6 characters'); return false; }
-    if (formData.password !== formData.confirmPassword) { setError('Passwords do not match'); return false; }
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address.');
+      return false;
+    }
+    if (!PASSWORD_RULES.test(formData.password)) {
+      setError('Password must be at least 8 characters with uppercase, lowercase, and a number.');
+      return false;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match.');
+      return false;
+    }
     return true;
   };
 
@@ -41,232 +53,271 @@ const Register = () => {
 
     setIsLoading(true);
     setError('');
-
     try {
       await register({
         name: formData.fullName,
         email: formData.email,
         phone: formData.phone,
-        password: formData.password
+        password: formData.password,
       });
-      toast.success('Registration successful! Please log in.');
       navigate('/login');
     } catch (err) {
-      const msg = err.response?.data?.message || 'Registration failed';
-      setError(msg);
-      toast.error(msg);
+      setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const passwordStrength = getPasswordStrength(formData.password);
+
   return (
-    <div className="min-h-screen bg-bg-base flex items-center">
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left Panel — Branding */}
-          <div className="hidden lg:flex flex-col justify-center">
-            <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <img src={logo} alt="GoPilot" className="h-10 w-auto" />
-                <span className="font-heading font-bold text-2xl text-text-primary">
-                  Go<span className="text-gold">Pilot</span>
-                </span>
-              </div>
-              <h1 className="font-heading text-4xl font-bold text-text-primary leading-tight">
-                Join the<br />
-                <span className="text-gold">GoPilot</span> family
-              </h1>
-              <p className="text-text-secondary text-lg max-w-md">
-                Create an account to book professional drivers, track your rides,
-                and enjoy exclusive benefits.
-              </p>
-              <div className="flex items-center gap-8 pt-4">
-                <StatBadge value="4.9" label="Avg Rating" />
-                <StatBadge value="50K+" label="Trips" />
-                <StatBadge value="10K+" label="Riders" />
-              </div>
-            </div>
+    <main className="flex flex-col lg:flex-row min-h-screen w-full bg-background text-primary antialiased">
+      {/* Left — Brand Panel */}
+      <section className="relative w-full lg:w-1/2 flex flex-col justify-between p-8 md:p-margin-edge bg-primary text-on-primary overflow-hidden min-h-[400px] lg:min-h-screen">
+        <div
+          className="absolute inset-0 z-0 opacity-30 mix-blend-luminosity bg-cover bg-center"
+          style={{ backgroundImage: `url(${hangarImg})` }}
+          role="presentation"
+        />
+        <div className="absolute inset-0 z-0 bg-gradient-to-t from-primary via-primary/80 to-transparent" />
+
+        {/* Brand anchor */}
+        <header className="relative z-10 pt-4 lg:pt-0">
+          <Link
+            to="/"
+            className="font-headline-lg text-headline-lg-mobile md:text-headline-lg tracking-tighter uppercase inline-block hover:opacity-70 transition-opacity italic"
+          >
+            GOPILOT
+          </Link>
+        </header>
+
+        {/* Core message */}
+        <div className="relative z-10 flex flex-col gap-6 lg:gap-8 max-w-lg mt-12 lg:mt-0 lg:pl-[12.5%]">
+          <h1 className="font-headline-lg text-display-lg italic leading-none">
+            Join the<br />Elite
+          </h1>
+          <p className="font-body-lg text-body-lg text-on-primary/80 leading-relaxed max-w-sm">
+            Step into a world where absolute logistical choreography meets unparalleled luxury.
+          </p>
+        </div>
+
+        {/* Trust metrics */}
+        <div className="relative z-10 flex flex-col sm:flex-row gap-8 lg:gap-16 pt-12 lg:pt-16 border-t border-on-primary/20 mt-12 lg:mt-auto">
+          <div className="flex flex-col gap-1">
+            <span className="font-headline-lg text-headline-lg-mobile md:text-headline-lg">500+</span>
+            <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-primary/60">Elite Pilots</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="font-headline-lg text-headline-lg-mobile md:text-headline-lg">4.9★</span>
+            <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-primary/60">Avg Rating</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="font-headline-lg text-headline-lg-mobile md:text-headline-lg">50K+</span>
+            <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-primary/60">Trips</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Right — Form */}
+      <section className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 md:p-margin-edge bg-background text-primary">
+        <div className="w-full max-w-md flex flex-col gap-10">
+          {/* Header */}
+          <div className="flex flex-col gap-3">
+            <h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg">Apply for Access</h2>
+            <p className="font-body-md text-body-md text-secondary">
+              Submit your details below. Strict confidentiality is maintained.
+            </p>
           </div>
 
-          {/* Right Panel — Form */}
-          <div className="bg-bg-surface border border-border rounded-2xl p-8 md:p-10">
-            <div className="text-center mb-8">
-              <div className="lg:hidden flex items-center justify-center gap-2 mb-4">
-                <img src={logo} alt="GoPilot" className="h-8 w-auto" />
-                <span className="font-heading font-bold text-xl text-text-primary">
-                  Go<span className="text-gold">Pilot</span>
-                </span>
-              </div>
-              <h2 className="font-heading text-2xl font-bold text-text-primary">
-                Create an account
-              </h2>
-              <p className="mt-2 text-sm text-text-secondary">
-                Already have an account?{' '}
-                <Link to="/login" className="text-gold hover:text-gold-light font-medium transition-colors">
-                  Sign in
-                </Link>
-              </p>
+          {error && (
+            <div className="p-4 border border-error/30 bg-error-container/20 text-error">
+              <p className="font-ui-label text-ui-label uppercase tracking-widest">{error}</p>
             </div>
+          )}
 
-            {error && (
-              <div className="mb-6 p-3 bg-rose/10 border border-rose/20 rounded-xl text-rose text-sm">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <InputField
-                label="Full Name"
+          <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+            {/* Full Name */}
+            <Field label="Full Name" htmlFor="fullName">
+              <input
+                id="fullName"
                 name="fullName"
                 type="text"
-                icon={<FaUser className="text-text-muted" />}
-                placeholder="John Doe"
                 value={formData.fullName}
                 onChange={handleChange}
-                error={error}
                 required
+                aria-invalid={!!error}
+                className="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 px-0 py-2 font-body-md text-body-md transition-colors outline-none placeholder:text-transparent"
+                placeholder="Full Name"
               />
+            </Field>
 
-              <InputField
-                label="Email Address"
+            {/* Email */}
+            <Field label="Email Address" htmlFor="email">
+              <input
+                id="email"
                 name="email"
                 type="email"
-                icon={<FaEnvelope className="text-text-muted" />}
-                placeholder="you@example.com"
                 value={formData.email}
                 onChange={handleChange}
-                error={error}
                 required
+                aria-invalid={!!error}
+                className="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 px-0 py-2 font-body-md text-body-md transition-colors outline-none placeholder:text-transparent"
+                placeholder="Email Address"
               />
+            </Field>
 
-              <InputField
-                label="Phone Number"
+            {/* Phone */}
+            <Field label="Phone Number" htmlFor="phone">
+              <input
+                id="phone"
                 name="phone"
                 type="tel"
-                icon={<FaPhone className="text-text-muted" />}
-                placeholder="+91 98765 43210 (Optional)"
                 value={formData.phone}
                 onChange={handleChange}
-                error={error}
+                className="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 px-0 py-2 font-body-md text-body-md transition-colors outline-none placeholder:text-transparent"
+                placeholder="Phone Number"
               />
+            </Field>
 
-              <PasswordField
-                label="Password"
-                name="password"
-                value={formData.password}
-                show={showPassword}
-                setShow={setShowPassword}
-                onChange={handleChange}
-                error={error}
-                required
-              />
+            {/* Password row */}
+            <div className="flex flex-col sm:flex-row gap-8 sm:gap-6">
+              <Field label="Password" htmlFor="password" className="w-full">
+                <div className="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    aria-invalid={!!error}
+                    className="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 px-0 py-2 pr-7 font-body-md text-body-md transition-colors outline-none placeholder:text-transparent"
+                    placeholder="Password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(v => !v)}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">
+                      {showPassword ? 'visibility_off' : 'visibility'}
+                    </span>
+                  </button>
+                </div>
+                {formData.password && (
+                  <PasswordStrength strength={passwordStrength} />
+                )}
+              </Field>
 
-              <PasswordField
-                label="Confirm Password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                show={showConfirm}
-                setShow={setShowConfirm}
-                onChange={handleChange}
-                error={error}
-                required
-              />
+              <Field label="Confirm Password" htmlFor="confirmPassword" className="w-full">
+                <div className="relative">
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirm ? 'text' : 'password'}
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    required
+                    aria-invalid={!!error}
+                    className="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 px-0 py-2 pr-7 font-body-md text-body-md transition-colors outline-none placeholder:text-transparent"
+                    placeholder="Confirm Password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm(v => !v)}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors"
+                    aria-label={showConfirm ? 'Hide password' : 'Show password'}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">
+                      {showConfirm ? 'visibility_off' : 'visibility'}
+                    </span>
+                  </button>
+                </div>
+              </Field>
+            </div>
 
+            {/* Submit */}
+            <div className="pt-6">
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 bg-gradient-gold text-bg-base font-semibold rounded-xl
-                  hover:shadow-glow-gold hover:scale-[1.01] active:scale-[0.99]
-                  transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+                className="w-full flex justify-center items-center gap-2 bg-primary text-on-primary py-5 px-8 font-ui-button text-ui-button uppercase tracking-[0.15em] hover:bg-inverse-surface transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <Spinner /> Creating account...
-                  </span>
+                  <>
+                    <Spinner />
+                    SUBMITTING...
+                  </>
                 ) : (
-                  'Create Account'
+                  'SIGN UP'
                 )}
               </button>
-            </form>
-
-            <div className="text-center text-xs text-text-muted mt-6">
-              By creating an account, you agree to our{' '}
-              <Link to="/terms" className="text-gold hover:text-gold-light transition-colors">Terms</Link>
-              {' '}and{' '}
-              <Link to="/privacy" className="text-gold hover:text-gold-light transition-colors">Privacy Policy</Link>
             </div>
+          </form>
+
+          {/* Legal */}
+          <div className="border-t border-outline-variant pt-8">
+            <p className="font-ui-label text-[10px] md:text-ui-label text-secondary leading-relaxed uppercase tracking-widest">
+              BY REGISTERING, YOU AGREE TO OUR{' '}
+              <Link to="/terms" className="text-primary hover:italic transition-all">TERMS OF SERVICE</Link>
+              {' '}AND{' '}
+              <Link to="/privacy" className="text-primary hover:italic transition-all">PRIVACY POLICY</Link>.{' '}
+              ALREADY HAVE AN ACCOUNT?{' '}
+              <Link to="/login" className="text-primary hover:italic transition-all">SIGN IN</Link>.
+            </p>
           </div>
         </div>
+      </section>
+    </main>
+  );
+};
+
+const Field = ({ label, htmlFor, children, className = '' }) => (
+  <div className={`flex flex-col relative group ${className}`}>
+    <label
+      htmlFor={htmlFor}
+      className="font-ui-label text-ui-label uppercase tracking-widest text-secondary mb-2 transition-colors group-focus-within:text-primary"
+    >
+      {label}
+    </label>
+    {children}
+  </div>
+);
+
+const getPasswordStrength = (password) => {
+  if (!password) return 0;
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[a-z]/.test(password)) score++;
+  if (/\d/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+  return score;
+};
+
+const PasswordStrength = ({ strength }) => {
+  const labels = ['', 'Weak', 'Fair', 'Good', 'Strong', 'Excellent'];
+  const colors = ['', 'bg-error', 'bg-tertiary-container', 'bg-outline', 'bg-on-surface-variant', 'bg-primary'];
+  return (
+    <div className="mt-2 space-y-1">
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map(i => (
+          <div
+            key={i}
+            className={`h-0.5 flex-1 transition-colors duration-300 ${i <= strength ? colors[strength] : 'bg-outline-variant'}`}
+          />
+        ))}
       </div>
+      <p className="font-ui-label text-[10px] text-on-surface-variant uppercase tracking-widest">
+        {labels[strength]}
+      </p>
     </div>
   );
 };
 
-const InputField = ({ label, name, type, icon, placeholder, value, onChange, error, required }) => (
-  <div>
-    <label htmlFor={name} className="block text-sm text-text-secondary mb-1.5">
-      {label} {required && <span className="text-rose">*</span>}
-    </label>
-    <div className="relative">
-      <span className="absolute left-4 top-1/2 -translate-y-1/2">{icon}</span>
-      <input
-        id={name}
-        name={name}
-        type={type}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        aria-invalid={!!error}
-        required={required}
-        className="w-full bg-bg-elevated border border-border rounded-xl pl-10 pr-4 py-3
-          text-text-primary placeholder:text-text-muted
-          focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors"
-      />
-    </div>
-  </div>
-);
-
-const PasswordField = ({ label, name, value, show, setShow, onChange, error, required }) => (
-  <div>
-    <label htmlFor={name} className="block text-sm text-text-secondary mb-1.5">
-      {label} {required && <span className="text-rose">*</span>}
-    </label>
-    <div className="relative">
-      <span className="absolute left-4 top-1/2 -translate-y-1/2"><FaLock className="text-text-muted" /></span>
-      <input
-        id={name}
-        name={name}
-        type={show ? 'text' : 'password'}
-        value={value}
-        onChange={onChange}
-        aria-invalid={!!error}
-        required={required}
-        className="w-full bg-bg-elevated border border-border rounded-xl pl-10 pr-12 py-3
-          text-text-primary
-          focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors"
-      />
-      <button
-        type="button"
-        onClick={() => setShow(!show)}
-        className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary transition-colors"
-        aria-label={show ? 'Hide password' : 'Show password'}
-      >
-        {show ? <FaEyeSlash /> : <FaEye />}
-      </button>
-    </div>
-  </div>
-);
-
-const StatBadge = ({ value, label }) => (
-  <div>
-    <div className="text-2xl font-bold text-gold">{value}</div>
-    <div className="text-xs text-text-secondary">{label}</div>
-  </div>
-);
-
 const Spinner = () => (
-  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
   </svg>

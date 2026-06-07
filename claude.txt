@@ -1,0 +1,185 @@
+Here's the comprehensive audit. Based on my analysis of all frontend pages, backend routes, services, and the design system, I've identified the current status of everything.
+
+  ---
+  1. Frontend Pages — Redesign Status
+     
+  ┌─────┬───────────────────────────┬──────────────────────────┬─────────────────┬────────────────────┬───────────────────────────────────────────────────────────────────────────────────────────┐
+  │  #  │           Page            │           File           │     Status      │   Design System    │                                           Notes                                           │
+  │     │                           │                          │                 │       Match        │                                                                                           │
+  ├─────┼───────────────────────────┼──────────────────────────┼─────────────────┼────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 1   │ Home                      │ pages/Home.jsx           │ ✅ Redesigned   │ ✅ Full editorial  │ Assembled from all home components with editorial aesthetic                               │
+  ├─────┼───────────────────────────┼──────────────────────────┼─────────────────┼────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 2   │ Login                     │ pages/Login.jsx          │ ✅ Redesigned   │ ✅ Full editorial  │ Split panel, Bodoni Moda, borderless inputs                                               │
+  ├─────┼───────────────────────────┼──────────────────────────┼─────────────────┼────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 3   │ Register                  │ pages/Register.jsx       │ ✅ Redesigned   │ ✅ Full editorial  │ Split panel, trust metrics, password strength                                             │
+  ├─────┼───────────────────────────┼──────────────────────────┼─────────────────┼────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 4   │ About                     │ pages/About.jsx          │ ✅ Redesigned   │ ✅ Full editorial  │ Hero, origin story, values, stats, quote, CTA                                             │
+  ├─────┼───────────────────────────┼──────────────────────────┼─────────────────┼────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 5   │ Contact                   │ pages/Contact.jsx        │ ✅ Redesigned   │ ✅ Full editorial  │ Hero, contact info, form, FAQ accordion                                                   │
+  ├─────┼───────────────────────────┼──────────────────────────┼─────────────────┼────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 6   │ Services                  │ pages/Services.jsx       │ ✅ Redesigned   │ ✅ Full editorial  │ Services grid, stats strip, CTA                                                           │
+  ├─────┼───────────────────────────┼──────────────────────────┼─────────────────┼────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 7   │ Drivers (Pilots List)     │ pages/Drivers.jsx        │ 🔴 Needs        │ ❌ Old generic UI  │ Still uses bg-white, rounded-lg, shadow-md, text-gray-600                                 │
+  │     │                           │                          │ Redesign        │                    │                                                                                           │
+  ├─────┼───────────────────────────┼──────────────────────────┼─────────────────┼────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 8   │ DriverDetails (Single     │ pages/DriverDetails.jsx  │ 🔴 Needs        │ ❌ Old dark theme  │ Still uses bg-bg-base, rounded-2xl, bg-gradient-gold (old dark theme)                     │
+  │     │ Pilot)                    │                          │ Redesign        │                    │                                                                                           │
+  ├─────┼───────────────────────────┼──────────────────────────┼─────────────────┼────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 9   │ Dashboard                 │ pages/Dashboard.jsx      │ 🟡 Partial      │ ⚠️  Old dark theme  │ Has full content (bookings, stats, tabs) but uses old bg-bg-base / bg-gradient-gold       │
+  │     │                           │                          │                 │                    │ theme, not editorial                                                                      │
+  ├─────┼───────────────────────────┼──────────────────────────┼─────────────────┼────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 10  │ SearchResults             │ pages/SearchResults.jsx  │ 🔴 Needs        │ ❌ Old generic UI  │ Basic white card grid, no editorial styling                                               │
+  │     │                           │                          │ Redesign        │                    │                                                                                           │
+  ├─────┼───────────────────────────┼──────────────────────────┼─────────────────┼────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 11  │ BookingSuccess            │ pages/BookingSuccess.jsx │ 🟡 Partial      │ ⚠️  Custom CSS      │ Has custom BookingSuccess.css, confetti effect, but no editorial theme                    │
+  │     │                           │                          │                 │ styling            │                                                                                           │
+  └─────┴───────────────────────────┴──────────────────────────┴─────────────────┴────────────────────┴───────────────────────────────────────────────────────────────────────────────────────────┘
+
+  ---
+  2. Component Redesign Status
+
+  ┌─────────────────────┬─────────────────────────────────────────┬───────────────────┬───────────────────────────────────────────────────────────┐
+  │      Component      │                  File                   │      Status       │                           Notes                           │
+  ├─────────────────────┼─────────────────────────────────────────┼───────────────────┼───────────────────────────────────────────────────────────┤
+  │ EnhancedNavbar      │ components/layout/EnhancedNavbar.jsx    │ ✅ Redesigned     │ Editorial styling, proper scroll logic                    │
+  ├─────────────────────┼─────────────────────────────────────────┼───────────────────┼───────────────────────────────────────────────────────────┤
+  │ EnhancedFooter      │ components/layout/EnhancedFooter.jsx    │ ✅ Redesigned     │ Editorial, Bodoni Moda logo                               │
+  ├─────────────────────┼─────────────────────────────────────────┼───────────────────┼───────────────────────────────────────────────────────────┤
+  │ PilotCard           │ components/PilotCard.jsx                │ 🔴 Needs Redesign │ Still uses bg-white, rounded-lg, shadow-md, text-gray-600 │
+  ├─────────────────────┼─────────────────────────────────────────┼───────────────────┼───────────────────────────────────────────────────────────┤
+  │ FilterPanel         │ components/FilterPanel.jsx              │ 🔴 Needs Redesign │ Still uses border-gray-300, rounded-lg                    │
+  ├─────────────────────┼─────────────────────────────────────────┼───────────────────┼───────────────────────────────────────────────────────────┤
+  │ LoadingSpinner      │ components/LoadingSpinner.jsx           │ 🔴 Needs Redesign │ Basic, no editorial styling                               │
+  ├─────────────────────┼─────────────────────────────────────────┼───────────────────┼───────────────────────────────────────────────────────────┤
+  │ Hero (home)         │ components/home/Hero.jsx                │ ✅ Redesigned     │ Full editorial                                            │
+  ├─────────────────────┼─────────────────────────────────────────┼───────────────────┼───────────────────────────────────────────────────────────┤
+  │ StatsShowcase       │ components/home/StatsShowcase.jsx       │ ✅ Redesigned     │ Full editorial                                            │
+  ├─────────────────────┼─────────────────────────────────────────┼───────────────────┼───────────────────────────────────────────────────────────┤
+  │ ServicesGrid        │ components/home/ServicesGrid.jsx        │ ✅ Redesigned     │ Full editorial                                            │
+  ├─────────────────────┼─────────────────────────────────────────┼───────────────────┼───────────────────────────────────────────────────────────┤
+  │ BookingSearch       │ components/home/BookingSearch.jsx       │ ✅ Redesigned     │ Full editorial                                            │
+  ├─────────────────────┼─────────────────────────────────────────┼───────────────────┼───────────────────────────────────────────────────────────┤
+  │ HowItWorks          │ components/home/HowItWorks.jsx          │ ✅ Redesigned     │ Full editorial                                            │
+  ├─────────────────────┼─────────────────────────────────────────┼───────────────────┼───────────────────────────────────────────────────────────┤
+  │ FeaturedPilots      │ components/home/FeaturedPilots.jsx      │ ✅ Redesigned     │ Full editorial                                            │
+  ├─────────────────────┼─────────────────────────────────────────┼───────────────────┼───────────────────────────────────────────────────────────┤
+  │ TestimonialCarousel │ components/home/TestimonialCarousel.jsx │ ✅ Redesigned     │ Full editorial                                            │
+  ├─────────────────────┼─────────────────────────────────────────┼───────────────────┼───────────────────────────────────────────────────────────┤
+  │ EditorialCTA        │ components/home/EditorialCTA.jsx        │ ✅ Redesigned     │ Full editorial                                            │
+  └─────────────────────┴─────────────────────────────────────────┴───────────────────┴───────────────────────────────────────────────────────────┘
+
+  ---
+  3. Frontend ↔ Backend Functionality Mismatch Table
+
+  ┌───────────────┬─────────────────────────────────────────────────────┬────────────────────────────────────────┬────────┬────────────────────────────────────────────────────────────────────────┐
+  │    Feature    │                   Frontend Calls                    │            Backend Endpoint            │ Status │                             Mismatch/Issue                             │
+  ├───────────────┼─────────────────────────────────────────────────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Auth Register │ endpoints.auth.register(data) → POST /auth/register │ POST /api/auth/register                │ ✅     │ Works                                                                  │
+  ├───────────────┼─────────────────────────────────────────────────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Auth Login    │ endpoints.auth.login(data) → POST /auth/login       │ POST /api/auth/login                   │ ✅     │ Works                                                                  │
+  ├───────────────┼─────────────────────────────────────────────────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Auth Logout   │ endpoints.auth.logout() → POST /auth/logout         │ POST /api/auth/logout                  │ ✅     │ Works                                                                  │
+  ├───────────────┼─────────────────────────────────────────────────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Get Current   │ endpoints.auth.getMe() → GET /auth/me               │ GET /api/auth/me                       │ ✅     │ Works                                                                  │
+  │ User          │                                                     │                                        │        │                                                                        │
+  ├───────────────┼─────────────────────────────────────────────────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Get User      │ endpoints.users.getProfile() → GET /users/profile   │ GET /api/users/profile/me              │ ❌     │ PATH MISMATCH — Frontend calls /users/profile but backend is           │
+  │ Profile       │                                                     │                                        │        │ /users/profile/me                                                      │
+  ├───────────────┼─────────────────────────────────────────────────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Update        │ endpoints.users.updateProfile() → PUT               │ PUT /api/auth/profile or PUT           │ ❌     │ PATH MISMATCH — Frontend calls /users/profile but backend auth route   │
+  │ Profile       │ /users/profile                                      │ /api/users/profile/me                  │        │ has PUT /profile and user route has PUT /profile/me                    │
+  ├───────────────┼─────────────────────────────────────────────────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Get All       │ driverService.getAllDrivers() → GET /drivers        │ GET /api/drivers                       │ ✅     │ Works                                                                  │
+  │ Drivers       │                                                     │                                        │        │                                                                        │
+  ├───────────────┼─────────────────────────────────────────────────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Get Available │ driverService.getAvailableDrivers() — but           │ GET /api/drivers/available             │ ⚠️      │ METHOD NOT EXPORTED in api.js endpoints. Used directly in Drivers.jsx  │
+  │  Drivers      │ endpoints.drivers has no getAvailable               │                                        │        │ via driverService.getAvailableDrivers()                                │
+  ├───────────────┼─────────────────────────────────────────────────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Get Driver by │ driverService.getDriverById(id) → GET /drivers/:id  │ GET /api/drivers/:id                   │ ✅     │ Works                                                                  │
+  │  ID           │                                                     │                                        │        │                                                                        │
+  ├───────────────┼─────────────────────────────────────────────────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Search        │ driverService.searchDrivers(params) → GET           │ GET /api/drivers/search                │ ✅     │ Works                                                                  │
+  │ Drivers       │ /drivers/search                                     │                                        │        │                                                                        │
+  ├───────────────┼─────────────────────────────────────────────────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Create        │ endpoints.bookings.create(data) → POST /bookings    │ POST /api/bookings                     │ ✅     │ Works                                                                  │
+  │ Booking       │                                                     │                                        │        │                                                                        │
+  ├───────────────┼─────────────────────────────────────────────────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Get All       │ endpoints.bookings.getAll() → GET /bookings         │ GET /api/bookings                      │ ✅     │ Works                                                                  │
+  │ Bookings      │                                                     │                                        │        │                                                                        │
+  ├───────────────┼─────────────────────────────────────────────────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Get Booking   │ endpoints.bookings.getById(id) → GET /bookings/:id  │ GET /api/bookings/:id                  │ ✅     │ Works                                                                  │
+  │ by ID         │                                                     │                                        │        │                                                                        │
+  ├───────────────┼─────────────────────────────────────────────────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Update        │ endpoints.bookings.update(id, data) → PUT           │ PUT /api/bookings/:id                  │ ✅     │ Works                                                                  │
+  │ Booking       │ /bookings/:id                                       │                                        │        │                                                                        │
+  ├───────────────┼─────────────────────────────────────────────────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Cancel        │ endpoints.bookings.cancel(id) → PATCH               │                                        │        │ Backend route doesn't have this — bookingRoutes.js has                 │
+  │ Booking       │ /bookings/:id/cancel                                │ PATCH /api/bookings/:id/cancel         │ ⚠️      │ router.patch('/:id/cancel', cancelBooking)... actually ✅ this does    │
+  │               │                                                     │                                        │        │ exist.                                                                 │
+  ├───────────────┼─────────────────────────────────────────────────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Delete        │ endpoints.bookings.delete(id) → DELETE              │ DELETE /api/bookings/:id               │ ⚠️      │ Backend bookingRoutes.js doesn't expose DELETE /:id — only has POST    │
+  │ Booking       │ /bookings/:id                                       │                                        │        │ /:id/review for reviews                                                │
+  ├───────────────┼─────────────────────────────────────────────────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Create        │ Not implemented in api.js                           │ POST /api/payments/create-order        │ 🔴     │ Missing entirely from frontend                                         │
+  │ Payment Order │                                                     │                                        │        │                                                                        │
+  ├───────────────┼─────────────────────────────────────────────────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Verify        │ Not implemented in api.js                           │ POST /api/payments/verify              │ 🔴     │ Missing entirely from frontend                                         │
+  │ Payment       │                                                     │                                        │        │                                                                        │
+  ├───────────────┼─────────────────────────────────────────────────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Refund        │ Not implemented in api.js                           │ POST /api/payments/refund/:bookingId   │ 🔴     │ Missing entirely from frontend                                         │
+  │ Payment       │                                                     │                                        │        │                                                                        │
+  ├───────────────┼─────────────────────────────────────────────────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Forgot        │ Not implemented in api.js                           │ POST /api/auth/forgot-password         │ 🔴     │ Missing entirely from frontend                                         │
+  │ Password      │                                                     │                                        │        │                                                                        │
+  ├───────────────┼─────────────────────────────────────────────────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Reset         │ Not implemented in api.js                           │ PUT /api/auth/reset-password/:token    │ 🔴     │ Missing entirely from frontend                                         │
+  │ Password      │                                                     │                                        │        │                                                                        │
+  ├───────────────┼─────────────────────────────────────────────────────┼────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────┤
+  │ Refresh Token │ Not implemented in api.js                           │ POST /api/auth/refresh                 │ 🔴     │ Missing entirely from frontend                                         │
+  └───────────────┴─────────────────────────────────────────────────────┴────────────────────────────────────────┴────────┴────────────────────────────────────────────────────────────────────────┘
+
+  ---
+  4. Summary: What's Pending
+
+  🔴 Must Redesign (High Priority)
+
+  1. pages/Drivers.jsx — Pilots list page still uses old generic UI (bg-white, rounded-lg, shadow-md)
+  2. pages/DriverDetails.jsx — Single pilot page still uses old dark theme (bg-bg-base, bg-gradient-gold)
+  3. components/PilotCard.jsx — Card component used by both Drivers and SearchResults
+  4. components/FilterPanel.jsx — Filter panel with old styling
+  5. components/LoadingSpinner.jsx — Needs editorial styling
+  6. pages/SearchResults.jsx — Search results page still uses old generic UI
+
+  🟡 Needs Theme Migration (Medium Priority)
+
+  7. pages/Dashboard.jsx — Content is complete but uses old dark theme instead of editorial
+  8. pages/BookingSuccess.jsx — Uses custom CSS instead of editorial theme
+
+  ❌ Missing Frontend API Integrations
+
+  9. Payment endpoints — /api/payments/create-order, /api/payments“Hello pro” — Hello proto verify, /api/payments/refund/:bookingIdnot wired inapi.js`
+  10. Password reset flow — Forgot password / reset password not wired
+  11. Refresh token — Not implemented for keeping sessions alive
+
+  ❌ Minor Path Mismatches
+
+  12. users.getProfile — Frontend calls /users/profile, backend expects /users/profile/me
+  13. users.updateProfile — Frontend calls /users/profile, backend has PUT /auth/profile or PUT /users/profile/me
+
+
+
+                  Frontend                  │               Backend Actual               │         Issue         │
+  ├────────────────────────────────────────────┼────────────────────────────────────────────┼───────────────────────┤
+  │ users.getProfile() → GET /users/profile    │ GET /users/profile/me                      │ Wrong path            │
+  ├────────────────────────────────────────────┼────────────────────────────────────────────┼───────────────────────┤
+  │ users.updateProfile() → PUT /users/profile │ PUT /auth/profile or PUT /users/profile/me │ Wrong path            │
+  ├────────────────────────────────────────────┼────────────────────────────────────────────┼───────────────────────┤
+  │ Missing: forgotPassword()                  │ POST /auth/forgot-password                 │ Not implemented       │
+  ├────────────────────────────────────────────┼────────────────────────────────────────────┼───────────────────────┤
+  │ Missing: resetPassword()                   │ PUT /auth/reset-password/:token            │ Not implemented       │
+  ├────────────────────────────────────────────┼────────────────────────────────────────────┼───────────────────────┤
+  │ Missing: refreshToken()                    │ POST /auth/refresh                         │ Not implemented       │
+  ├────────────────────────────────────────────┼────────────────────────────────────────────┼───────────────────────┤
+  │ Missing: payment endpoints                 │ /payments/*                                │ Not implemented       │
+  ├────────────────────────────────────────────┼────────────────────────────────────────────┼───────────────────────┤
+  │ bookings.delete()                          │ DELETE /bookings/:id                       │ Backend route missing │

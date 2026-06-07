@@ -1,6 +1,6 @@
 // filepath: src/services/api.js
 import axios from 'axios';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 
 // ✅ Base URL
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
@@ -76,19 +76,32 @@ export const endpoints = {
     register: (data) => api.post('/auth/register', data),
     login: (data) => api.post('/auth/login', data),
     logout: () => api.post('/auth/logout'),
-    getMe: () => api.get('/auth/me'), // ✅ FIXED
+    getMe: () => api.get('/auth/me'),
+    forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+    resetPassword: (token, password) => api.put(`/auth/reset-password/${token}`, { password }),
+    refreshToken: () => api.post('/auth/refresh'),
+    verifyEmail: (token) => api.get(`/auth/verify-email/${token}`),
   },
 
   // 👤 USERS
   users: {
-    getProfile: () => api.get('/auth/me'), // ✅ FIXED (was wrong)
-    updateProfile: (data) => api.put('/auth/profile', data), // adjust if needed
+    getProfile: () => api.get('/users/profile/me'),
+    updateProfile: (data) => api.put('/users/profile/me', data),
+    getAll: () => api.get('/users'),
+    getById: (id) => api.get(`/users/${id}`),
+    updateUser: (id, data) => api.put(`/users/${id}`, data),
+    deleteUser: (id) => api.delete(`/users/${id}`),
+    updatePassword: (id, data) => api.put(`/users/${id}/password`, data),
+    updatePhoto: (id, formData) => api.put(`/users/${id}/photo`, formData),
+    getBookings: (id) => api.get(`/users/${id}/bookings`),
+    getStats: (id) => api.get(`/users/${id}/stats`),
   },
 
   // 🚗 DRIVERS
   drivers: {
     getAll: (params) => api.get('/drivers', { params }),
     getById: (id) => api.get(`/drivers/${id}`),
+    getAvailable: () => api.get('/drivers/available'),
   },
 
   // 📦 BOOKINGS
@@ -99,5 +112,12 @@ export const endpoints = {
     update: (id, data) => api.put(`/bookings/${id}`, data),
     cancel: (id) => api.patch(`/bookings/${id}/cancel`),
     delete: (id) => api.delete(`/bookings/${id}`),
+  },
+
+  // 💳 PAYMENTS
+  payments: {
+    createOrder: (data) => api.post('/payments/create-order', data),
+    verify: (data) => api.post('/payments/verify', data),
+    refund: (bookingId) => api.post(`/payments/refund/${bookingId}`),
   }
 };

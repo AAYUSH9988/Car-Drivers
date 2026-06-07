@@ -1,59 +1,49 @@
-// src/components/Hero.jsx
 import { Link } from 'react-router-dom';
-// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 
 const Hero = () => {
   return (
-    <div className="relative bg-gradient-to-r from-gray-900 to-black overflow-hidden">
-      <div className="absolute inset-0 bg-black opacity-50"></div>
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-              Your Professional <span className="text-primary">Pilot</span> Awaits
-            </h1>
-            <p className="text-lg text-gray-300 mb-8">
-              Experience luxury travel with our professional pilots. Safe, reliable, and comfortable journeys guaranteed.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Link 
-                to="/pilots" 
-                className="px-8 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium"
-              >
-                Find a Pilot
-              </Link>
-              <Link 
-                to="/about" 
-                className="px-8 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium"
-              >
-                Learn More
-              </Link>
-            </div>
-          </motion.div>
-          <motion.div 
-            className="hidden lg:flex justify-end items-center"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <div className="relative w-full max-w-sm mx-auto"> {/* Changed from max-w-md to max-w-sm */}
-              <div className="absolute -top-10 -left-10 w-60 h-60 bg-primary/20 rounded-full blur-3xl"></div>
-              <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-blue-500/10 rounded-full blur-2xl"></div>
-              <img 
-                src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
-                alt="Luxury car with professional driver service"
-                className="relative z-10 w-full h-auto object-contain rounded-xl shadow-2xl"
-              />
-            </div>
-          </motion.div>
+    <section className="relative w-full pt-20 md:pt-36 pb-section-gap flex flex-col md:flex-row justify-between min-h-[85vh] md:min-h-[921px]">
+
+      {/* Asymmetric Headline Area */}
+      <div className="w-full md:w-[55%] pb-12 md:pb-0 z-10 relative px-gutter md:px-0">
+        <motion.h1
+          className="font-display-xl text-[42px] leading-[40px] sm:text-[64px] sm:leading-[60px] md:text-[80px] md:leading-[74px] lg:text-display-xl text-primary -ml-1 md:-ml-2 relative"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+        >
+          <span className="block">THE ART</span>
+          <span className="block text-outline-variant italic font-normal ml-8 sm:ml-12 md:ml-24">OF</span>
+          <span className="block text-right pr-4 md:pr-12">ARRIVAL</span>
+        </motion.h1>
+        <motion.p
+          className="font-body-md text-body-md text-on-surface-variant max-w-sm mt-12 md:ml-24 border-l border-primary pl-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
+          Curated logistical choreography for the discerning individual. Beyond transport, an aesthetic experience.
+        </motion.p>
+      </div>
+
+      {/* Offset Vertical Image */}
+      <div className="w-full md:w-[40%] h-[400px] sm:h-[500px] md:h-[614px] lg:h-[819px] bg-surface-container-high relative overflow-hidden group">
+        <img
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPhm3ZvX7oJW9ycwsOUjffHzXso6GtxhvhilIORrOIBVEbh2Z4-buxxbH5d8hzmB7IUjvIrchg-3LgHAFkOBmY9JhWXlGkNEJJd5GzKTA_-5Fb7F6ERY9lMgPa9qyksj9kHVJJ7bK3wsJZ2tLUbC0DTQQz--16CtH5iXZeQAAcwViHRTyMC5KXs2Hs9846HHfuGIvnGOGdPYf6lqjjq5Wg7kbbPlenIIJ9w7rz_1Xtbv7JOim9r-vhlwKts5kERxN8UKGmhsH1yVM"
+          alt="Luxury car interior detail"
+          loading="eager"
+          className="w-full h-full object-cover grayscale opacity-90 group-hover:scale-105 transition-transform duration-[2s] ease-out"
+          onError={(e) => {
+            e.target.src = 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+          }}
+        />
+        {/* Hard Overlap Element */}
+        <div className="absolute bottom-0 left-0 bg-background border-t border-r border-primary p-4 md:p-6 z-20">
+          <span className="font-ui-label text-ui-label uppercase tracking-widest text-primary">FLEET / 01</span>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

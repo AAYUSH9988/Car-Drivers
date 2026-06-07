@@ -4,64 +4,113 @@
 
 @layer base {
   :root {
-    --background: 220 20% 6%;
-    --foreground: 220 13% 95%;
-    --card: 226 26% 13%;
-    --card-foreground: 220 13% 95%;
-    --primary: 43 78% 61%;
-    --primary-foreground: 220 20% 6%;
-    --secondary: 231 100% 65%;
-    --secondary-foreground: 220 13% 95%;
-    --muted: 222 27% 18%;
-    --muted-foreground: 220 13% 60%;
-    --border: 222 27% 18%;
-    --ring: 43 78% 61%;
-    --radius: 0.75rem;
+    /* Modern Editorial Design System */
+    --background: #fbf9f9; /* Paper */
+    --foreground: #1b1c1c; /* Ink (on-background) */
+    --surface: #fbf9f9;
+    --on-surface: #1b1c1c;
+    --primary: #000000;
+    --on-primary: #ffffff;
+    --border: #c4c7c7;
+    --ring: #000000;
+    --radius: 0px;
+
+    /* Custom scrollbar for editorial feel */
+    --scrollbar-thumb: #e3e2e2;
+    --scrollbar-track: #fbf9f9;
   }
 
   html {
-    @apply scroll-smooth;
+    scroll-behavior: smooth;
   }
 
   body {
-    background-color: #0A0B14;
-    color: #F1F5F9;
-    font-family: 'Inter', system-ui, sans-serif;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: 'Hanken Grotesk', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
 
+  /* Typography hierarchy */
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Bodoni Moda', serif;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--foreground);
   }
 
-  * {
-    border-color: #252840;
+  h1 { font-size: clamp(2.5rem, 8vw, 7.5rem); }
+  h2 { font-size: clamp(1.8rem, 5vw, 5rem); }
+  h3 { font-size: clamp(1.3rem, 3vw, 3rem); }
+  h4 { font-size: clamp(1rem, 2vw, 2rem); }
+
+  /* Selection color */
+  ::selection {
+    background-color: #3d0506;
+    color: #c26b65;
   }
 }
 
 @layer components {
+  /* Primary Button - Solid Ink */
   .btn-primary {
-    @apply px-6 py-3 bg-gradient-gold text-bg-base font-semibold rounded-xl
-      hover:shadow-glow-gold hover:scale-[1.02] active:scale-[0.98]
-      transition-all duration-200 font-heading;
+    @apply px-6 py-3 bg-primary text-on-primary font-ui-button text-ui-button uppercase tracking-widest;
+    @apply hover:bg-on-surface transition-colors duration-300;
+    @apply active:scale-[0.99];
   }
 
+  /* Secondary Button - Paper with 1px Ink border */
   .btn-secondary {
-    @apply px-6 py-3 border border-electric text-electric font-semibold rounded-xl
-      hover:bg-electric/10 active:scale-[0.98]
-      transition-all duration-200;
+    @apply px-6 py-3 bg-surface border border-primary text-primary font-ui-button text-ui-button uppercase tracking-widest;
+    @apply hover:bg-primary hover:text-on-primary transition-colors duration-300;
   }
 
-  .card {
-    @apply bg-bg-surface border border-border rounded-2xl
-      hover:border-gold/30 hover:shadow-card transition-all duration-300;
+  /* Cards - top-border only, no background or shadows */
+  .card-editorial {
+    @apply border-t border-primary pt-6 pb-10;
   }
 
-  .input-dark {
-    @apply w-full bg-bg-elevated border border-border text-text-primary
-      placeholder:text-text-muted rounded-xl px-4 py-3
-      focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/20
-      transition-colors duration-200;
+  /* Input - bottom border only */
+  .input-editorial {
+    @apply w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0;
+    @apply font-body-lg text-body-lg text-primary placeholder-outline py-4 px-0 transition-colors;
+    @apply rounded-none outline-none;
   }
+
+  /* UI Label */
+  .label-editorial {
+    @apply font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant mb-2 block;
+  }
+
+  /* Heading Display */
+  .heading-display {
+    @apply font-display-xl text-display-xl text-primary leading-90 tracking-tighter;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #c4c7c7;
+}
+
+/* Utility: softer images */
+.grayscale-editorial {
+  filter: grayscale(0.7) contrast(1.1);
+}
+
+/* No webkit tap highlight */
+* {
+  -webkit-tap-highlight-color: transparent;
 }

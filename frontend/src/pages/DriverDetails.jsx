@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import { FaCalendarAlt, FaCar, FaCheck, FaClock, FaLanguage, FaMapMarkerAlt, FaMoneyBillWave, FaStar, FaTimes } from 'react-icons/fa';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 import { endpoints } from '../services/api.js';
 import { useAuth } from '../hooks/useAuth.js';
 import driverService from '../services/driverService.js';
@@ -12,12 +12,11 @@ const DriverDetails = () => {
   const { user } = useAuth();
   const location = useLocation();
 
-  // Driver data state
   const [driver, setDriver] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Booking modal state
+  // Booking modal
   const [bookingModal, setBookingModal] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingData, setBookingData] = useState({
@@ -30,6 +29,7 @@ const DriverDetails = () => {
 
   // Fetch driver
   useEffect(() => {
+    let mounted = true;
     const fetchDriver = async () => {
       try {
         setLoading(true);
@@ -37,23 +37,26 @@ const DriverDetails = () => {
         if (!id) throw new Error('Driver ID not found');
         const data = await driverService.getDriverById(id);
         if (!data) throw new Error('Driver not found');
-        setDriver(data);
+        if (mounted) setDriver(data);
       } catch (err) {
         const msg = err.message || 'Failed to load driver details';
-        setError(msg);
-        toast.error(msg);
+        if (mounted) {
+          setError(msg);
+          toast.error(msg);
+        }
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
     fetchDriver();
+    return () => { mounted = false; };
   }, [id]);
 
-  // Book via API
+  // Booking submit
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
     if (!user) {
-      toast.error('Please login to book a driver');
+      toast.error('Please login to book a pilot');
       navigate('/login', { state: { from: location.pathname } });
       return;
     }
@@ -98,7 +101,6 @@ const DriverDetails = () => {
     }
   };
 
-  // Loading
   if (loading) return <LoadingState />;
   if (error && !driver) return <ErrorState error={error} onBack={() => navigate(-1)} />;
   if (!driver) return <NotFoundState onBack={() => navigate('/pilots')} />;
@@ -106,186 +108,218 @@ const DriverDetails = () => {
   const totalPrice = (driver.hourlyRate * bookingData.duration).toFixed(2);
 
   return (
-    <div className="min-h-screen bg-bg-base py-12 px-4">
-      <div className="max-w-5xl mx-auto">
-        {/* Header Card */}
-        <div className="bg-bg-surface border border-border rounded-2xl overflow-hidden">
-          <div className="grid md:grid-cols-3 gap-6 p-6">
+    <div className="w-full bg-surface min-h-screen">
+      {/* ── Hero / Header ── */}
+      <section className="pt-24 md:pt-section-gap pb-16 px-gutter md:px-margin-edge border-b border-outline-variant">
+        <div className="max-w-[1440px] mx-auto">
+          <Link
+            to="/pilots"
+            className="inline-flex items-center font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors mb-6"
+          >
+            <span className="material-symbols-outlined text-[16px] mr-2">arrow_back</span>
+            Back to Fleet
+          </Link>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
             {/* Photo */}
-            <div className="md:col-span-1">
-              <img
-                src={driver.profilePhoto || '/src/assets/images/pilots/pilot1.jpg'}
-                alt={driver.name}
-                className="w-full h-80 object-cover rounded-xl"
-              />
+            <div className="lg:col-span-5">
+              <div className="relative aspect-[3/4] bg-surface-container-high overflow-hidden border border-primary">
+                <img
+                  src={driver.profilePhoto || '/src/assets/images/pilots/pilot1.jpg'}
+                  alt={driver.name}
+                  className="w-full h-full object-cover grayscale opacity-80"
+                />
+                {driver.isAvailable && (
+                  <div className="absolute bottom-0 left-0 bg-background border-t border-r border-primary px-3 py-2">
+                    <span className="font-ui-label text-ui-label uppercase tracking-widest text-primary">
+                      Available
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Info */}
-            <div className="md:col-span-2 flex flex-col justify-between">
-              <div className="space-y-4">
-                <div>
-                  <h1 className="font-heading text-3xl font-bold text-text-primary">{driver.name}</h1>
-                  <div className="flex items-center gap-2 mt-2">
-                    <div className="flex text-gold">
-                      {[...Array(5)].map((_, i) => (
-                        <FaStar key={i} className={i < Math.floor(driver.rating || 0) ? '' : 'text-text-muted/30'} />
-                      ))}
+            <div className="lg:col-span-6 lg:col-start-7 flex flex-col justify-between">
+              <div>
+                <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-4">
+                  Pilot Profile
+                </span>
+                <h1 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-6">
+                  {driver.name}
+                </h1>
+
+                {/* Rating */}
+                <div className="flex items-center gap-4 mb-8">
+                  <span className="font-display-xl text-[48px] text-primary leading-none">
+                    {driver.rating?.toFixed(1) || '4.5'}
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-1 mb-1">
+                      {renderStars(driver.rating || 0)}
                     </div>
-                    <span className="text-text-secondary text-sm">
-                      {driver.rating || 'N/A'} ({driver.totalRatings || 0} ratings)
+                    <p className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant">
+                      {driver.totalRatings || 0} Reviews
+                    </p>
+                  </div>
+                </div>
+
+                {/* Details */}
+                <div className="space-y-4 border-t border-primary pt-6 mb-8">
+                  <DetailRow label="Experience" value={`${driver.experience || 0} years`} />
+                  <DetailRow label="Hourly Rate" value={`$${driver.hourlyRate || 0}`} />
+                  <DetailRow label="Vehicle Types" value={driver.vehicleTypes?.join(' / ') || 'Sedan'} />
+                  <DetailRow label="Languages" value={driver.languages?.join(' / ') || 'English'} />
+                  {driver.certifications?.length > 0 && (
+                    <DetailRow label="Certifications" value={driver.certifications.join(', ')} />
+                  )}
+                </div>
+              </div>
+
+              {/* Book CTA */}
+              <div className="border-t border-outline-variant pt-6">
+                <div className="flex items-end justify-between mb-6">
+                  <div>
+                    <span className="font-display-xl text-[56px] text-primary leading-none">
+                      ${driver.hourlyRate}
+                    </span>
+                    <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant ml-2">
+                      /hr
                     </span>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <DetailItem icon={<FaCar />} label="Experience" value={`${driver.experience || 0} years`} />
-                  <DetailItem icon={<FaMoneyBillWave />} label="Rate" value={`₹${driver.hourlyRate || 0}/hr`} />
-                </div>
-
-                {driver.vehicleTypes?.length > 0 && (
-                  <TagGroup label="Vehicle Types" items={driver.vehicleTypes} color="bg-electric/10 text-electric" />
-                )}
-
-                {driver.languages?.length > 0 && (
-                  <TagGroup label="Languages" items={driver.languages} color="bg-gold/10 text-gold" />
-                )}
-
-                {driver.certifications?.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {driver.certifications.map((cert, i) => (
-                      <span key={i} className="inline-flex items-center gap-1 bg-emerald/10 text-emerald px-2.5 py-1 rounded-lg text-xs">
-                        <FaCheck className="text-[10px]" /> {cert}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                <div className="flex items-center gap-2">
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${
+                <button
+                  onClick={() => driver.isAvailable && setBookingModal(true)}
+                  disabled={!driver.isAvailable}
+                  className={`w-full py-4 font-ui-button text-ui-button uppercase tracking-[0.15em] transition-all duration-300 ${
                     driver.isAvailable
-                      ? 'bg-emerald/10 text-emerald'
-                      : 'bg-rose/10 text-rose'
-                  }`}>
-                    <span className={`w-2 h-2 rounded-full ${driver.isAvailable ? 'bg-emerald animate-pulse' : 'bg-rose'}`} />
-                    {driver.isAvailable ? 'Available Now' : 'Not Available'}
+                      ? 'bg-primary text-on-primary hover:bg-tertiary-container'
+                      : 'bg-surface-container-high text-on-surface-variant cursor-not-allowed'
+                  }`}
+                >
+                  {driver.isAvailable ? 'Book This Pilot' : 'Currently Unavailable'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Booking Modal ── */}
+      {bookingModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-background border border-primary w-full max-w-lg max-h-[85vh] overflow-y-auto p-6 md:p-8"
+          >
+            <div className="flex justify-between items-center mb-8 border-b border-outline-variant pb-4">
+              <div>
+                <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-2">
+                  Reserve
+                </span>
+                <h2 className="font-headline-lg text-headline-lg-mobile text-primary">
+                  Book {driver.name}
+                </h2>
+              </div>
+              <button
+                onClick={() => setBookingModal(false)}
+                className="p-2 text-on-surface-variant hover:text-primary transition-colors"
+                aria-label="Close modal"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleBookingSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <BookingField
+                  label="Pickup Date"
+                  type="date"
+                  value={bookingData.selectedDate}
+                  onChange={v => setBookingData(p => ({ ...p, selectedDate: v }))}
+                />
+                <BookingField
+                  label="Pickup Time"
+                  type="time"
+                  value={bookingData.selectedTime}
+                  onChange={v => setBookingData(p => ({ ...p, selectedTime: v }))}
+                />
+              </div>
+
+              <div>
+                <label className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-2">
+                  Duration (hours)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="24"
+                  value={bookingData.duration}
+                  onChange={e => setBookingData(p => ({ ...p, duration: parseInt(e.target.value) || 1 }))}
+                  className="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 py-2 font-body-md text-body-md text-primary outline-none"
+                />
+              </div>
+
+              <BookingField
+                label="Pickup Location"
+                type="text"
+                placeholder="Enter pickup address"
+                value={bookingData.pickupLocation}
+                onChange={v => setBookingData(p => ({ ...p, pickupLocation: v }))}
+              />
+              <BookingField
+                label="Drop-off Location"
+                type="text"
+                placeholder="Optional"
+                value={bookingData.dropoffLocation}
+                onChange={v => setBookingData(p => ({ ...p, dropoffLocation: v }))}
+              />
+
+              {/* Total */}
+              <div className="border-t border-outline-variant pt-6">
+                <div className="flex items-center justify-between">
+                  <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant">
+                    Total Amount
+                  </span>
+                  <span className="font-display-xl text-[40px] text-primary leading-none">
+                    ${totalPrice}
                   </span>
                 </div>
               </div>
 
               <button
-                onClick={() => driver.isAvailable && setBookingModal(true)}
-                disabled={!driver.isAvailable}
-                className={`w-full mt-6 py-3.5 rounded-xl font-semibold text-lg transition-all ${
-                  driver.isAvailable
-                    ? 'bg-gradient-gold text-bg-base hover:shadow-glow-gold hover:scale-[1.01] active:scale-[0.99]'
-                    : 'bg-bg-elevated text-text-muted cursor-not-allowed'
-                }`}
+                type="submit"
+                disabled={bookingLoading}
+                className="w-full py-4 bg-primary text-on-primary font-ui-button text-ui-button uppercase tracking-[0.15em] hover:bg-tertiary-container transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {driver.isAvailable ? 'Book Now' : 'Not Available'}
+                {bookingLoading ? 'Confirming...' : 'Confirm Booking'}
               </button>
-            </div>
-          </div>
+            </form>
+          </motion.div>
         </div>
-
-        {/* Booking Modal */}
-        {bookingModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-bg-surface border border-border rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto p-6 shadow-card">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="font-heading text-xl font-bold text-text-primary">Book {driver.name}</h2>
-                <button onClick={() => setBookingModal(false)} className="p-2 text-text-muted hover:text-text-primary transition-colors">
-                  <FaTimes className="w-5 h-5" />
-                </button>
-              </div>
-
-              <form onSubmit={handleBookingSubmit} className="space-y-5">
-                <BookingInput
-                  label="Pickup Date"
-                  icon={<FaCalendarAlt />}
-                  type="date"
-                  value={bookingData.selectedDate}
-                  onChange={v => setBookingData(prev => ({ ...prev, selectedDate: v }))}
-                />
-                <BookingInput
-                  label="Pickup Time"
-                  icon={<FaClock />}
-                  type="time"
-                  value={bookingData.selectedTime}
-                  onChange={v => setBookingData(prev => ({ ...prev, selectedTime: v }))}
-                />
-                <div>
-                  <label className="block text-sm text-text-secondary mb-1.5">Duration (hours)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="24"
-                    value={bookingData.duration}
-                    onChange={e => setBookingData(prev => ({ ...prev, duration: parseInt(e.target.value) || 1 }))}
-                    className="w-full bg-bg-elevated border border-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
-                  />
-                </div>
-                <BookingInput
-                  label="Pickup Location"
-                  icon={<FaMapMarkerAlt />}
-                  type="text"
-                  placeholder="Enter pickup location"
-                  value={bookingData.pickupLocation}
-                  onChange={v => setBookingData(prev => ({ ...prev, pickupLocation: v }))}
-                />
-                <BookingInput
-                  label="Dropoff Location"
-                  icon={<FaMapMarkerAlt />}
-                  type="text"
-                  placeholder="Optional"
-                  value={bookingData.dropoffLocation}
-                  onChange={v => setBookingData(prev => ({ ...prev, dropoffLocation: v }))}
-                />
-
-                <div className="bg-bg-elevated border border-border rounded-xl p-4">
-                  <p className="text-sm text-text-secondary">Total Amount</p>
-                  <p className="text-2xl font-bold text-gold">₹{totalPrice}</p>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={bookingLoading}
-                  className="w-full py-3.5 bg-gradient-gold text-bg-base font-semibold rounded-xl
-                    hover:shadow-glow-gold hover:scale-[1.01] active:scale-[0.99]
-                    transition-all duration-200 disabled:opacity-60"
-                >
-                  {bookingLoading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Spinner /> Booking...
-                    </span>
-                  ) : (
-                    'Confirm Booking'
-                  )}
-                </button>
-              </form>
-            </div>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 };
 
-// Subcomponents
+/* ─── Subcomponents ─── */
+
 const LoadingState = () => (
-  <div className="min-h-screen bg-bg-base flex items-center justify-center">
-    <div className="text-center space-y-4">
-      <div className="w-12 h-12 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto" />
-      <p className="text-text-secondary">Loading driver details...</p>
-    </div>
+  <div className="min-h-screen bg-surface flex items-center justify-center">
+    <div className="w-px h-12 bg-primary animate-pulse" />
   </div>
 );
 
 const ErrorState = ({ error, onBack }) => (
-  <div className="min-h-screen bg-bg-base flex items-center justify-center px-4">
-    <div className="bg-rose/10 border border-rose/20 rounded-2xl p-8 text-center max-w-md">
-      <h3 className="font-heading text-lg font-semibold text-rose mb-2">Error Loading Driver</h3>
-      <p className="text-rose/80 mb-6">{error}</p>
-      <button onClick={onBack} className="px-6 py-2 bg-rose/20 text-rose rounded-xl hover:bg-rose/30 transition-colors">
+  <div className="min-h-screen bg-surface flex items-center justify-center px-4">
+    <div className="border border-error/30 bg-error-container/20 p-8 text-center max-w-md">
+      <p className="font-ui-label text-ui-label uppercase tracking-widest text-error mb-4">Error</p>
+      <p className="font-body-lg text-body-lg text-primary mb-6">{error}</p>
+      <button
+        onClick={onBack}
+        className="bg-primary text-on-primary font-ui-button text-ui-button uppercase px-8 py-4 tracking-widest hover:bg-tertiary-container transition-colors"
+      >
         Go Back
       </button>
     </div>
@@ -293,61 +327,56 @@ const ErrorState = ({ error, onBack }) => (
 );
 
 const NotFoundState = ({ onBack }) => (
-  <div className="min-h-screen bg-bg-base flex items-center justify-center px-4">
+  <div className="min-h-screen bg-surface flex items-center justify-center px-4">
     <div className="text-center">
-      <p className="text-text-secondary mb-4">Driver not found</p>
-      <button onClick={onBack} className="px-6 py-2 bg-gradient-gold text-bg-base rounded-xl font-medium">
-        Back to Drivers
+      <p className="font-display-lg text-display-lg text-primary mb-4">Not Found</p>
+      <p className="font-body-lg text-body-lg text-on-surface-variant mb-8">This pilot could not be located.</p>
+      <button
+        onClick={onBack}
+        className="bg-primary text-on-primary font-ui-button text-ui-button uppercase px-8 py-4 tracking-widest hover:bg-tertiary-container transition-colors"
+      >
+        Back to Fleet
       </button>
     </div>
   </div>
 );
 
-const DetailItem = ({ icon, label, value }) => (
-  <div className="flex items-center gap-3 bg-bg-elevated rounded-xl px-4 py-3">
-    <span className="text-gold">{icon}</span>
-    <div>
-      <p className="text-xs text-text-secondary">{label}</p>
-      <p className="text-sm font-semibold text-text-primary">{value}</p>
-    </div>
+const renderStars = (rating) => {
+  return Array.from({ length: 5 }, (_, i) => (
+    <span
+      key={i}
+      className={`material-symbols-outlined text-[16px] ${
+        i < Math.floor(rating) ? 'text-primary' : 'text-outline-variant'
+      }`}
+    >
+      star
+    </span>
+  ));
+};
+
+const DetailRow = ({ label, value }) => (
+  <div className="flex justify-between items-baseline border-b border-outline-variant/30 pb-2">
+    <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant">
+      {label}
+    </span>
+    <span className="font-body-md text-body-md text-primary text-right">{value}</span>
   </div>
 );
 
-const TagGroup = ({ label, items, color }) => (
+const BookingField = ({ label, type, placeholder, value, onChange }) => (
   <div>
-    <p className="text-sm text-text-secondary mb-1.5">{label}</p>
-    <div className="flex flex-wrap gap-2">
-      {items.map((item, i) => (
-        <span key={i} className={`px-2.5 py-1 rounded-lg text-sm ${color}`}>{item}</span>
-      ))}
-    </div>
+    <label className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-2">
+      {label}
+    </label>
+    <input
+      type={type}
+      placeholder={placeholder}
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      required={type !== 'text' || label === 'Pickup Location'}
+      className="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 py-2 font-body-md text-body-md text-primary placeholder-outline-variant outline-none transition-colors"
+    />
   </div>
-);
-
-const BookingInput = ({ label, icon, type, value, onChange, placeholder }) => (
-  <div>
-    <label className="block text-sm text-text-secondary mb-1.5">{label}</label>
-    <div className="relative">
-      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">{icon}</span>
-      <input
-        type={type}
-        placeholder={placeholder}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        required
-        className="w-full bg-bg-elevated border border-border rounded-xl pl-12 pr-4 py-3
-          text-text-primary placeholder:text-text-muted
-          focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors"
-      />
-    </div>
-  </div>
-);
-
-const Spinner = () => (
-  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-  </svg>
 );
 
 export default DriverDetails;

@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
-import { FaBars, FaTimes, FaUser } from 'react-icons/fa';
+import { FaBars, FaTimes } from 'react-icons/fa';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import logo from '../../assets/images/logo/GoPilot-logo.png';
 
 const EnhancedNavbar = () => {
   const { user, logout } = useAuth();
-  const [isScrolled, setIsScrolled]       = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setMobileMenu] = useState(false);
   const location = useLocation();
 
@@ -30,45 +29,43 @@ const EnhancedNavbar = () => {
   const isActive = (path) => location.pathname === path;
 
   const navBg = isHome && !isScrolled
-    ? 'bg-transparent'
-    : 'bg-bg-base/95 backdrop-blur-md border-b border-border shadow-lg';
+    ? 'bg-background border-b border-outline-variant'
+    : 'bg-background/95 border-b border-outline-variant backdrop-blur-sm';
 
   return (
-    <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${navBg}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-
-          {/* Logo */}
-          <Link to="/" className="flex-shrink-0 flex items-center gap-2">
-            <img src={logo} alt="GoPilot" className="h-9 w-auto" />
-            <span className="font-heading font-bold text-lg text-text-primary">
-              Go<span className="text-gold">Pilot</span>
-            </span>
+    <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${navBg}`}>
+      <div className="max-w-[1440px] mx-auto px-gutter md:px-margin-edge">
+        <div className="flex justify-between items-center h-16 md:h-20">
+          {/* Brand Logo */}
+          <Link
+            to="/"
+            className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary tracking-tighter"
+          >
+            GOPILOT
           </Link>
 
-          {/* Desktop nav links */}
-          <div className="hidden md:flex items-center gap-1">
-            <NavLink to="/"        active={isActive('/')}>Home</NavLink>
-            <NavLink to="/pilots"  active={isActive('/pilots')}>Find Pilots</NavLink>
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex gap-8 items-center">
+            <NavLink to="/" active={isActive('/')}>Home</NavLink>
+            <NavLink to="/pilots" active={isActive('/pilots')}>Fleet</NavLink>
             <NavLink to="/services" active={isActive('/services')}>Services</NavLink>
-            <NavLink to="/about"   active={isActive('/about')}>About</NavLink>
+            <NavLink to="/about" active={isActive('/about')}>About</NavLink>
             <NavLink to="/contact" active={isActive('/contact')}>Contact</NavLink>
-          </div>
+          </nav>
 
-          {/* Desktop actions */}
+          {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <>
                 <Link
                   to="/dashboard"
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-bg-surface transition-colors"
+                  className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors"
                 >
-                  <FaUser className="text-gold text-xs" />
-                  <span>{user.name}</span>
+                  {user.name}
                 </Link>
                 <button
                   onClick={logout}
-                  className="px-4 py-2 rounded-lg text-sm font-semibold border border-border text-text-secondary hover:border-rose hover:text-rose transition-colors"
+                  className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant hover:text-tertiary-container transition-colors"
                 >
                   Sign Out
                 </button>
@@ -76,25 +73,25 @@ const EnhancedNavbar = () => {
             ) : (
               <>
                 <Link
-                  to="/register"
-                  className="px-3 py-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
+                  to="/login"
+                  className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors"
                 >
-                  Register
+                  Login
                 </Link>
                 <Link
-                  to="/login"
-                  className="px-5 py-2 rounded-xl text-sm font-semibold bg-gradient-gold text-bg-base hover:shadow-glow-gold hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                  to="/register"
+                  className="bg-primary text-on-primary font-ui-button text-ui-button uppercase px-6 py-3 hover:bg-on-surface transition-colors duration-300"
                 >
-                  Sign In
+                  Book Now
                 </Link>
               </>
             )}
           </div>
 
-          {/* Mobile menu button */}
+          {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenu(!isMobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-surface transition-colors"
+            className="md:hidden p-2 text-primary"
             aria-label="Toggle menu"
             aria-expanded={isMobileMenuOpen}
           >
@@ -103,46 +100,36 @@ const EnhancedNavbar = () => {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-bg-surface border-t border-border animate-fade-in">
-          <div className="px-4 pt-3 pb-4 space-y-1">
-            <MobileNavLink to="/"         active={isActive('/')}>Home</MobileNavLink>
-            <MobileNavLink to="/pilots"   active={isActive('/pilots')}>Find Pilots</MobileNavLink>
+        <div className="md:hidden bg-surface border-t border-outline-variant">
+          <div className="px-gutter py-6 space-y-4">
+            <MobileNavLink to="/" active={isActive('/')}>Home</MobileNavLink>
+            <MobileNavLink to="/pilots" active={isActive('/pilots')}>Fleet</MobileNavLink>
             <MobileNavLink to="/services" active={isActive('/services')}>Services</MobileNavLink>
-            <MobileNavLink to="/about"    active={isActive('/about')}>About</MobileNavLink>
-            <MobileNavLink to="/contact"  active={isActive('/contact')}>Contact</MobileNavLink>
+            <MobileNavLink to="/about" active={isActive('/about')}>About</MobileNavLink>
+            <MobileNavLink to="/contact" active={isActive('/contact')}>Contact</MobileNavLink>
 
-            <div className="pt-4 border-t border-border space-y-2">
+            <div className="pt-4 border-t border-outline-variant space-y-3">
               {user ? (
                 <>
-                  <Link
-                    to="/dashboard"
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
-                  >
-                    <FaUser className="text-gold text-xs" />
-                    <span>{user.name}</span>
+                  <Link to="/dashboard" className="block font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant">
+                    {user.name}
                   </Link>
-                  <button
-                    onClick={logout}
-                    className="w-full text-left px-3 py-2 rounded-lg text-rose hover:bg-rose/10 transition-colors"
-                  >
+                  <button onClick={logout} className="block font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant">
                     Sign Out
                   </button>
                 </>
               ) : (
                 <>
-                  <Link
-                    to="/register"
-                    className="block px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
-                  >
-                    Register
+                  <Link to="/login" className="block font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant">
+                    Login
                   </Link>
                   <Link
-                    to="/login"
-                    className="block px-3 py-2 rounded-xl text-center font-semibold bg-gradient-gold text-bg-base"
+                    to="/register"
+                    className="inline-block bg-primary text-on-primary font-ui-button text-ui-button uppercase px-6 py-3 Hotel"
                   >
-                    Sign In
+                    Book Now
                   </Link>
                 </>
               )}
@@ -150,31 +137,28 @@ const EnhancedNavbar = () => {
           </div>
         </div>
       )}
-    </nav>
+    </header>
   );
 };
 
 const NavLink = ({ to, children, active }) => (
   <Link
     to={to}
-    className={`relative px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+    className={`font-ui-label text-ui-label uppercase tracking-widest transition-colors duration-300 ${
       active
-        ? 'text-gold'
-        : 'text-text-secondary hover:text-text-primary hover:bg-bg-surface'
+        ? 'text-primary'
+        : 'text-on-surface-variant hover:text-primary'
     }`}
   >
     {children}
-    {active && <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-gold rounded-full" />}
   </Link>
 );
 
 const MobileNavLink = ({ to, children, active }) => (
   <Link
     to={to}
-    className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-      active
-        ? 'bg-gold/10 text-gold'
-        : 'text-text-secondary hover:text-text-primary hover:bg-bg-elevated'
+    className={`block font-ui-label text-ui-label uppercase tracking-widest ${
+      active ? 'text-primary' : 'text-on-surface-variant'
     }`}
   >
     {children}

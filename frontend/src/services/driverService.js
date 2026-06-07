@@ -105,6 +105,35 @@ const mockPhotos = [pilot1Photo, pilot2Photo, pilot3Photo, pilot4Photo, pilot5Ph
 const getRandomPhoto = () => mockPhotos[Math.floor(Math.random() * mockPhotos.length)];
 
 const driverService = {
+  // ✅ GET AVAILABLE DRIVERS
+  getAvailableDrivers: async () => {
+  getAvailableDrivers: async () => {
+    try {
+      console.log('📥 Fetching available drivers...');
+      const response = await api.get('/drivers/available', {
+        timeout: 10000
+      });
+
+      if (!response.data?.data) {
+        console.warn('⚠️ No available drivers in response, using mock data');
+        return mockDrivers.filter(d => d.isAvailable);
+      }
+
+      const drivers = response.data.data.map(driver => ({
+        ...driver,
+        profilePhoto: driver.documents?.profilePhoto || driver.profilePhoto || getRandomPhoto(),
+        name: driver.user?.name || driver.name || 'Unknown Driver'
+      }));
+
+      console.log(`✅ Fetched ${drivers.length} available drivers`);
+      return drivers;
+    } catch (error) {
+      console.error('❌ Error fetching available drivers:', error.message);
+      console.log('📦 Using mock data as fallback');
+      return mockDrivers.filter(d => d.isAvailable);
+    }
+  },
+
   // ✅ GET ALL DRIVERS
   getAllDrivers: async (filters = {}) => {
     try {
@@ -257,7 +286,6 @@ const driverService = {
       const errorMessage = error.response?.data?.message || error.message || 'Failed to create booking';
       throw new Error(errorMessage);
     }
-  }
 };
 
 export default driverService;

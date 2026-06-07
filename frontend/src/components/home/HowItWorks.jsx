@@ -1,29 +1,21 @@
-// frontend/src/components/home/HowItWorks.jsx
-import React from 'react';
-import { FaSearch, FaUserCheck, FaCar, FaStar } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
-const Step = ({ number, icon, title, description, isLast }) => {
+const Step = ({ number, title, description, isLast }) => {
   return (
-    <div className="flex items-start">
-      <div className="relative">
-        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-white font-bold text-lg">
-          {number}
-        </div>
-        
-        {!isLast && (
-          <div className="absolute top-12 left-1/2 w-0.5 h-full -ml-0.5 bg-primary/20"></div>
-        )}
+    <div className="flex items-start relative">
+      {/* Vertical divider line */}
+      {!isLast && (
+        <div className="absolute left-[15px] top-8 w-px h-[calc(100%-24px)] bg-outline-variant" />
+      )}
+
+      <div className="flex-shrink-0 w-8 h-8 border border-primary flex items-center justify-center mr-6">
+        <span className="font-ui-label text-ui-label text-primary">{number}</span>
       </div>
-      
-      <div className="ml-6 pb-12">
-        <div className="flex items-center mb-2">
-          <div className="p-2 bg-primary/10 rounded-lg text-primary mr-3">
-            {icon}
-          </div>
-          <h3 className="text-xl font-bold text-gray-900">{title}</h3>
-        </div>
-        <p className="text-gray-600">{description}</p>
+
+      <div className="pb-12">
+        <h3 className="font-headline-lg text-[20px] text-primary mb-2">{title}</h3>
+        <p className="font-body-md text-body-md text-on-surface-variant max-w-md">{description}</p>
       </div>
     </div>
   );
@@ -32,81 +24,96 @@ const Step = ({ number, icon, title, description, isLast }) => {
 const HowItWorks = () => {
   const steps = [
     {
-      number: 1,
-      icon: <FaSearch className="w-5 h-5" />,
-      title: "Search For a Pilot",
-      description: "Enter your location, date, and time to search for available professional drivers in your area."
+      number: '01',
+      title: 'Define Your Route',
+      description: 'Enter pickup and destination locations along with preferred date and time.'
     },
     {
-      number: 2,
-      icon: <FaUserCheck className="w-5 h-5" />,
-      title: "Choose Your Pilot",
-      description: "Browse through profiles, check ratings, reviews, and experience to select the perfect driver for your journey."
+      number: '02',
+      title: 'Select Your Pilot',
+      description: 'Browse curated profiles, ratings, and vehicle details.'
     },
     {
-      number: 3,
-      icon: <FaCar className="w-5 h-5" />,
-      title: "Confirm Your Booking",
-      description: "Complete your booking by providing journey details and making the payment securely through our platform."
+      number: '03',
+      title: 'Confirm & Reserve',
+      description: 'Secure your booking with a streamlined payment process.'
     },
     {
-      number: 4,
-      icon: <FaStar className="w-5 h-5" />,
-      title: "Enjoy Your Ride",
-      description: "Sit back, relax, and enjoy a comfortable ride with your professional pilot. Don't forget to leave a review!"
+      number: '04',
+      title: 'Arrive in Style',
+      description: 'Experience precision logistics with professional chauffeurs.'
     }
   ];
 
   return (
-    <section className="py-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <span className="text-primary font-semibold text-sm uppercase tracking-wider">Simple Process</span>
-          <h2 className="mt-2 text-3xl md:text-4xl font-bold text-gray-900">How It Works</h2>
-          <p className="mt-4 text-xl text-gray-600 max-w-2xl mx-auto">
-            Book your professional driver in just a few simple steps
-          </p>
-        </div>
-        
-        <div className="grid md:grid-cols-2 gap-12">
-          <div className="space-y-0">
+    <section className="w-full pb-section-gap">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16">
+        {/* Left: Steps */}
+        <div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+            className="mb-12"
+          >
+            <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-4">
+              Process
+            </span>
+            <h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary">
+              How It Works
+            </h2>
+          </motion.div>
+
+          <div className="relative">
             {steps.map((step, index) => (
-              <Step 
+              <motion.div
                 key={index}
-                {...step}
-                isLast={index === steps.length - 1}
-              />
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.1 }}
+                viewport={{ once: true }}
+              >
+                <Step
+                  {...step}
+                  isLast={index === steps.length - 1}
+                />
+              </motion.div>
             ))}
           </div>
-          
-          <div className="flex items-center justify-center h-full">
-            <div className="relative w-full h-full max-w-md mx-auto">
-              {/* Decorative elements for better visual appeal */}
-              <div className="absolute -top-6 -right-6 w-32 h-32 bg-primary/10 rounded-full blur-xl"></div>
-              <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-blue-500/10 rounded-full blur-xl"></div>
-              
-              {/* Image container with proper alignment */}
-              <div className="relative rounded-xl overflow-hidden shadow-2xl h-[520px] flex items-center">
-                <img 
-                  src="https://ik.imagekit.io/bxi3adntf/Car-Driver/Photos/Home%20Image.png?updatedAt=1744650669954" 
-                  alt="Booking process" 
-                  className="w-full h-full object-cover object-center"
-                />
-                
-                {/* Overlay with gradient and CTA */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-8">
-                  <h3 className="text-2xl font-bold text-white mb-2">Ready to Book?</h3>
-                  <p className="text-white/80 mb-4">Experience premium transportation with our professional pilots</p>
-                  <Link 
-                    to="/pilots"
-                    className="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-8 rounded-lg transition-colors w-max flex items-center"
-                  >
-                    Book Now
-                  </Link>
-                </div>
-              </div>
+        </div>
+
+        {/* Right: Image + CTA */}
+        <div className="relative">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+            viewport={{ once: true }}
+            className="relative h-full min-h-[500px]"
+          >
+            <img
+              src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+              alt="Luxury chauffeur service"
+              loading="lazy"
+              className="w-full h-full object-cover grayscale opacity-80"
+            />
+            {/* Hard Overlap CTA */}
+            <div className="absolute bottom-0 right-0 bg-background border-t border-l border-primary p-6 md:p-8 max-w-sm">
+              <h3 className="font-headline-lg text-[20px] md:text-[24px] text-primary mb-3">
+                Ready to Book?
+              </h3>
+              <p className="font-body-md text-body-md text-on-surface-variant mb-6">
+                Experience premium transportation with our professional pilots.
+              </p>
+              <Link
+                to="/pilots"
+                className="inline-block bg-primary text-on-primary font-ui-button text-ui-button uppercase px-8 py-3 tracking-widest hover:bg-on-surface transition-colors duration-300"
+              >
+                Book Now
+              </Link>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

@@ -1,213 +1,138 @@
-import { useNavigate } from 'react-router-dom';
-import { FaCar, FaClock, FaMapMarkerAlt, FaShieldAlt, FaStar, FaUsers } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+
+const services = [
+  {
+    id: 1,
+    title: 'Personal Driver',
+    description: 'Dedicated chauffeuring for the discerning individual. Your schedule, executed with absolute discretion.',
+    icon: 'person',
+    features: ['On-demand availability', 'Route optimization', 'Privacy guaranteed'],
+    price: 'From $150/hr',
+    offset: 'md:col-start-2',
+  },
+  {
+    id: 2,
+    title: 'Airport Transfer',
+    description: 'Seamless transitions between ground and air. Timing calculated to the minute.',
+    icon: 'flight_takeoff',
+    features: ['Flight tracking', 'Curbside coordination', 'Luggage handling'],
+    price: 'From $200',
+    offset: 'md:col-start-8 md:mt-32',
+  },
+  {
+    id: 3,
+    title: 'Event Transportation',
+    description: 'Flawless logistics for high-profile gatherings. We manage the movement so you can focus on the moment.',
+    icon: 'event',
+    features: ['Fleet coordination', 'VIP handling', 'On-site management'],
+    price: 'Custom Quote',
+    offset: 'md:col-start-1',
+  },
+  {
+    id: 4,
+    title: 'Hourly Service',
+    description: 'Fluid adaptability. Retain a vehicle and pilot for as long as your itinerary demands.',
+    icon: 'schedule',
+    features: ['Ultimate flexibility', 'Multiple stops', 'Standby readiness'],
+    price: 'From $120/hr',
+    offset: 'md:col-start-8 md:-mt-24',
+  },
+];
+
+const stats = [
+  { value: '500+', label: 'Elite Pilots' },
+  { value: '15+', label: 'Global Cities' },
+  { value: '0.01%', label: 'Acceptance Rate' },
+];
 
 const Services = () => {
-  const navigate = useNavigate();
-
-  const services = [
-    {
-      id: 1,
-      title: "Personal Driver",
-      description: "Professional drivers for your daily commute, shopping trips, or personal errands.",
-      icon: <FaCar className="text-4xl text-gold" />,
-      features: [
-        "Experienced drivers",
-        "Flexible scheduling",
-        "Safe and reliable",
-        "Competitive rates"
-      ],
-      price: "Starting from ₹1,875/hour"
-    },
-    {
-      id: 2,
-      title: "Airport Transfer",
-      description: "Comfortable and punctual airport pickup and drop-off services.",
-      icon: <FaMapMarkerAlt className="text-4xl text-emerald" />,
-      features: [
-        "Flight tracking",
-        "Meet & greet service",
-        "Luggage assistance",
-        "24/7 availability"
-      ],
-      price: "Starting from ₹3,375"
-    },
-    {
-      id: 3,
-      title: "Event Transportation",
-      description: "Special occasion transportation for weddings, parties, and corporate events.",
-      icon: <FaStar className="text-4xl text-electric" />,
-      features: [
-        "Luxury vehicles",
-        "Professional attire",
-        "Event coordination",
-        "Group bookings"
-      ],
-      price: "Starting from ₹4,500/hour"
-    },
-    {
-      id: 4,
-      title: "Hourly Service",
-      description: "Book a driver for multiple stops and extended periods throughout the day.",
-      icon: <FaClock className="text-4xl text-gold" />,
-      features: [
-        "Multiple destinations",
-        "Wait time included",
-        "Flexible itinerary",
-        "Cost-effective"
-      ],
-      price: "Starting from ₹2,625/hour"
-    },
-    {
-      id: 5,
-      title: "Corporate Services",
-      description: "Business transportation solutions for executives and corporate teams.",
-      icon: <FaUsers className="text-4xl text-electric" />,
-      features: [
-        "Executive vehicles",
-        "Corporate accounts",
-        "Bulk bookings",
-        "Priority support"
-      ],
-      price: "Contact for pricing"
-    },
-    {
-      id: 6,
-      title: "Safety First",
-      description: "All our drivers are thoroughly vetted and trained for maximum safety.",
-      icon: <FaShieldAlt className="text-4xl text-emerald" />,
-      features: [
-        "Background checks",
-        "Insurance coverage",
-        "Safety training",
-        "24/7 support"
-      ],
-      price: "Included in all services"
-    }
-  ];
-
-  const stats = [
-    { value: "500+", label: "Verified Drivers", color: "text-electric" },
-    { value: "4.9★", label: "Average Rating", color: "text-gold" },
-    { value: "24/7", label: "Available Support", color: "text-emerald" },
-    { value: "100%", label: "Satisfaction", color: "text-electric" }
-  ];
-
   return (
-    <div className="min-h-screen bg-bg-base">
-      {/* Hero Section */}
-      <section className="relative py-20 bg-bg-surface border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <span className="inline-block px-4 py-1.5 bg-gold/10 text-gold text-sm font-medium rounded-full mb-6">
-            Our Services
-          </span>
-          <h1 className="font-heading text-4xl md:text-5xl font-bold text-text-primary mb-6">
-            Premium Transportation <span className="text-gold">Solutions</span>
-          </h1>
-          <p className="text-text-secondary text-lg max-w-3xl mx-auto">
-            Professional driving services tailored to meet your every transportation need.
-            Safe, reliable, and convenient solutions for all occasions.
-          </p>
-        </div>
-      </section>
-
-      {/* Services Grid */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.map((service) => (
-              <div
-                key={service.id}
-                className="bg-bg-surface border border-border rounded-2xl p-8 hover:border-gold/30 hover:shadow-card transition-all duration-300"
-              >
-                <div className="text-center mb-6">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-bg-elevated mb-4">
-                    {service.icon}
-                  </div>
-                  <h3 className="font-heading text-xl font-bold text-text-primary mb-2">
-                    {service.title}
-                  </h3>
-                  <p className="text-text-secondary text-sm mb-4">
-                    {service.description}
-                  </p>
-                  <div className="text-lg font-semibold text-gold">
-                    {service.price}
-                  </div>
-                </div>
-
-                <div className="space-y-3 mb-6">
-                  {service.features.map((feature, index) => (
-                    <div key={index} className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-gold rounded-full flex-shrink-0" />
-                      <span className="text-text-secondary text-sm">{feature}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => navigate('/pilots')}
-                  className="w-full py-3 bg-gradient-gold text-bg-base font-semibold rounded-xl hover:shadow-glow-gold hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
-                >
-                  Book Now
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="py-16 bg-bg-surface border-y border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl font-bold text-text-primary mb-4">
-              Why Choose Our Service?
-            </h2>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className={`text-3xl font-bold ${stat.color} mb-2`}>{stat.value}</div>
-                <div className="text-text-secondary text-sm">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-bg-surface border border-border rounded-3xl overflow-hidden">
-            <div className="grid md:grid-cols-2">
-              <div className="p-12 flex flex-col justify-center">
-                <h2 className="font-heading text-3xl font-bold text-text-primary mb-4">
-                  Ready to Book Your Driver?
-                </h2>
-                <p className="text-text-secondary mb-8">
-                  Choose from our verified professional drivers and enjoy a safe, comfortable ride.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <button
-                    onClick={() => navigate('/pilots')}
-                    className="px-8 py-3 bg-gradient-gold text-bg-base font-semibold rounded-xl hover:shadow-glow-gold hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
-                  >
-                    Find a Pilot
-                  </button>
-                </div>
-              </div>
-              <div className="relative h-64 md:h-auto bg-bg-elevated">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center p-8">
-                    <div className="w-20 h-20 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <FaCar className="text-gold text-3xl" />
-                    </div>
-                    <p className="text-text-secondary text-sm">Trusted by 10,000+ riders</p>
-                  </div>
-                </div>
-              </div>
+    <div className="w-full bg-background">
+      {/* ── Hero ── */}
+      <section className="pt-24 md:pt-section-gap pb-16 md:pb-32 px-gutter md:px-margin-edge">
+        <div className="max-w-[1440px] mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter relative">
+            <div className="lg:col-span-8 lg:col-start-2">
+              <h1 className="font-display-xl text-[48px] leading-[44px] md:text-display-lg lg:text-display-xl text-primary mb-8 leading-none">
+                The Architecture of Movement.
+              </h1>
+              <p className="font-body-lg text-body-lg text-secondary max-w-2xl">
+                A curated approach to transportation. We blend precision logistics with unparalleled comfort, ensuring every journey is an exhibition of flawless execution.
+              </p>
+            </div>
+            <div className="col-span-12 mt-12 md:mt-16 relative aspect-[21/9] lg:col-span-10 lg:col-start-3">
+              <img
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBma-3Z9T95ry3fBbVaW7MIkSrTjm2ONCvhhWJhlEXD2INJzn1FgCP1D3dEDxA4tbHPL69OkajxN_iSWaDs6nkAOyfceHtOq3JZk-OX7i0t96frAK-fcR6aE4n5pK663S-jzD8-y-DNr9rE1pHOyP0PWS8gXh1jLOi2a7TLZ0xG4exfBPeaVKCw0FXbAvsqX4l9KAMIjTEiR6ONSjTZdIw_ANue9--xJdSO8dKELMFOaotaMFrEVJIF_V7veLpb_iCCsCLDLk_EiE4"
+                alt="Luxury car interior"
+                className="w-full h-full object-cover grayscale opacity-90"
+              />
             </div>
           </div>
         </div>
+      </section>
+
+      {/* ── Services Grid ── */}
+      <section className="mb-section-gap px-gutter md:px-margin-edge">
+        <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-12 gap-gutter gap-y-24 relative">
+          {services.map((service) => (
+            <div
+              key={service.id}
+              className={`col-span-1 md:col-span-5 ${service.offset} border-t border-primary pt-6`}
+            >
+              <span className="material-symbols-outlined text-primary text-3xl mb-4 block">
+                {service.icon}
+              </span>
+              <h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-4">
+                {service.title}
+              </h2>
+              <p className="font-body-md text-body-md text-secondary mb-6">
+                {service.description}
+              </p>
+              <ul className="font-ui-label text-ui-label text-primary mb-8 space-y-2 uppercase tracking-widest">
+                {service.features.map((f, i) => (
+                  <li key={i} className="border-b border-surface-variant pb-1">
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <p className="font-ui-label text-ui-label text-secondary uppercase tracking-widest">
+                {service.price}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Stats ── */}
+      <section className="py-24 md:py-32 px-gutter md:px-margin-edge bg-surface border-t border-b border-outline-variant">
+        <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-16 text-center md:text-left">
+          {stats.map((s, i) => (
+            <div key={i}>
+              <p className="font-display-lg text-display-lg text-primary mb-2">{s.value}</p>
+              <p className="font-ui-label text-ui-label text-secondary uppercase tracking-widest">
+                {s.label}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── CTA ── */}
+      <section className="py-section-gap px-gutter md:px-margin-edge text-center">
+        <h2 className="font-display-lg text-headline-lg-mobile md:text-display-lg text-primary mb-6 max-w-4xl mx-auto">
+          Elevate your transit.
+        </h2>
+        <p className="font-body-lg text-body-lg text-secondary max-w-xl mb-12 mx-auto">
+          Experience the zenith of vehicular choreography. Reserve your GoPilot today.
+        </p>
+        <Link
+          to="/pilots"
+          className="inline-flex items-center justify-center gap-2 bg-primary text-on-primary font-ui-button text-ui-button uppercase px-8 py-4 tracking-widest hover:bg-surface-tint transition-colors duration-300 w-full md:w-auto"
+        >
+          Enlist Your Pilot
+          <span className="material-symbols-outlined text-sm">arrow_forward</span>
+        </Link>
       </section>
     </div>
   );
