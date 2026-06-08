@@ -88,6 +88,7 @@ const TestimonialCarousel = () => {
                     <img
                       src={testimonials[currentIndex].image}
                       alt={testimonials[currentIndex].name}
+                      loading="lazy"
                       className="w-full h-full object-cover grayscale opacity-80"
                     />
                   </div>

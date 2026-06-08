@@ -1,152 +1,225 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import Card from '../../components/common/Card';
-import Table from '../../components/common/Table';
-import Button from '../../components/common/Button';
-import Input from '../../components/common/Input';
-import { useData } from '../../contexts/DataContext';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Search, Star, CheckCircle, XCircle, MoreHorizontal } from 'lucide-react';
+import { driverAPI } from '../../services/api';
+import { toast } from 'sonner';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
+import StatusBadge from '../../components/common/StatusBadge';
+import Pagination from '../../components/common/Pagination';
+import EmptyState from '../../components/common/EmptyState';
+import { TableSkeleton } from '../../components/common/Skeleton';
+
 
 const AllDrivers = () => {
   const navigate = useNavigate();
-  const { drivers, setDrivers } = useData();
+  const [drivers, setDrivers] = useState([]);
+  const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, pages: 1 });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  
-  useEffect(() => {
-    const fetchDrivers = async () => {
-      try {
-        // If we don't have any drivers in context, fetch placeholder data
-        if (drivers.length === 0) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          // Placeholder data
-          setDrivers([
-            {
-              _id: '1',
-              user: { name: 'John Smith', email: 'john@example.com', phone: '555-1234' },
-              experience: 5,
-              licenseNumber: 'DL12345',
-              hourlyRate: 25,
-              rating: 4.7,
-              isAvailable: true,
-              vehicleTypes: ['sedan', 'suv']
-            },
-            {
-              _id: '2',
-              user: { name: 'Sarah Davis', email: 'sarah@example.com', phone: '555-5678' },
-              experience: 3,
-              licenseNumber: 'DL67890',
-              hourlyRate: 22,
-              rating: 4.5,
-              isAvailable: true,
-              vehicleTypes: ['sedan', 'luxury']
-            },
-            {
-              _id: '3',
-              user: { name: 'Mike Johnson', email: 'mike@example.com', phone: '555-9012' },
-              experience: 7,
-              licenseNumber: 'DL54321',
-              hourlyRate: 30,
-              rating: 4.9,
-              isAvailable: false,
-              vehicleTypes: ['suv', 'van']
-            }
-          ]);
-        }
-      } catch (err) {
-        console.error(err);
-        setError('Failed to load drivers');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchDrivers();
-  }, [drivers.length, setDrivers]);
-  
-  const columns = [
-    { key: 'name', title: 'Name', render: (driver) => driver.user.name },
-    { key: 'email', title: 'Email', render: (driver) => driver.user.email },
-    { key: 'phone', title: 'Phone', render: (driver) => driver.user.phone },
-    { key: 'experience', title: 'Experience', render: (driver) => `${driver.experience} years` },
-    { key: 'hourlyRate', title: 'Hourly Rate', render: (driver) => `$${driver.hourlyRate}/hr` },
-    { key: 'rating', title: 'Rating', render: (driver) => (
-      <div className="flex items-center">
-        <span>{driver.rating}</span>
-        <svg className="w-4 h-4 text-yellow-400 ml-1" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.799-2.034c-.784-.57-.38-1.81.588-1.81h3.461a1 1 0 00.95-.69l1.07-3.292z" />
-        </svg>
-      </div>
-    )},
-    { key: 'status', title: 'Status', render: (driver) => (
-      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${driver.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-        {driver.isAvailable ? 'Available' : 'Unavailable'}
-      </span>
-    )},
-    { key: 'actions', title: 'Actions', render: (driver) => (
-      <Link to={`/drivers/${driver._id}`} className="text-blue-600 hover:text-blue-900">
-        View Details
-      </Link>
-    )}
-  ];
-  
-  const filteredDrivers = drivers.filter(driver => {
-    if (!driver.user) return false;
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [actionMenu, setActionMenu] = useState(null);
+  const [confirm, setConfirm] = useState(null);
+
+  const load = useCallback(async (page = 1) => {
+    try {
+      setLoading(true);
+      const res = await driverAPI.getAll({ page, limit: 20, search, status: statusFilter || undefined });
+      setDrivers(res.data.data || []);
+      setPagination(res.data.pagination || { page, limit: 20, total: 0, pages: 1 });
+    } catch {
+      toast.error('Failed to load drivers');
+    } finally {
+      setLoading(false);
+    }
+  }, [search, statusFilter]);
+
+  useEffect(() => { load(1); }, [load]);
+
+  const handleApprove = async (id, name) => {
+    try {
+      await driverAPI.approve(id);
+      toast.success(`${name} approved`);
+      load(pagination.page);
+    } catch {
+      toast.error('Approval failed');
+    }
+  };
+
+  const handleSuspend = async (id, name) => {
+    try {
+      await driverAPI.suspend(id);
+      toast.success(`${name} suspended`);
+      load(pagination.page);
+    } catch {
+      toast.error('Suspension failed');
+    }
+    setConfirm(null);
+  };
+
+  const TableRow = ({ driver }) => {
+    const user = driver.user || {};
+    const name = user.name || '—';
     return (
-      driver.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      driver.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (driver.user.phone && driver.user.phone.includes(searchTerm))
+      <tr
+        onClick={() => navigate(`/drivers/${driver._id}`)}
+        className="border-b border-admin-border hover:bg-admin-hover transition-colors cursor-pointer"
+      >
+        <td className="px-4 py-3.5">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-admin-accent/20 flex items-center justify-center text-xs font-semibold text-admin-accent shrink-0">
+              {name.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <p className="text-sm font-medium text-admin-text-1">{name}</p>
+              <p className="text-xs text-admin-text-3">{user.email || '—'}</p>
+            </div>
+          </div>
+        </td>
+        <td className="px-4 py-3.5 text-sm text-admin-text-2 font-mono">{driver.licenseNumber || '—'}</td>
+        <td className="px-4 py-3.5 text-sm text-admin-text-2">{driver.experience || 0} yrs</td>
+        <td className="px-4 py-3.5">
+          <div className="flex items-center gap-1 text-sm text-admin-text-1">
+            <Star size={12} className="text-amber-400 fill-amber-400" />
+            {driver.rating?.toFixed(1) || '0.0'}
+          </div>
+        </td>
+        <td className="px-4 py-3.5 text-sm font-mono text-admin-text-1">${driver.hourlyRate || 0}/hr</td>
+        <td className="px-4 py-3.5"><StatusBadge status={driver.status} /></td>
+        <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
+          <div className="relative">
+            <button
+              onClick={() => setActionMenu(actionMenu === driver._id ? null : driver._id)}
+              className="p-1.5 text-admin-text-3 hover:text-admin-text-1 hover:bg-admin-elevated rounded-md transition-colors"
+            >
+              <MoreHorizontal size={16} />
+            </button>
+            {actionMenu === driver._id && (
+              <div className="absolute right-0 top-8 w-40 bg-admin-elevated border border-admin-border rounded-md shadow-xl z-20 animate-fade-in">
+                <button
+                  onClick={() => { navigate(`/drivers/${driver._id}`); setActionMenu(null); }}
+                  className="w-full text-left px-3 py-2 text-sm text-admin-text-1 hover:bg-admin-hover transition-colors"
+                >
+                  View Details
+                </button>
+                {driver.status !== 'active' && (
+                  <button
+                    onClick={() => { handleApprove(driver._id, name); setActionMenu(null); }}
+                    className="w-full text-left px-3 py-2 text-sm text-emerald-400 hover:bg-admin-hover transition-colors flex items-center gap-2"
+                  >
+                    <CheckCircle size={14} /> Approve
+                  </button>
+                )}
+                {driver.status !== 'suspended' && (
+                  <button
+                    onClick={() => { setConfirm({ id: driver._id, name }); setActionMenu(null); }}
+                    className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-admin-hover transition-colors flex items-center gap-2"
+                  >
+                    <XCircle size={14} /> Suspend
+                  </button>
+                )}
+                <button
+                  onClick={() => { navigate(`/drivers/verify/${driver._id}`); setActionMenu(null); }}
+                  className="w-full text-left px-3 py-2 text-sm text-admin-text-2 hover:bg-admin-hover transition-colors border-t border-admin-border"
+                >
+                  Verify Docs
+                </button>
+              </div>
+            )}
+          </div>
+        </td>
+      </tr>
     );
-  });
-  
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-  
-  if (error) {
-    return (
-      <div className="text-center py-10 text-red-600">{error}</div>
-    );
-  }
-  
+  };
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Drivers</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Manage all registered drivers
-          </p>
+          <h1 className="text-xl font-semibold text-admin-text-1">Drivers</h1>
+          <p className="text-sm text-admin-text-3 mt-0.5">{pagination.total} total drivers</p>
         </div>
-        <Button
+        <button
           onClick={() => navigate('/drivers/add')}
-          className="bg-blue-600 hover:bg-blue-700 text-white"
+          className="flex items-center gap-2 bg-admin-accent hover:bg-admin-accent-dim text-white rounded-md px-4 py-2 text-sm font-medium transition-colors"
         >
-          Add New Driver
-        </Button>
+          <Plus size={16} /> Add Driver
+        </button>
       </div>
-      
-      <Card>
-        <div className="mb-4">
-          <Input
-            type="search"
-            placeholder="Search drivers..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+
+      <div className="bg-admin-surface border border-admin-border rounded-md overflow-hidden">
+        {/* Toolbar */}
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-admin-border">
+          <div className="relative flex-1 max-w-xs">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-text-3" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search drivers…"
+              className="w-full bg-admin-elevated border border-admin-border rounded-md pl-9 pr-3 py-1.5 text-sm text-admin-text-1 placeholder-admin-text-3 outline-none focus:border-admin-border-alt"
+            />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            className="bg-admin-elevated border border-admin-border rounded-md px-3 py-1.5 text-sm text-admin-text-1 outline-none focus:border-admin-border-alt cursor-pointer"
+          >
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="pending">Pending</option>
+            <option value="suspended">Suspended</option>
+            <option value="inactive">Inactive</option>
+          </select>
         </div>
-        
-        <Table 
-          columns={columns} 
-          data={filteredDrivers} 
-          onRowClick={(driver) => navigate(`/drivers/${driver._id}`)}
-        />
-      </Card>
+
+        {/* Table */}
+        <table className="w-full">
+          <thead>
+            <tr className="bg-admin-elevated border-b border-admin-border">
+              {['Driver', 'License', 'Experience', 'Rating', 'Rate', 'Status', ''].map(h => (
+                <th key={h} className="px-4 py-3 text-left text-2xs font-medium text-admin-text-2 uppercase tracking-wider">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <TableSkeleton rows={8} cols={7} />
+            ) : drivers.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="px-4 py-16">
+                  <EmptyState
+                    title="No drivers found"
+                    description={search || statusFilter ? 'Try clearing your filters.' : 'Get started by adding your first driver.'}
+                    action={{ label: 'Add Driver', onClick: () => navigate('/drivers/add') }}
+                  />
+                </td>
+              </tr>
+            ) : (
+              drivers.map(d => <TableRow key={d._id} driver={d} />)
+            )}
+          </tbody>
+        </table>
+
+        {/* Pagination */}
+        {pagination.pages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-admin-border">
+            <span className="text-xs text-admin-text-3">{pagination.total} drivers</span>
+            <Pagination
+              page={pagination.page}
+              totalPages={pagination.pages}
+              onChange={load}
+            />
+          </div>
+        )}
+      </div>
+
+      <ConfirmDialog
+        open={!!confirm}
+        title="Suspend Driver"
+        description={`Are you sure you want to suspend ${confirm?.name}? They will not be able to accept bookings.`}
+        danger
+        onConfirm={() => handleSuspend(confirm?.id, confirm?.name)}
+        onCancel={() => setConfirm(null)}
+      />
     </div>
   );
 };

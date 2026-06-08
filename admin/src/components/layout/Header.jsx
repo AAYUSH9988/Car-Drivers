@@ -1,145 +1,131 @@
 import React, { useContext, useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { Bell, ChevronRight, Menu } from 'lucide-react';
 import { AuthContext } from '../../contexts/AuthContext';
 import { useData } from '../../contexts/DataContext';
+import { SidebarContext } from './Layout';
+import Avatar from '../common/Avatar';
+
+const LABELS = {
+  '/': 'Dashboard',
+  '/drivers': 'Drivers',
+  '/drivers/add': 'Add Driver',
+  '/users': 'Users',
+  '/users/add': 'Add User',
+  '/bookings': 'Bookings',
+  '/reports': 'Reports',
+  '/settings': 'Settings',
+  '/profile': 'Profile',
+};
 
 const Header = () => {
-  const { user, logout } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const { notifications, markNotificationAsRead, markAllNotificationsAsRead } = useData();
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
-  
-  const notificationRef = useRef(null);
-  const profileRef = useRef(null);
-  
-  // Handle clicks outside to close the dropdowns
+  const { sidebarOpen, setSidebarOpen } = useContext(SidebarContext);
+  const [showNotif, setShowNotif] = useState(false);
+  const notifRef = useRef(null);
+  const location = useLocation();
+
+  const unread = notifications.filter(n => !n.read).length;
+
+  // Build breadcrumb segments
+  const segments = location.pathname.split('/').filter(Boolean);
+  const crumbs = segments.map((seg, i) => {
+    const path = '/' + segments.slice(0, i + 1).join('/');
+    const label = LABELS[path] || seg.charAt(0).toUpperCase() + seg.slice(1);
+    return { path, label };
+  });
+
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
-        setShowNotifications(false);
-      }
-      if (profileRef.current && !profileRef.current.contains(event.target)) {
-        setShowProfileMenu(false);
-      }
-    }
-    
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+    const handleClick = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotif(false);
     };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
   }, []);
-  
-  const unreadNotificationsCount = notifications.filter(n => !n.read).length;
-  
+
   return (
-    <header className="bg-white shadow-sm h-16 flex items-center justify-between px-6">
-      <div className="flex items-center">
-        <h1 className="text-xl font-bold text-gray-800">Car Driver Admin</h1>
-      </div>
-      
-      <div className="flex items-center space-x-4">
-        {/* Notifications */}
-        <div className="relative" ref={notificationRef}>
-          <button 
-            className="p-2 text-gray-600 hover:text-gray-900 focus:outline-none"
-            onClick={() => setShowNotifications(!showNotifications)}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
-            {unreadNotificationsCount > 0 && (
-              <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
-                {unreadNotificationsCount}
+    <header className="h-14 bg-admin-bg border-b border-admin-border flex items-center justify-between px-6 sticky top-0 z-40">
+      {/* Left: hamburger + breadcrumb */}
+      <div className="flex items-center gap-3">
+        <button
+          className="md:hidden p-2 text-admin-text-3 hover:text-admin-text-1 hover:bg-admin-elevated rounded-md transition-colors -ml-2"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open menu"
+        >
+          <Menu size={20} />
+        </button>
+
+        <nav className="flex items-center gap-1.5 text-sm">
+          <Link to="/" className="text-admin-text-3 hover:text-admin-text-1 transition-colors">Dashboard</Link>
+          {crumbs.map((c, i) => (
+            <React.Fragment key={c.path}>
+              <ChevronRight size={14} className="text-admin-text-3" />
+              <span className={i === crumbs.length - 1 ? 'text-admin-text-1 font-medium' : 'text-admin-text-3 hover:text-admin-text-1 transition-colors'}>
+                {c.label}
               </span>
+            </React.Fragment>
+          ))}
+        </nav>
+      </div>
+
+      {/* Right actions */}
+      <div className="flex items-center gap-2">
+        {/* Notification bell */}
+        <div className="relative" ref={notifRef}>
+          <button
+            onClick={() => setShowNotif(s => !s)}
+            className="relative p-2 text-admin-text-3 hover:text-admin-text-1 hover:bg-admin-elevated rounded-md transition-colors"
+          >
+            <Bell size={18} />
+            {unread > 0 && (
+              <span className="absolute top-1 right-1 w-2 h-2 bg-admin-accent rounded-full" />
             )}
           </button>
-          
-          {/* Notification dropdown */}
-          {showNotifications && (
-            <div className="origin-top-right absolute right-0 mt-2 w-80 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
-              <div className="py-2">
-                <div className="px-4 py-2 border-b flex justify-between items-center">
-                  <h3 className="text-sm font-medium text-gray-900">Notifications</h3>
-                  {unreadNotificationsCount > 0 && (
-                    <button 
-                      onClick={markAllNotificationsAsRead}
-                      className="text-xs text-blue-600 hover:text-blue-800"
+
+          {showNotif && (
+            <div className="absolute right-0 mt-1 w-80 bg-admin-elevated border border-admin-border rounded-md shadow-xl z-50 animate-slide-in">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-admin-border">
+                <span className="text-sm font-medium text-admin-text-1">Notifications</span>
+                {unread > 0 && (
+                  <button onClick={markAllNotificationsAsRead} className="text-2xs text-admin-accent hover:text-admin-accent-dim transition-colors uppercase tracking-wide">
+                    Mark all read
+                  </button>
+                )}
+              </div>
+              <div className="max-h-72 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <p className="text-sm text-admin-text-3 text-center py-8">No notifications</p>
+                ) : (
+                  notifications.map(n => (
+                    <div
+                      key={n.id}
+                      onClick={() => markNotificationAsRead(n.id)}
+                      className={`px-4 py-3 border-b border-admin-border last:border-0 cursor-pointer hover:bg-admin-hover transition-colors ${!n.read ? 'bg-admin-accent/5' : ''}`}
                     >
-                      Mark all as read
-                    </button>
-                  )}
-                </div>
-                
-                <div className="max-h-72 overflow-y-auto">
-                  {notifications.length === 0 ? (
-                    <div className="px-4 py-3 text-sm text-gray-500 text-center">
-                      No notifications
-                    </div>
-                  ) : (
-                    notifications.map(notification => (
-                      <div 
-                        key={notification.id} 
-                        className={`px-4 py-3 hover:bg-gray-50 cursor-pointer ${notification.read ? '' : 'bg-blue-50'}`}
-                        onClick={() => markNotificationAsRead(notification.id)}
-                      >
-                        <p className="text-sm font-medium text-gray-900">{notification.title}</p>
-                        <p className="text-xs text-gray-500">{notification.message}</p>
-                        <p className="text-xs text-gray-400 mt-1">{notification.time}</p>
+                      <div className="flex items-start gap-2">
+                        {!n.read && <div className="w-1.5 h-1.5 rounded-full bg-admin-accent mt-1.5 shrink-0" />}
+                        <div className={!n.read ? '' : 'ml-3.5'}>
+                          <p className="text-sm font-medium text-admin-text-1">{n.title}</p>
+                          <p className="text-xs text-admin-text-3 mt-0.5">{n.message}</p>
+                          <p className="text-2xs text-admin-text-3 mt-1">{n.time}</p>
+                        </div>
                       </div>
-                    ))
-                  )}
-                </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
         </div>
-        
-        <div className="border-r h-6 border-gray-300"></div>
-        
-        {/* User profile dropdown */}
-        <div className="relative group" ref={profileRef}>
-          <button 
-            className="flex items-center space-x-2 focus:outline-none"
-            onClick={() => setShowProfileMenu(!showProfileMenu)}
-          >
-            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
-              {user?.name ? user.name.charAt(0) : 'A'}
-            </div>
-            <span className="text-sm font-medium text-gray-700 hidden md:block">{user?.name || 'Admin'}</span>
-            <svg className="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-          </button>
-          
-          {/* Profile dropdown menu */}
-          {showProfileMenu && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-              <Link 
-                to="/profile" 
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => setShowProfileMenu(false)}
-              >
-                Your Profile
-              </Link>
-              <Link 
-                to="/settings" 
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => setShowProfileMenu(false)}
-              >
-                Settings
-              </Link>
-              <button 
-                onClick={() => {
-                  logout();
-                  setShowProfileMenu(false);
-                }}
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                Sign out
-              </button>
-            </div>
-          )}
-        </div>
+
+        <div className="w-px h-5 bg-admin-border" />
+
+        {/* Avatar */}
+        <Link to="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <Avatar name={user?.name} size={32} />
+          <span className="text-sm font-medium text-admin-text-2 hidden md:block">{user?.name || 'Admin'}</span>
+        </Link>
       </div>
     </header>
   );

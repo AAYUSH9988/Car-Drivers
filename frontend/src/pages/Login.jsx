@@ -46,6 +46,7 @@ const Login = () => {
           <img
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0mfnmi32c5xegBoyiazoUiv9ZEbR9gSY93vpIFaLISLA8JlKnBjAtO9NOKv04e4pcHBi0gKVHBtUh0Np7IMAlkgO5rATUtKkYTVAvQL1hlfxpCG1Md-ll54Hq1calSH2sSU3dMyT0tN7b1JQIk29WjuLlks8kIQczuxOaxLmc24pL7zl1mVlz82KhiUYQigvCrIgob93cCG8f3uBgUTMOpJkRYkyqUUMTrqTw-sPfZzFCm5v0miIjIh7Kx9aWJLGbKMhvHJXdbEI"
             alt="Luxury vehicle interior"
+            loading="lazy"
             className="w-full h-full object-cover opacity-60 mix-blend-luminosity"
           />
         </div>

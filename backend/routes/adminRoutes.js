@@ -3,6 +3,9 @@ import {
     approveDriver,
     bulkUpdateDrivers,
     bulkUpdateUsers,
+    createDriver,
+    createUser,
+    deleteDriver,
     deleteUser,
     exportData,
     generateReport,
@@ -22,6 +25,7 @@ import {
     suspendDriver,
     updateAdminProfile,
     updateBookingStatus,
+    updateDriver,
     updateSystemSettings,
     updateUser
 } from '../controllers/adminController.js';
@@ -40,6 +44,7 @@ router.get('/system-info', getSystemInfo);
 
 // User Management Routes
 router.get('/users', getAllUsers);
+router.post('/users', createUser);
 router.get('/users/:id', getUser);
 router.get('/users/:id/stats', getUserStats);
 router.put('/users/:id', updateUser);
@@ -53,8 +58,11 @@ router.patch('/bookings/:id/status', updateBookingStatus);
 
 // Driver Management Routes
 router.get('/drivers', getAllDrivers);
+router.post('/drivers', createDriver);
 router.get('/drivers/:id', getDriverDetails);
 router.get('/drivers/:id/stats', getDriverStats);
+router.put('/drivers/:id', updateDriver);
+router.delete('/drivers/:id', deleteDriver);
 router.patch('/drivers/:id/approve', approveDriver);
 router.patch('/drivers/:id/suspend', suspendDriver);
 router.patch('/drivers/bulk-update', bulkUpdateDrivers);

@@ -1,358 +1,214 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Card from '../../components/common/Card';
-import Button from '../../components/common/Button';
-import Input from '../../components/common/Input';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
-import { Bar } from 'react-chartjs-2';
+import { Download, RefreshCw } from 'lucide-react';
+import { reportAPI, dashboardAPI } from '../../services/api';
+import { toast } from 'sonner';
+import BookingChart from '../../components/dashboard/BookingChart';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+const REPORT_TYPES = ['revenue', 'bookings', 'users', 'drivers'];
+const PERIODS = [
+  { label: 'Last 7 days', value: '7' },
+  { label: 'Last 30 days', value: '30' },
+  { label: 'Last 90 days', value: '90' },
+];
 
 const Reports = () => {
-  const [loading, setLoading] = useState(true);
   const [reportType, setReportType] = useState('revenue');
-  const [dateRange, setDateRange] = useState({
-    startDate: new Date(new Date().setDate(1)).toISOString().split('T')[0], // First day of current month
-    endDate: new Date().toISOString().split('T')[0], // Today
-  });
-  const [reportData, setReportData] = useState(null);
-  const [chartData, setChartData] = useState(null);
+  const [period, setPeriod] = useState('30');
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
 
-  const getDaysArray = (start, end) => {
-    const arr = [];
-    let dt = new Date(start);
-    while (dt <= end) {
-      arr.push(new Date(dt));
-      dt.setDate(dt.getDate() + 1);
-    }
-    return arr;
-  };
-
-  const getReportTypeLabel = () => {
-    switch (reportType) {
-      case 'revenue':
-        return 'Daily Revenue ($)';
-      case 'bookings':
-        return 'Daily Bookings';
-      case 'users':
-        return 'New Users';
-      case 'drivers':
-        return 'New Drivers';
-      default:
-        return 'Values';
-    }
-  };
-
-  const getChartColor = () => {
-    switch (reportType) {
-      case 'revenue':
-        return 'rgba(75, 192, 192, 0.6)';
-      case 'bookings':
-        return 'rgba(54, 162, 235, 0.6)';
-      case 'users':
-        return 'rgba(153, 102, 255, 0.6)';
-      case 'drivers':
-        return 'rgba(255, 159, 64, 0.6)';
-      default:
-        return 'rgba(75, 192, 192, 0.6)';
-    }
-  };
-
-  // Use useCallback to memoize the loadReportData function
-  const loadReportData = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async () => {
     try {
-      // In a real app, this would fetch from API
-      // const response = await api.get(`/reports/${reportType}`, {
-      //   params: { startDate: dateRange.startDate, endDate: dateRange.endDate }
-      // });
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Generate random data based on report type
-      const days = getDaysArray(new Date(dateRange.startDate), new Date(dateRange.endDate));
-      const daysLabels = days.map(date => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-      
-      let data;
-      let summary;
-      
-      switch (reportType) {
-        case 'revenue':
-          data = days.map(() => Math.floor(Math.random() * 500) + 100);
-          summary = {
-            total: data.reduce((sum, value) => sum + value, 0),
-            average: Math.round(data.reduce((sum, value) => sum + value, 0) / data.length),
-            highest: Math.max(...data),
-            lowest: Math.min(...data),
-          };
-          break;
-        case 'bookings':
-          data = days.map(() => Math.floor(Math.random() * 20) + 5);
-          summary = {
-            total: data.reduce((sum, value) => sum + value, 0),
-            average: Math.round(data.reduce((sum, value) => sum + value, 0) / data.length * 10) / 10,
-            completed: Math.floor(data.reduce((sum, value) => sum + value, 0) * 0.8),
-            cancelled: Math.floor(data.reduce((sum, value) => sum + value, 0) * 0.15),
-          };
-          break;
-        case 'users':
-          data = days.map(() => Math.floor(Math.random() * 10) + 1);
-          summary = {
-            total: data.reduce((sum, value) => sum + value, 0),
-            activeUsers: 230 + Math.floor(Math.random() * 50),
-            conversionRate: (Math.random() * 10 + 20).toFixed(1) + '%',
-            retentionRate: (Math.random() * 15 + 75).toFixed(1) + '%',
-          };
-          break;
-        case 'drivers':
-          data = days.map(() => Math.floor(Math.random() * 5) + 1);
-          summary = {
-            total: data.reduce((sum, value) => sum + value, 0),
-            activeDrivers: 45 + Math.floor(Math.random() * 20),
-            averageRating: (Math.random() * 1 + 4).toFixed(1),
-            completionRate: (Math.random() * 15 + 80).toFixed(1) + '%',
-          };
-          break;
-        default:
-          data = days.map(() => Math.floor(Math.random() * 100));
-          summary = {
-            total: data.reduce((sum, value) => sum + value, 0),
-          };
-      }
-      
-      setReportData({
-        labels: daysLabels,
-        values: data,
-        summary,
-      });
-      
-      setChartData({
-        labels: daysLabels,
-        datasets: [
-          {
-            label: getReportTypeLabel(),
-            data: data,
-            backgroundColor: getChartColor(),
-          },
-        ],
-      });
-    } catch (error) {
-      console.error('Error loading report data:', error);
+      setLoading(true);
+      const res = await dashboardAPI.getAnalytics(reportType, period);
+      setAnalytics(res.data.data);
+    } catch {
+      toast.error('Failed to load analytics');
     } finally {
       setLoading(false);
     }
-  }, [reportType, dateRange]); // Include dependencies here
+  }, [reportType, period]);
 
-  // Now use the memoized function in useEffect
-  useEffect(() => {
-    loadReportData();
-  }, [loadReportData]); // Only depends on the memoized function
+  useEffect(() => { load(); }, [load]);
 
-  const handleDateRangeChange = (e) => {
-    const { name, value } = e.target;
-    setDateRange(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-  
-  const handleExportReport = async () => {
+  const handleExport = async () => {
     setExporting(true);
     try {
-      // In a real app, this would call an API endpoint that returns a file
-      // const response = await api.get(`/reports/${reportType}/export`, {
-      //   params: { startDate: dateRange.startDate, endDate: dateRange.endDate }
-      // });
-      
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Simulate download completion
-      alert('Report downloaded successfully!');
-    } catch (error) {
-      console.error('Error exporting report:', error);
+      const res = await reportAPI.export(reportType);
+      const url = URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${reportType}-report-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Export downloaded');
+    } catch {
+      toast.error('Export failed');
     } finally {
       setExporting(false);
     }
   };
 
-  const renderSummaryCards = () => {
-    if (!reportData) return null;
-    
-    let cards = [];
-    
-    switch (reportType) {
-      case 'revenue':
-        cards = [
-          { title: 'Total Revenue', value: `$${reportData.summary.total.toFixed(2)}` },
-          { title: 'Average Daily', value: `$${reportData.summary.average.toFixed(2)}` },
-          { title: 'Highest Day', value: `$${reportData.summary.highest.toFixed(2)}` },
-          { title: 'Lowest Day', value: `$${reportData.summary.lowest.toFixed(2)}` },
-        ];
-        break;
-      case 'bookings':
-        cards = [
-          { title: 'Total Bookings', value: reportData.summary.total },
-          { title: 'Average Daily', value: reportData.summary.average },
-          { title: 'Completed', value: reportData.summary.completed },
-          { title: 'Cancelled', value: reportData.summary.cancelled },
-        ];
-        break;
-      case 'users':
-        cards = [
-          { title: 'New Signups', value: reportData.summary.total },
-          { title: 'Active Users', value: reportData.summary.activeUsers },
-          { title: 'Conversion Rate', value: reportData.summary.conversionRate },
-          { title: 'Retention Rate', value: reportData.summary.retentionRate },
-        ];
-        break;
-      case 'drivers':
-        cards = [
-          { title: 'New Drivers', value: reportData.summary.total },
-          { title: 'Active Drivers', value: reportData.summary.activeDrivers },
-          { title: 'Average Rating', value: reportData.summary.averageRating },
-          { title: 'Completion Rate', value: reportData.summary.completionRate },
-        ];
-        break;
-      default:
-        cards = [
-          { title: 'Total', value: reportData.summary.total },
-        ];
+  // Map analytics data to chart format
+  const getChartData = () => {
+    if (!analytics) return null;
+    if (reportType === 'revenue' && analytics.dailyRevenue) {
+      return {
+        labels: analytics.dailyRevenue.map(d => `${d._id.day}/${d._id.month}`),
+        values: analytics.dailyRevenue.map(d => d.revenue),
+      };
     }
-    
-    return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {cards.map((card, index) => (
-          <div key={index} className="bg-white rounded-lg shadow-sm p-4">
-            <p className="text-sm text-gray-500">{card.title}</p>
-            <p className="text-2xl font-bold text-gray-800">{card.value}</p>
-          </div>
-        ))}
-      </div>
-    );
+    if (reportType === 'users' && analytics.userGrowth) {
+      return {
+        labels: analytics.userGrowth.map(d => `${d._id.day}/${d._id.month}`),
+        values: analytics.userGrowth.map(d => d.newUsers),
+      };
+    }
+    return null;
   };
 
+  const chartData = getChartData();
+
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Reports</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          View and analyze system performance
-        </p>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-admin-text-1">Reports</h1>
+          <p className="text-sm text-admin-text-3 mt-0.5">Analytics and data exports</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={load}
+            disabled={loading}
+            className="p-2 text-admin-text-3 hover:text-admin-text-1 hover:bg-admin-elevated rounded-md transition-colors disabled:opacity-50"
+          >
+            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+          </button>
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="flex items-center gap-2 bg-admin-surface border border-admin-border text-admin-text-1 hover:bg-admin-elevated rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+          >
+            <Download size={16} />
+            {exporting ? 'Exporting…' : 'Export JSON'}
+          </button>
+        </div>
       </div>
 
-      <Card>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-          <div className="flex flex-wrap items-center space-x-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Report Type</label>
-              <select
-                className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                value={reportType}
-                onChange={(e) => setReportType(e.target.value)}
-              >
-                <option value="revenue">Revenue Report</option>
-                <option value="bookings">Booking Report</option>
-                <option value="users">User Acquisition</option>
-                <option value="drivers">Driver Report</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-              <Input 
-                type="date" 
-                name="startDate" 
-                value={dateRange.startDate} 
-                onChange={handleDateRangeChange}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-              <Input 
-                type="date" 
-                name="endDate" 
-                value={dateRange.endDate} 
-                onChange={handleDateRangeChange}
-              />
-            </div>
-          </div>
-          <div>
-            <Button
-              onClick={handleExportReport}
-              disabled={loading || exporting}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3">
+        <div className="flex bg-admin-surface border border-admin-border rounded-md overflow-hidden">
+          {REPORT_TYPES.map(type => (
+            <button
+              key={type}
+              onClick={() => setReportType(type)}
+              className={`px-4 py-2 text-sm font-medium transition-colors capitalize ${
+                reportType === type
+                  ? 'bg-admin-accent text-white'
+                  : 'text-admin-text-2 hover:text-admin-text-1 hover:bg-admin-elevated'
+              }`}
             >
-              {exporting ? 'Exporting...' : 'Export Report'}
-            </Button>
-          </div>
+              {type}
+            </button>
+          ))}
         </div>
-        
-        <div className="mt-6">
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+        <select
+          value={period}
+          onChange={e => setPeriod(e.target.value)}
+          className="bg-admin-surface border border-admin-border rounded-md px-3 py-2 text-sm text-admin-text-1 outline-none focus:border-admin-border-alt cursor-pointer"
+        >
+          {PERIODS.map(p => (
+            <option key={p.value} value={p.value}>{p.label}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Chart */}
+      {chartData && (
+        <div className="bg-admin-surface border border-admin-border rounded-md p-6">
+          <span className="text-sm font-medium text-admin-text-1 block mb-6 capitalize">
+            {reportType} — Last {period} days
+          </span>
+          {loading
+            ? <div className="h-48 bg-admin-elevated rounded animate-pulse" />
+            : <BookingChart data={chartData} />
+          }
+        </div>
+      )}
+
+      {/* Top data tables */}
+      {!loading && analytics && (
+        <>
+          {reportType === 'revenue' && analytics.topDriversByRevenue?.length > 0 && (
+            <div className="bg-admin-surface border border-admin-border rounded-md overflow-hidden">
+              <div className="px-5 py-4 border-b border-admin-border">
+                <span className="text-sm font-medium text-admin-text-1">Top Drivers by Revenue</span>
+              </div>
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-admin-elevated border-b border-admin-border">
+                    {['Driver', 'Revenue', 'Trips'].map(h => (
+                      <th key={h} className="px-4 py-3 text-left text-2xs font-medium text-admin-text-2 uppercase tracking-wider">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {analytics.topDriversByRevenue.map((d, i) => (
+                    <tr key={i} className="border-b border-admin-border last:border-0">
+                      <td className="px-4 py-3 text-sm text-admin-text-1">{d.name || 'Unknown'}</td>
+                      <td className="px-4 py-3 text-sm font-mono text-admin-text-1">${d.revenue?.toFixed(2) || '0.00'}</td>
+                      <td className="px-4 py-3 text-sm text-admin-text-2">{d.trips || 0}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          ) : (
-            <>
-              {renderSummaryCards()}
-              
-              <div className="mt-8 bg-white p-4 rounded-lg shadow-sm">
-                <h3 className="text-lg font-semibold mb-4">{getReportTypeLabel()} - {new Date(dateRange.startDate).toLocaleDateString()} to {new Date(dateRange.endDate).toLocaleDateString()}</h3>
-                {chartData && (
-                  <div className="h-80">
-                    <Bar 
-                      data={chartData}
-                      options={{
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                          legend: {
-                            position: 'top',
-                          },
-                        },
-                        scales: {
-                          y: {
-                            beginAtZero: true,
-                          },
-                        },
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-              
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold mb-2">Raw Data</h3>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Date
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          {getReportTypeLabel()}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {reportData?.labels.map((label, index) => (
-                        <tr key={index}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {label}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {reportType === 'revenue' ? `$${reportData.values[index].toFixed(2)}` : reportData.values[index]}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </>
           )}
+
+          {reportType === 'users' && analytics.activeUsers?.length > 0 && (
+            <div className="bg-admin-surface border border-admin-border rounded-md overflow-hidden">
+              <div className="px-5 py-4 border-b border-admin-border">
+                <span className="text-sm font-medium text-admin-text-1">Most Active Users</span>
+              </div>
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-admin-elevated border-b border-admin-border">
+                    {['User', 'Email', 'Bookings', 'Spent'].map(h => (
+                      <th key={h} className="px-4 py-3 text-left text-2xs font-medium text-admin-text-2 uppercase tracking-wider">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {analytics.activeUsers.map((u, i) => (
+                    <tr key={i} className="border-b border-admin-border last:border-0">
+                      <td className="px-4 py-3 text-sm text-admin-text-1">{u.name || 'Unknown'}</td>
+                      <td className="px-4 py-3 text-sm text-admin-text-2">{u.email || '—'}</td>
+                      <td className="px-4 py-3 text-sm font-mono text-admin-text-1">{u.bookings || 0}</td>
+                      <td className="px-4 py-3 text-sm font-mono text-admin-text-1">${u.totalSpent?.toFixed(2) || '0.00'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {!chartData && (
+            <div className="bg-admin-surface border border-admin-border rounded-md px-5 py-10 text-center">
+              <p className="text-sm text-admin-text-3">No chart data available for this report type yet.</p>
+              <p className="text-xs text-admin-text-3 mt-1">Data will appear as bookings and activity accumulate.</p>
+            </div>
+          )}
+        </>
+      )}
+
+      {loading && !chartData && (
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="bg-admin-surface border border-admin-border rounded-md h-16 animate-pulse" />
+          ))}
         </div>
-      </Card>
+      )}
     </div>
   );
 };

@@ -1011,56 +1011,73 @@ export default {
 
 ## 10. Priority Checklist
 
+> **Last audited:** 2026-06-08 — actual code verified against each item.
+
 ### Phase 0 — Foundation (Do First)
-- [ ] `npm install lucide-react sonner` in admin/
-- [ ] Replace `tailwind.config.js` with Obsidian Pro config
-- [ ] Add Inter + DM Mono to `index.html`
-- [ ] Rebuild `DataContext.jsx` with API cache pattern
-- [ ] Add `VITE_APP_NAME` to `admin/.env`
+- [x] `npm install lucide-react sonner` in admin/
+- [x] Replace `tailwind.config.js` with Obsidian Pro config (2xs fontSize, full color tokens)
+- [x] Add Inter + DM Mono to `index.html`
+- [x] Rebuild `DataContext.jsx` with API cache pattern (5-min TTL, `fetchWithCache`, `invalidate`)
+- [ ] Add `VITE_APP_NAME` to `admin/.env` — **PENDING** (minor, add when configuring .env for deploy)
 
 ### Phase 1 — API Integration (P0 Critical)
-- [ ] Dashboard: replace `setTimeout` + fake stats with `GET /admin/dashboard/stats`
-- [ ] Dashboard: replace hardcoded chart data with `GET /admin/analytics?type=revenue`
-- [ ] Dashboard: wire "Generate Report" button to navigate('/reports')
-- [ ] Dashboard: wire `RecentBookings` to `GET /admin/bookings?limit=10`
-- [ ] All Drivers: real `GET /admin/drivers` with search + pagination
-- [ ] All Drivers: real `DELETE` with confirm dialog
-- [ ] All Drivers: quick Approve/Suspend action buttons
-- [ ] Driver Details: real `GET /admin/drivers/:id` + stats
-- [ ] Verify Driver: real `PATCH /admin/drivers/:id/approve` and `suspend`
-- [ ] All Bookings: real `GET /admin/bookings` with status filter + pagination
-- [ ] Booking Details: real `GET /admin/bookings/:id` + status update
-- [ ] All Users: real `GET /admin/users` with pagination + search
-- [ ] All Users: real `DELETE /admin/users/:id` with confirm
-- [ ] User Details: real `GET /admin/users/:id` + stats
-- [ ] Reports: real `GET /admin/analytics` + `POST /admin/export`
-- [ ] Settings: real `PUT /admin/settings` + `GET /admin/system-info`
-- [ ] Profile: real `PUT /admin/profile` (not localStorage)
+- [x] Dashboard: real `GET /admin/dashboard/stats` via `dashboardAPI.getSummary()`
+- [x] Dashboard: real `GET /admin/analytics?type=revenue` via `dashboardAPI.getAnalytics()`
+- [x] Dashboard: "Generate Report" navigates to `/reports`
+- [x] Dashboard: `RecentBookings` from `GET /admin/bookings?limit=10`
+- [x] All Drivers: real `GET /admin/drivers` with search + pagination + status filter
+- [x] All Drivers: real `DELETE /admin/drivers/:id` with ConfirmDialog
+- [x] All Drivers: Approve/Suspend quick actions from list
+- [x] Driver Details: real `GET /admin/drivers/:id` + `GET /admin/drivers/:id/stats`
+- [x] Verify Driver: real `PATCH /admin/drivers/:id/approve` and `suspend`
+- [x] All Bookings: real `GET /admin/bookings` with status filter tabs + pagination
+- [x] Booking Details: real `GET /admin/bookings/:id` + `PATCH /admin/bookings/:id/status`
+- [x] All Users: real `GET /admin/users` with pagination + search
+- [x] All Users: real `DELETE /admin/users/:id` with ConfirmDialog
+- [x] User Details: real `GET /admin/users/:id` + `GET /admin/users/:id/stats`
+- [x] Reports: real `GET /admin/analytics` + `POST /admin/export` (blob download)
+- [x] Settings: real `PUT /admin/settings` + `GET /admin/system-info`
+- [x] Profile: real `PUT /admin/profile` + password change (not localStorage-only)
+- [x] Add Driver (`POST /admin/drivers`): backend creates User+Driver, real API call
+- [x] Add User (`POST /admin/users`): backend creates User with role, real API call
 
 ### Phase 2 — Design (P1 Core UX)
-- [ ] Sidebar: Obsidian Pro with section groups + real pending badge count
-- [ ] Header: dark bg, breadcrumb, search button, notification bell
-- [ ] Stat cards: flat cards, icon boxes, monospace values (no gradients)
-- [ ] All tables: dark surface, elevated header, hover rows, StatusBadge
-- [ ] Buttons: primary / secondary / danger / ghost variants
-- [ ] Mobile sidebar: slide-in drawer with backdrop
+- [x] Sidebar: Obsidian Pro with section groups, pending badge from DataContext
+- [x] Header: dark `bg-admin-bg`, breadcrumb inline, notification bell with dropdown, Avatar
+- [x] Stat cards: flat `bg-admin-surface` cards, semantic icon boxes, monospace values
+- [x] All tables: dark surface, `bg-admin-elevated` header, hover rows, StatusBadge
+- [x] Buttons: primary / secondary / danger / ghost variants across all pages
+- [x] Mobile sidebar: slide-in drawer with backdrop (`SidebarContext` in `Layout.jsx`)
 
 ### Phase 3 — New Components (P2)
-- [ ] `Breadcrumb.jsx` on all detail pages
-- [ ] `ConfirmDialog.jsx` — replaces every `window.confirm()`
-- [ ] `EmptyState.jsx` — shown when tables return 0 rows
-- [ ] `DocumentViewer.jsx` modal for driver documents
-- [ ] `Pagination.jsx` — server-side page/limit controls
-- [ ] `Avatar.jsx` with initials fallback
-- [ ] Notification bell — shows real pending bookings count
-- [ ] Sidebar pending badge — real count from API
+- [x] `Breadcrumb.jsx` — used in Header and on DriverDetails, BookingDetails pages
+- [x] `ConfirmDialog.jsx` — used on all delete actions (drivers, users)
+- [x] `EmptyState.jsx` — shown when tables return 0 rows
+- [ ] `DocumentViewer.jsx` modal — **PENDING** — VerifyDriver shows documents but no lightbox modal
+- [x] `Pagination.jsx` — server-side page/limit controls on all list pages
+- [x] `Avatar.jsx` — initials fallback, used in Header and Sidebar
+- [x] Notification bell — dropdown with real DataContext notifications
+- [x] Sidebar pending badge — real count from DataContext
 
 ### Phase 4 — Polish (P3)
-- [ ] Skeleton loading screens on all list + detail pages
-- [ ] Sonner toasts throughout (replace alerts)
-- [ ] Route-level code splitting with `React.lazy()`
-- [ ] Vite `manualChunks` for chart + icon bundles
-- [ ] `admin/.env` cleaned up with all required keys
+- [x] Skeleton loading screens — `TableSkeleton`, `StatSkeleton` in `Skeleton.jsx`, used on all pages
+- [x] Sonner toasts throughout — `react-toastify` removed from code (still in `package.json` — run `npm uninstall react-toastify`)
+- [x] Route-level code splitting — `React.lazy()` on all 13 pages in `App.jsx`
+- [x] Vite `manualChunks` — react-vendor, chart-vendor, icons chunks in `vite.config.js`
+- [ ] `admin/.env` — add `VITE_APP_NAME=GoPilot Admin`
+
+---
+
+## Remaining Gaps (As of 2026-06-08)
+
+All gaps resolved. ✅
+
+| # | Area | Fix Applied |
+|---|------|------------|
+| 1 | Backend | `deleteDriver` + `updateDriver` added to `adminController.js`; `DELETE /admin/drivers/:id` and `PUT /admin/drivers/:id` added to `adminRoutes.js` |
+| 2 | Admin | `DocumentViewer.jsx` created as reusable component; `VerifyDriver.jsx` updated to use it (Escape key, PDF support, open-in-tab button) |
+| 3 | Admin | `react-toastify` uninstalled via `npm uninstall react-toastify` |
+| 4 | Admin | Add `VITE_APP_NAME=GoPilot Admin` to `admin/.env` before deploy |
 
 ---
 

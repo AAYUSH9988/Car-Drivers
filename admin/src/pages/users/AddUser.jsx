@@ -1,193 +1,95 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Card from '../../components/common/Card';
-import Button from '../../components/common/Button';
-import Input from '../../components/common/Input';
-import { useData } from '../../contexts/DataContext';
+import { ArrowLeft, Save } from 'lucide-react';
+import { userAPI } from '../../services/api';
+import { toast } from 'sonner';
+
+const INPUT_CLS = 'w-full bg-admin-elevated border border-admin-border rounded-md px-3 py-2.5 text-sm text-admin-text-1 placeholder-admin-text-3 outline-none focus:border-admin-border-alt transition-colors';
+const LABEL_CLS = 'block text-sm text-admin-text-2 mb-1.5';
 
 const AddUser = () => {
   const navigate = useNavigate();
-  const { addUser } = useData();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  
-  const [formData, setFormData] = useState({
-    // Personal Details
-    firstName: '',
-    lastName: '',
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    name: '',
     email: '',
     phone: '',
+    password: '',
     role: 'user',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
   });
-  
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-  
+
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
-    
+    if (!form.name || !form.email || !form.password) {
+      toast.error('Name, email and password are required');
+      return;
+    }
+    if (form.password.length < 8) {
+      toast.error('Password must be at least 8 characters');
+      return;
+    }
+    setSaving(true);
     try {
-      // In a real app, you would call your API
-      // const response = await api.post('/users', formData);
-      
-      // For demo purposes:
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Add user to context
-      addUser(formData);
-      
-      // Navigate back to users list
+      await userAPI.create(form);
+      toast.success('User created successfully');
       navigate('/users');
     } catch (err) {
-      console.error('Error adding user:', err);
-      setError(err.response?.data?.message || 'Failed to add user. Please try again.');
+      toast.error(err.response?.data?.message || 'Failed to create user');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
-  
+
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Add New User</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Register a new user in the system
-        </p>
+    <div className="space-y-6 max-w-lg">
+      <div className="flex items-center gap-4">
+        <button onClick={() => navigate('/users')} className="p-2 text-admin-text-3 hover:text-admin-text-1 hover:bg-admin-elevated rounded-md transition-colors">
+          <ArrowLeft size={18} />
+        </button>
+        <div>
+          <h1 className="text-xl font-semibold text-admin-text-1">Add User</h1>
+          <p className="text-sm text-admin-text-3 mt-0.5">Create a new user account</p>
+        </div>
       </div>
-      
-      <form onSubmit={handleSubmit}>
-        <div className="space-y-6">
-          <Card title="User Information">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                <Input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                <Input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                <Input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                <Input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                <select
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                  required
-                >
-                  <option value="user">User</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-            </div>
-          </Card>
-          
-          <Card title="Address Information">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                <Input
-                  type="text"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-                <Input
-                  type="text"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">State/Province</label>
-                <Input
-                  type="text"
-                  name="state"
-                  value={formData.state}
-                  onChange={handleChange}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Zip/Postal Code</label>
-                <Input
-                  type="text"
-                  name="zipCode"
-                  value={formData.zipCode}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-          </Card>
-          
-          <div className="flex items-center justify-end space-x-4">
-            {error && (
-              <div className="mr-auto bg-red-50 text-red-700 px-4 py-2 rounded-md text-sm">
-                {error}
-              </div>
-            )}
-            <Button 
-              type="button" 
-              onClick={() => navigate('/users')} 
-              className="bg-gray-200 hover:bg-gray-300 text-gray-800"
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              {loading ? 'Adding User...' : 'Add User'}
-            </Button>
-          </div>
+
+      <form onSubmit={handleSubmit} className="bg-admin-surface border border-admin-border rounded-md p-6 space-y-4">
+        <div>
+          <label className={LABEL_CLS}>Full Name <span className="text-red-400">*</span></label>
+          <input className={INPUT_CLS} value={form.name} onChange={e => set('name', e.target.value)} required placeholder="John Doe" />
+        </div>
+        <div>
+          <label className={LABEL_CLS}>Email Address <span className="text-red-400">*</span></label>
+          <input className={INPUT_CLS} type="email" value={form.email} onChange={e => set('email', e.target.value)} required placeholder="john@example.com" />
+        </div>
+        <div>
+          <label className={LABEL_CLS}>Phone</label>
+          <input className={INPUT_CLS} type="tel" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+1 555 000 0000" />
+        </div>
+        <div>
+          <label className={LABEL_CLS}>Password <span className="text-red-400">*</span></label>
+          <input className={INPUT_CLS} type="password" value={form.password} onChange={e => set('password', e.target.value)} required placeholder="At least 8 characters" />
+        </div>
+        <div>
+          <label className={LABEL_CLS}>Role</label>
+          <select className={INPUT_CLS} value={form.role} onChange={e => set('role', e.target.value)}>
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div className="flex gap-3 justify-end pt-2">
+          <button type="button" onClick={() => navigate('/users')} className="px-4 py-2.5 text-sm bg-admin-elevated border border-admin-border rounded-md text-admin-text-1 hover:bg-admin-hover transition-colors">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            className="flex items-center gap-2 bg-admin-accent hover:bg-admin-accent-dim text-white rounded-md px-5 py-2.5 text-sm font-medium transition-colors disabled:opacity-50"
+          >
+            <Save size={16} />
+            {saving ? 'Creating…' : 'Create User'}
+          </button>
         </div>
       </form>
     </div>

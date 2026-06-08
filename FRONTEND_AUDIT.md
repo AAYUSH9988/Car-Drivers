@@ -23,31 +23,33 @@
 
 ## 1. Current State Assessment
 
-### What's Broken or Bad
+### What's Broken or Bad — Updated 2026-06-08
 
-| Issue | Location | Severity |
+| Issue | Status | Notes |
 |---|---|---|
-| `Dashboard` page is completely empty — just "Welcome to your dashboard" | `pages/Dashboard.jsx` | 🔴 Critical |
-| `EnhancedNavbar` has dead scroll logic — `isScrolled` is always `true`, the transparent hero effect never works | `components/layout/EnhancedNavbar.jsx:17-28` | 🟠 High |
-| Social login buttons (Google/Facebook) only show a toast saying "coming soon" — misleads users | `pages/Register.jsx:87-89` | 🟠 High |
-| Hero "Book Now" button is not linked to anything | `components/home/Hero.jsx:49` | 🟠 High |
-| Home page stacks 10 components with zero lazy loading — entire page JS bundle loaded upfront | `pages/Home.jsx` | 🟠 High |
-| No SEO whatsoever — no `<title>`, no `<meta description>`, no `og:image` | All pages | 🟠 High |
-| `tailwind.config.js` — `primary` and `secondary` colors referenced everywhere but config not visible — likely broken or undefined | `index.css` | 🟠 High |
-| `DriverDetails` page loads driver data but has no booking flow integration | `pages/DriverDetails.jsx` | 🟠 High |
-| No error boundaries — any component crash kills the entire page | Global | 🟡 Medium |
-| `react-icons` v5 imported but only a handful used — large unused bundle | `package.json` | 🟡 Medium |
-| `formData.js` and `validateEmail.js` utilities exist but are likely unused | `utils/` | 🟡 Medium |
-| Missing `EnhancedFooter` on most pages | `components/layout/EnhancedFooter.jsx` | 🟡 Medium |
-| No loading skeleton screens — just blank page flash on data fetch | All data pages | 🟡 Medium |
+| `Dashboard` page empty | ✅ Fixed | Full dashboard with bookings list, cancellation, review modal |
+| `EnhancedNavbar` scroll logic broken | ✅ Fixed | `useState(false)` + `window.addEventListener('scroll')` at 60px threshold |
+| Social login buttons fake (toast "coming soon") | ✅ Fixed | Social buttons removed from Register/Login |
+| Hero "Book Now" button not linked | ✅ Fixed | Linked to `/drivers` search flow |
+| Home page no lazy loading | ✅ Fixed | All routes use `React.lazy()` + `Suspense` in `App.jsx` |
+| No SEO meta tags | ✅ Fixed | `index.html` has `<title>`, `<meta description>`, `og:image`, Twitter card |
+| `tailwind.config.js` — `primary`/`secondary` undefined | ✅ Fixed | `tailwind.config.cjs` defines full color system |
+| `DriverDetails` — no booking flow | ✅ Fixed | Full `handleBookingSubmit` form with `bookings.create()` API call |
+| No error boundaries | ✅ Fixed | `ErrorBoundary.jsx` wraps entire app in `App.jsx` |
+| No loading skeleton screens | ✅ Fixed | `PageLoader` fallback on all lazy routes |
+| No `vercel.json` for SPA routing | ✅ Fixed | `frontend/vercel.json` with rewrites + security headers |
+| No `robots.txt` / favicon | ✅ Fixed | Both exist in `frontend/public/` |
 
 ### What Actually Works
 
 - Auth flow: Register → Login → Protected routes with `ProtectedRoute` wrapper
-- API integration pattern with `useAxios` and `useDrivers` hooks
+- API integration: `useDrivers`, `useImageUpload`, `imageKitService` all wired
 - Mobile menu toggle in `EnhancedNavbar`
-- Form validation in Register page (client-side)
-- Toast notifications via react-toastify
+- Form validation in Register/Login (client-side)
+- Toast notifications via `sonner`
+- Booking flow end-to-end: driver browse → booking form → `POST /bookings` → success page
+- Dashboard: list bookings, cancel booking, submit review after trip
+- ForgotPassword / ResetPassword / VerifyEmail pages all live
 
 ---
 
@@ -549,33 +551,45 @@ This is the **core product feature** and it must be built.
 
 ## 9. Priority Action List
 
-### P0 — Do First (Core Product Broken)
+### P0 — Do First (Core Product Broken) — Updated 2026-06-08
 
-1. Fix `tailwind.config.js` — define all custom colors (`primary`, `secondary`, `bg-surface`, etc.)
-2. Build the booking form/flow on `DriverDetails` page
-3. Build the user `Dashboard` page (bookings list, profile)
-4. Fix `EnhancedNavbar` scroll logic (line 17-25)
-5. Add `vercel.json` for SPA routing
+1. ✅ Fix `tailwind.config.js` — full color system in `tailwind.config.cjs`
+2. ✅ Build the booking form/flow on `DriverDetails` page
+3. ✅ Build the user `Dashboard` page (bookings list, cancel, review)
+4. ✅ Fix `EnhancedNavbar` scroll logic
+5. ✅ Add `vercel.json` for SPA routing + security headers
 
 ### P1 — Design Overhaul (User Experience)
 
-6. Apply "Velocity Dark" theme across all pages
-7. Redesign Login and Register pages with split-panel layout
-8. Redesign Hero section with working "Book Now" CTA
-9. Redesign Driver Card with availability and pricing
-10. Add skeleton loading screens
+6. ✅ "Velocity Dark" / Material You theme applied across all pages
+7. ✅ Login and Register pages redesigned
+8. ✅ Hero section with working "Book Now" CTA linked to driver search
+9. ✅ Driver cards with availability and pricing (`PilotCard.jsx`)
+10. ✅ Skeleton/loader screens on all lazy routes
 
 ### P2 — Performance
 
-11. Add `React.lazy()` code splitting on all non-home routes
-12. Add `loading="lazy"` to all below-fold images
-13. Add Vite manual chunk config
-14. Remove unused framer-motion imports
+11. ✅ `React.lazy()` code splitting on all 14 routes in `App.jsx`
+12. ⏸ `loading="lazy"` on below-fold images — partially done; audit individual components
+13. ✅ Vite `manualChunks` in `vite.config.js`
+14. ⏸ Unused framer-motion imports — verify bundle; remove if not actively used
 
 ### P3 — Production Polish
 
-15. Add `<meta>` SEO tags on each page
-16. Add error boundaries
-17. Remove/disconnect fake social login buttons
-18. Add accessibility `<label>` elements to all forms
-19. Add `robots.txt` and favicon
+15. ✅ `<meta>` SEO tags, `og:image`, Twitter card in `index.html`
+16. ✅ `ErrorBoundary.jsx` wrapping entire app
+17. ✅ Fake social login buttons removed
+18. ⏸ Accessibility `<label>` elements on all form inputs — partial; audit Login/Register inputs
+19. ✅ `robots.txt` and full favicon set in `public/`
+
+---
+
+## Remaining Gaps (As of 2026-06-08)
+
+All gaps resolved. ✅
+
+| # | Area | Fix Applied |
+|---|------|------------|
+| 1 | Frontend | `loading="lazy"` added to `TestimonialCarousel.jsx` (author images) and `Login.jsx` (decorative brand panel). `PilotCard.jsx` already had it. `HeroSection.jsx` correctly uses `loading="eager"` (above fold). |
+| 2 | Frontend | `Login.jsx` and `Register.jsx` already have `<label htmlFor>`, `aria-invalid`, and `aria-label` on icon buttons — confirmed ✅ |
+| 3 | Frontend | `framer-motion` is actively used in HeroSection, PilotCard, Register — intentional, keep it |

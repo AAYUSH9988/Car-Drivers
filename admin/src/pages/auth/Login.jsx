@@ -1,25 +1,18 @@
-import React, { useState, useContext } from 'react';
+import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Input from '../../components/common/Input';
-import Button from '../../components/common/Button';
+import { LogIn, Shield, AlertCircle } from 'lucide-react';
 import { AuthContext } from '../../contexts/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
 
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e) => {
@@ -38,96 +31,102 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-b from-blue-500 to-purple-600">
-      {/* Left side - Image or illustration */}
-      <div className="hidden lg:flex lg:w-1/2 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1578575437130-527eed3abbec?q=80&w=1000')" }}>
-        <div className="w-full h-full bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="text-white px-12">
-            <h1 className="text-4xl font-bold mb-6">Car Driver Admin</h1>
-            <p className="text-xl mb-8">Manage your drivers, users, and bookings efficiently with our dashboard.</p>
-            <div className="flex space-x-3">
-              <div className="bg-white bg-opacity-20 p-4 rounded-lg">
-                <p className="text-2xl font-bold">Easy Management</p>
-              </div>
-              <div className="bg-white bg-opacity-20 p-4 rounded-lg">
-                <p className="text-2xl font-bold">Real-time Updates</p>
-              </div>
+    <div className="min-h-screen flex bg-admin-bg">
+      {/* Left side - Brand area */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-admin-accent/10 to-admin-void" />
+        <div className="relative w-full h-full flex flex-col justify-between p-12">
+          <div className="flex items-center gap-2">
+            <Shield size={28} className="text-admin-accent" strokeWidth={1.5} />
+            <span className="text-admin-text-1 font-semibold text-lg">GoPilot</span>
+          </div>
+
+          <div className="space-y-4">
+            <h1 className="text-3xl font-semibold text-admin-text-1">
+              Admin Dashboard
+            </h1>
+            <p className="text-admin-text-2 max-w-sm leading-relaxed">
+              Manage drivers, users, and bookings from a single, centralized interface.
+            </p>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="px-4 py-3 bg-admin-surface border border-admin-border rounded-md">
+              <p className="text-2xl font-semibold text-admin-text-1 font-mono">99.9%</p>
+              <p className="text-2xs text-admin-text-3 uppercase tracking-wide mt-1">Uptime</p>
+            </div>
+            <div className="px-4 py-3 bg-admin-surface border border-admin-border rounded-md">
+              <p className="text-2xl font-semibold text-admin-text-1 font-mono">24/7</p>
+              <p className="text-2xs text-admin-text-3 uppercase tracking-wide mt-1">Support</p>
             </div>
           </div>
         </div>
       </div>
-      
+
       {/* Right side - Login form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-12">
-        <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-800">Welcome Back</h2>
-            <p className="text-gray-600 mt-2">Sign in to your admin account</p>
+        <div className="w-full max-w-md">
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold text-admin-text-1 mb-1">Welcome back</h2>
+            <p className="text-sm text-admin-text-3">Sign in to your admin account</p>
           </div>
-          
+
           {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded">
-              <p className="text-sm text-red-700">{error}</p>
+            <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-md px-4 py-3 mb-6">
+              <AlertCircle size={16} className="text-red-400 shrink-0" />
+              <p className="text-sm text-red-400">{error}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-5">
-              <Input
-                label="Email Address"
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-admin-text-2 mb-1.5">Email</label>
+              <input
                 name="email"
                 type="email"
-                placeholder="admin@example.com"
                 required
                 value={formData.email}
                 onChange={handleChange}
+                placeholder="admin@example.com"
+                className="w-full bg-admin-elevated border border-admin-border rounded-md px-4 py-2.5 text-sm text-admin-text-1 placeholder-admin-text-3 outline-none focus:border-admin-border-alt transition-colors"
               />
-              <Input
-                label="Password"
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-admin-text-2 mb-1.5">Password</label>
+              <input
                 name="password"
                 type="password"
-                placeholder="••••••••"
                 required
                 value={formData.password}
                 onChange={handleChange}
+                placeholder="••••••••"
+                className="w-full bg-admin-elevated border border-admin-border rounded-md px-4 py-2.5 text-sm text-admin-text-1 placeholder-admin-text-3 outline-none focus:border-admin-border-alt transition-colors"
               />
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 text-blue-600"
-                  />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                    Remember me
-                  </label>
-                </div>
-                <div className="text-sm">
-                  <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
-                    Forgot password?
-                  </a>
-                </div>
-              </div>
-              
-              <Button
-                type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition duration-200"
-                disabled={loading}
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Signing in...
-                  </span>
-                ) : 'Sign in'}
-              </Button>
             </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 bg-admin-accent hover:bg-admin-accent-dim text-white text-sm font-medium rounded-md px-4 py-2.5 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  <LogIn size={16} />
+                  Sign in
+                </>
+              )}
+            </button>
           </form>
+
+          <p className="mt-8 text-center text-2xs text-admin-text-3">
+            Secure admin access only. Unauthorized attempts are logged.
+          </p>
         </div>
       </div>
     </div>

@@ -1,178 +1,157 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import TableCard from '../../components/common/TableCard';
-import Input from '../../components/common/Input';
-import Button from '../../components/common/Button';
-import { useData } from '../../contexts/DataContext';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Search, Trash2 } from 'lucide-react';
+import { userAPI } from '../../services/api';
+import { toast } from 'sonner';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
+import Pagination from '../../components/common/Pagination';
+import EmptyState from '../../components/common/EmptyState';
+import { TableSkeleton } from '../../components/common/Skeleton';
 
 const AllUsers = () => {
   const navigate = useNavigate();
-  const { users, setUsers } = useData();
+  const [users, setUsers] = useState([]);
+  const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, pages: 1 });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        if (users.length === 0) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          // Placeholder data
-          setUsers([
-            {
-              _id: '1',
-              name: 'John Doe',
-              email: 'john@example.com',
-              phone: '555-1234',
-              role: 'user',
-              createdAt: '2023-06-15T10:00:00Z',
-            },
-            {
-              _id: '2',
-              name: 'Jane Smith',
-              email: 'jane@example.com',
-              phone: '555-5678',
-              role: 'user',
-              createdAt: '2023-06-10T14:30:00Z',
-            },
-            {
-              _id: '3',
-              name: 'Robert Brown',
-              email: 'robert@example.com',
-              phone: '555-9012',
-              role: 'user',
-              createdAt: '2023-06-05T09:15:00Z',
-            },
-            {
-              _id: '4',
-              name: 'Emily Wilson',
-              email: 'emily@example.com',
-              phone: '555-3456',
-              role: 'admin',
-              createdAt: '2023-05-20T11:45:00Z',
-            },
-            {
-              _id: '5',
-              name: 'Michael Johnson',
-              email: 'michael@example.com',
-              phone: '555-7890',
-              role: 'user',
-              createdAt: '2023-06-01T16:20:00Z',
-            }
-          ]);
-        }
-      } catch (err) {
-        console.error(err);
-        setError('Failed to load users');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchUsers();
-  }, [users.length, setUsers]);
-  
-  const columns = [
-    { key: 'name', title: 'Name' },
-    { key: 'email', title: 'Email' },
-    { key: 'phone', title: 'Phone' },
-    { 
-      key: 'role', 
-      title: 'Role',
-      render: (user) => (
-        <span className={`px-2 py-1 text-xs rounded-full ${
-          user.role === 'admin' 
-            ? 'bg-purple-100 text-purple-800' 
-            : 'bg-blue-100 text-blue-800'
-        }`}>
-          {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-        </span>
-      )
-    },
-    { 
-      key: 'createdAt', 
-      title: 'Joined',
-      render: (user) => new Date(user.createdAt).toLocaleDateString()
-    },
-    { 
-      key: 'actions', 
-      title: 'Actions',
-      render: (user) => (
-        <div className="flex space-x-2">
-          <Link 
-            to={`/users/${user._id}`}
-            className="text-blue-600 hover:text-blue-900"
-          >
-            View
-          </Link>
-          <button 
-            className="text-red-600 hover:text-red-900"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteUser(user._id);
-            }}
-          >
-            Delete
-          </button>
-        </div>
-      )
+  const [search, setSearch] = useState('');
+  const [confirm, setConfirm] = useState(null);
+
+  const load = useCallback(async (page = 1) => {
+    try {
+      setLoading(true);
+      const res = await userAPI.getAll({ page, limit: 20, search: search || undefined });
+      setUsers(res.data.data || []);
+      setPagination(res.data.pagination || { page, limit: 20, total: 0, pages: 1 });
+    } catch {
+      toast.error('Failed to load users');
+    } finally {
+      setLoading(false);
     }
-  ];
-  
-  const handleDeleteUser = (id) => {
-    // For now, just filter out the user from local state
-    setUsers(users.filter(user => user._id !== id));
+  }, [search]);
+
+  useEffect(() => { load(1); }, [load]);
+
+  const handleDelete = async (id, name) => {
+    try {
+      await userAPI.delete(id);
+      toast.success(`${name} deleted`);
+      load(pagination.page);
+    } catch {
+      toast.error('Delete failed');
+    }
+    setConfirm(null);
   };
-  
-  const filteredUsers = users.filter(user => {
-    return (
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.phone && user.phone.includes(searchTerm))
-    );
-  });
-  
-  const searchFilter = (
-    <Input
-      type="search"
-      placeholder="Search users by name, email or phone..."
-      value={searchTerm}
-      onChange={(e) => setSearchTerm(e.target.value)}
-    />
-  );
-  
-  const actionButton = (
-    <Button 
-      variant="primary" 
-      size="sm"
-      className="bg-blue-600 text-white hover:bg-blue-700"
-      onClick={() => navigate('/users/add')}
-    >
-      Add New User
-    </Button>
-  );
-  
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">All Users</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Manage all system users
-          </p>
+          <h1 className="text-xl font-semibold text-admin-text-1">Users</h1>
+          <p className="text-sm text-admin-text-3 mt-0.5">{pagination.total} registered users</p>
         </div>
+        <button
+          onClick={() => navigate('/users/add')}
+          className="flex items-center gap-2 bg-admin-accent hover:bg-admin-accent-dim text-white rounded-md px-4 py-2 text-sm font-medium transition-colors"
+        >
+          <Plus size={16} /> Add User
+        </button>
       </div>
-      
-      <TableCard 
-        title="Users"
-        columns={columns}
-        data={filteredUsers}
-        loading={loading}
-        emptyMessage="No users found"
-        onRowClick={(user) => navigate(`/users/${user._id}`)}
-        filters={searchFilter}
-        actionButton={actionButton}
+
+      <div className="bg-admin-surface border border-admin-border rounded-md overflow-hidden">
+        {/* Toolbar */}
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-admin-border">
+          <div className="relative flex-1 max-w-xs">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-text-3" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search by name, email, phone…"
+              className="w-full bg-admin-elevated border border-admin-border rounded-md pl-9 pr-3 py-1.5 text-sm text-admin-text-1 placeholder-admin-text-3 outline-none focus:border-admin-border-alt"
+            />
+          </div>
+        </div>
+
+        {/* Table */}
+        <table className="w-full">
+          <thead>
+            <tr className="bg-admin-elevated border-b border-admin-border">
+              {['Name', 'Email', 'Phone', 'Role', 'Joined', ''].map(h => (
+                <th key={h} className="px-4 py-3 text-left text-2xs font-medium text-admin-text-2 uppercase tracking-wider">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <TableSkeleton rows={8} cols={6} />
+            ) : users.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-16">
+                  <EmptyState
+                    title="No users found"
+                    description={search ? 'Try a different search.' : 'Get started by adding your first user.'}
+                    action={{ label: 'Add User', onClick: () => navigate('/users/add') }}
+                  />
+                </td>
+              </tr>
+            ) : (
+              users.map(u => (
+                  <tr
+                    key={u._id}
+                    onClick={() => navigate(`/users/${u._id}`)}
+                    className="border-b border-admin-border hover:bg-admin-hover transition-colors cursor-pointer last:border-0"
+                  >
+                    <td className="px-4 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-admin-elevated border border-admin-border flex items-center justify-center text-xs font-semibold text-admin-text-2 shrink-0">
+                          {u.name?.charAt(0).toUpperCase() || '?'}
+                        </div>
+                        <span className="text-sm font-medium text-admin-text-1">{u.name || '—'}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3.5 text-sm text-admin-text-2">{u.email}</td>
+                    <td className="px-4 py-3.5 text-sm text-admin-text-3 font-mono">{u.phone || '—'}</td>
+                    <td className="px-4 py-3.5">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${u.role === 'admin' ? 'bg-violet-400/10 text-violet-400' : 'bg-blue-400/10 text-blue-400'}`}>
+                        {u.role?.charAt(0).toUpperCase() + u.role?.slice(1)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3.5 text-sm text-admin-text-3">
+                      {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}
+                    </td>
+                    <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
+                      <button
+                        onClick={() => setConfirm({ id: u._id, name: u.name })}
+                        className="p-1.5 text-admin-text-3 hover:text-red-400 hover:bg-red-400/10 rounded-md transition-colors"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+            )}
+          </tbody>
+        </table>
+
+        {/* Pagination */}
+        {pagination.pages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-admin-border">
+            <span className="text-xs text-admin-text-3">{pagination.total} users</span>
+            <Pagination
+              page={pagination.page}
+              totalPages={pagination.pages}
+              onChange={load}
+            />
+          </div>
+        )}
+      </div>
+
+      <ConfirmDialog
+        open={!!confirm}
+        title="Delete User"
+        description={`Permanently delete ${confirm?.name}? This cannot be undone.`}
+        danger
+        onConfirm={() => handleDelete(confirm?.id, confirm?.name)}
+        onCancel={() => setConfirm(null)}
       />
     </div>
   );

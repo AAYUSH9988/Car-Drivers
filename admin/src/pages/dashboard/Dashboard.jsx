@@ -1,258 +1,237 @@
-import React, { useState, useEffect } from 'react';
-import Card from '../../components/common/Card';
-import StatsCard from '../../components/dashboard/StatsCard';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Users, Car, CalendarCheck, CheckCircle, DollarSign, TrendingUp, TrendingDown, ArrowRight } from 'lucide-react';
+import { dashboardAPI, bookingAPI } from '../../services/api';
 import BookingChart from '../../components/dashboard/BookingChart';
-import RecentBookings from '../../components/dashboard/RecentBookings';
-// Remove the unused api import or use it in your API calls
-// import api from '../../services/api';
+import StatusBadge from '../../components/common/StatusBadge';
+
+const StatCard = ({ label, value, icon: Icon, iconBg, iconColor, trend, trendUp }) => (
+  <div className="bg-admin-surface border border-admin-border rounded-md p-6">
+    <div className="flex items-center justify-between mb-4">
+      <span className="text-2xs font-medium text-admin-text-2 uppercase tracking-widest">{label}</span>
+      <div className={`p-2 rounded-md ${iconBg}`}>
+        <Icon size={16} strokeWidth={1.75} className={iconColor} />
+      </div>
+    </div>
+    <div className="text-3xl font-semibold text-admin-text-1 font-mono">{value}</div>
+    {trend !== undefined && (
+      <div className={`flex items-center gap-1 mt-2 text-xs font-medium ${trendUp ? 'text-emerald-400' : 'text-red-400'}`}>
+        {trendUp ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+        {Math.abs(trend)}% from last month
+      </div>
+    )}
+  </div>
+);
+
+const StatSkeleton = () => (
+  <div className="bg-admin-surface border border-admin-border rounded-md p-6 animate-pulse">
+    <div className="flex items-center justify-between mb-4">
+      <div className="h-2.5 w-20 bg-admin-elevated rounded" />
+      <div className="w-8 h-8 bg-admin-elevated rounded-md" />
+    </div>
+    <div className="h-8 w-24 bg-admin-elevated rounded mb-2" />
+    <div className="h-2.5 w-16 bg-admin-elevated rounded" />
+  </div>
+);
 
 const Dashboard = () => {
-  const [stats, setStats] = useState({
-    users: 0,
-    drivers: 0,
-    activeBookings: 0,
-    completedTrips: 0,
-    revenue: 0,
-  });
+  const navigate = useNavigate();
+  const [stats, setStats] = useState(null);
+  const [recentBookings, setRecentBookings] = useState([]);
+  const [chartData, setChartData] = useState(null);
+  const [period, setPeriod] = useState('30');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [timeframe, setTimeframe] = useState('monthly');
-  const [chartData, setChartData] = useState(null);
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        // When you're ready to make real API calls, uncomment this and remove the simulation
-        // const response = await api.get('/dashboard/stats');
-        // setStats(response.data);
-        
-        // Simulate API calls with placeholder data
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Placeholder data
-        setStats({
-          users: 284,
-          drivers: 48,
-          activeBookings: 23,
-          completedTrips: 1892,
-          revenue: 28654.75,
-        });
-        
-        // Different chart data based on timeframe
-        const monthlyData = [2800, 3200, 2950, 3800, 4200, 3950, 4800, 5100, 4700, 5900, 6300, 5800];
-        const weeklyData = [1200, 980, 1100, 1350, 1250, 1500, 1800];
-        
-        setChartData(timeframe === 'monthly' ? monthlyData : weeklyData);
-      } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-        setError('Failed to load dashboard data');
-      } finally {
-        setLoading(false);
+  const load = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [summaryRes, bookingsRes, analyticsRes] = await Promise.allSettled([
+        dashboardAPI.getSummary(),
+        bookingAPI.getAll({ page: 1, limit: 10 }),
+        dashboardAPI.getAnalytics('revenue', period),
+      ]);
+
+      if (summaryRes.status === 'fulfilled') {
+        setStats(summaryRes.value.data.data);
       }
-    };
 
-    fetchDashboardData();
-  }, [timeframe]);
+      if (bookingsRes.status === 'fulfilled' && bookingsRes.value.data.success) {
+        const b = bookingsRes.value.data.data || [];
+        setRecentBookings(b);
+      }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+      if (analyticsRes.status === 'fulfilled') {
+        const monthly = analyticsRes.value.data?.data?.monthly || [];
+        // If backend has monthlyRevenue; otherwise fallback to empty
+        if (monthly.length > 0) {
+          const labels = monthly.map(d => `${d._id.month}/${d._id.day || ''}`);
+          const values = monthly.map(d => d.revenue);
+          setChartData({ labels, values });
+        } else {
+          // fallback to mock-like daily if needed
+          setChartData({ labels: [], values: [] });
+        }
+      } else {
+        setChartData({ labels: [], values: [] });
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load dashboard');
+    } finally {
+      setLoading(false);
+    }
+  }, [period]);
 
-  if (error) {
-    return (
-      <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <div className="ml-3">
-            <p className="text-sm text-red-600">{error}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => { load(); }, [load]);
+
+  const overview = stats?.overview || {};
+  const revenue = stats?.revenue || {};
+
+  const cards = [
+    { label: 'Total Users',    value: overview.totalUsers    ?? '—', icon: Users,        iconBg: 'bg-blue-500/10',    iconColor: 'text-blue-400'    },
+    { label: 'Total Drivers',  value: overview.totalDrivers  ?? '—', icon: Car,          iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-400' },
+    { label: 'Active Bookings',value: overview.pendingBookings ?? '—', icon: CalendarCheck, iconBg: 'bg-violet-500/10', iconColor: 'text-violet-400'  },
+    { label: 'Completed Trips',value: overview.completedBookings ?? '—', icon: CheckCircle, iconBg: 'bg-sky-500/10', iconColor: 'text-sky-400'     },
+    { label: 'Total Revenue',  value: revenue.total != null ? `$${Number(revenue.total).toLocaleString()}` : '—', icon: DollarSign, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-400' },
+  ];
 
   return (
     <div className="space-y-6">
-      {/* Dashboard Header */}
-      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Welcome back! Here's what's happening with your platform today.
-          </p>
+          <h1 className="text-xl font-semibold text-admin-text-1">Dashboard</h1>
+          <p className="text-sm text-admin-text-3 mt-0.5">Platform overview</p>
         </div>
-        <div className="flex items-center space-x-3">
-          <div className="bg-white p-2 rounded-lg shadow-sm">
-            <select 
-              className="outline-none text-gray-700 text-sm font-medium" 
-              value={timeframe}
-              onChange={(e) => setTimeframe(e.target.value)}
-            >
-              <option value="weekly">Last 7 days</option>
-              <option value="monthly">Last 30 days</option>
-            </select>
-          </div>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition duration-150">
-            Generate Report
+        <div className="flex items-center gap-3">
+          <select
+            value={period}
+            onChange={e => setPeriod(e.target.value)}
+            className="bg-admin-surface border border-admin-border rounded-md px-3 py-1.5 text-sm text-admin-text-1 outline-none focus:border-admin-border-alt cursor-pointer"
+          >
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="90">Last 90 days</option>
+          </select>
+          <button
+            onClick={() => navigate('/reports')}
+            className="flex items-center gap-2 bg-admin-accent hover:bg-admin-accent-dim text-white rounded-md px-4 py-1.5 text-sm font-medium transition-colors"
+          >
+            Reports
+            <ArrowRight size={14} />
           </button>
         </div>
       </div>
-      
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
-        <StatsCard 
-          title="Total Customers" 
-          value={stats.users} 
-          icon="users" 
-          trend={7.2} 
-          bgColor="bg-gradient-to-r from-blue-500 to-blue-600"
-          subtitle="Active users"
-        />
-        <StatsCard 
-          title="Total Drivers" 
-          value={stats.drivers} 
-          icon="drivers" 
-          trend={5.3} 
-          bgColor="bg-gradient-to-r from-green-500 to-green-600"
-          subtitle="Available drivers"
-        />
-        <StatsCard 
-          title="Active Bookings" 
-          value={stats.activeBookings} 
-          icon="bookings" 
-          trend={3.1} 
-          bgColor="bg-gradient-to-r from-purple-500 to-purple-600"
-          subtitle="In progress"
-        />
-        <StatsCard 
-          title="Completed Trips" 
-          value={stats.completedTrips} 
-          icon="completed" 
-          trend={12.4} 
-          bgColor="bg-gradient-to-r from-yellow-500 to-yellow-600"
-          subtitle="Last 30 days"
-        />
-        <StatsCard 
-          title="Total Revenue" 
-          value={`$${stats.revenue.toLocaleString()}`} 
-          icon="revenue" 
-          trend={8.5} 
-          bgColor="bg-gradient-to-r from-red-500 to-red-600"
-          subtitle="Last 30 days"
-        />
+
+      {/* Stat Cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {loading
+          ? Array.from({ length: 5 }).map((_, i) => <StatSkeleton key={i} />)
+          : cards.map(c => <StatCard key={c.label} {...c} />)
+        }
       </div>
-      
-      {/* Charts and Tables */}
+
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-md px-4 py-3 text-sm text-red-400">
+          {error} — <button onClick={load} className="underline">Retry</button>
+        </div>
+      )}
+
+      {/* Chart + Top Drivers */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Card title="Revenue Overview">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-semibold">{timeframe === 'monthly' ? 'Monthly' : 'Weekly'} Revenue</h3>
-              <div className="flex space-x-2">
-                <button 
-                  onClick={() => setTimeframe('weekly')}
-                  className={`px-3 py-1 text-xs rounded-full ${
-                    timeframe === 'weekly' 
-                      ? 'bg-blue-100 text-blue-800' 
-                      : 'bg-gray-100 text-gray-600'
-                  }`}
-                >
-                  Weekly
-                </button>
-                <button 
-                  onClick={() => setTimeframe('monthly')}
-                  className={`px-3 py-1 text-xs rounded-full ${
-                    timeframe === 'monthly' 
-                      ? 'bg-blue-100 text-blue-800' 
-                      : 'bg-gray-100 text-gray-600'
-                  }`}
-                >
-                  Monthly
-                </button>
-              </div>
-            </div>
-            <BookingChart data={chartData} timeframe={timeframe} />
-          </Card>
+        <div className="lg:col-span-2 bg-admin-surface border border-admin-border rounded-md p-6">
+          <div className="flex items-center justify-between mb-6">
+            <span className="text-sm font-medium text-admin-text-1">Revenue</span>
+            <span className="text-2xs text-admin-text-3 uppercase tracking-widest">Last {period} days</span>
+          </div>
+          {loading
+            ? <div className="h-48 bg-admin-elevated rounded-md animate-pulse" />
+            : <BookingChart data={chartData} />
+          }
         </div>
-        
-        <div>
-          <Card title="Performance Overview">
-            <div className="space-y-6">
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-500">Customer Growth</span>
-                  <span className="text-sm font-semibold text-gray-700">78%</span>
+
+        <div className="bg-admin-surface border border-admin-border rounded-md p-6">
+          <span className="text-sm font-medium text-admin-text-1 block mb-4">Top Drivers</span>
+          {loading
+            ? Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 py-3 animate-pulse">
+                  <div className="w-8 h-8 rounded-full bg-admin-elevated" />
+                  <div className="flex-1">
+                    <div className="h-3 w-24 bg-admin-elevated rounded mb-1.5" />
+                    <div className="h-2.5 w-16 bg-admin-elevated rounded" />
+                  </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-blue-600 h-2 rounded-full" style={{ width: '78%' }}></div>
-                </div>
-              </div>
-              
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-500">Driver Growth</span>
-                  <span className="text-sm font-semibold text-gray-700">63%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-green-600 h-2 rounded-full" style={{ width: '63%' }}></div>
-                </div>
-              </div>
-              
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-500">Booking Rate</span>
-                  <span className="text-sm font-semibold text-gray-700">92%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-purple-600 h-2 rounded-full" style={{ width: '92%' }}></div>
-                </div>
-              </div>
-              
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-500">Customer Satisfaction</span>
-                  <span className="text-sm font-semibold text-gray-700">87%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-yellow-600 h-2 rounded-full" style={{ width: '87%' }}></div>
-                </div>
-              </div>
-              
-              {/* Added this section for quick actions */}
-              <div className="pt-4 mt-6 border-t border-gray-200">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Quick Actions</h4>
-                <div className="space-y-2">
-                  <button className="w-full text-left px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 rounded-md flex items-center justify-between">
-                    <span>View detailed analytics</span>
-                    <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                  <button className="w-full text-left px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 rounded-md flex items-center justify-between">
-                    <span>Download reports</span>
-                    <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </Card>
+              ))
+            : (stats?.performance?.topDrivers || []).length === 0
+              ? <p className="text-sm text-admin-text-3 py-6 text-center">No driver data yet</p>
+              : (stats?.performance?.topDrivers || []).map((d, i) => (
+                  <div key={i} className="flex items-center gap-3 py-2.5 border-b border-admin-border last:border-0">
+                    <div className="w-7 h-7 rounded-full bg-admin-accent/20 flex items-center justify-center text-xs font-semibold text-admin-accent">
+                      {i + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-admin-text-1 truncate">{d.name || 'Unknown'}</p>
+                      <p className="text-xs text-admin-text-3">{d.totalTrips || 0} trips · {d.rating?.toFixed(1) || '—'}</p>
+                    </div>
+                  </div>
+                ))
+          }
         </div>
       </div>
-      
+
       {/* Recent Bookings */}
-      <Card title="Recent Bookings">
-        <RecentBookings />
-      </Card>
+      <div className="bg-admin-surface border border-admin-border rounded-md overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-admin-border">
+          <span className="text-sm font-medium text-admin-text-1">Recent Bookings</span>
+          <button
+            onClick={() => navigate('/bookings')}
+            className="text-xs text-admin-accent hover:text-admin-accent-dim flex items-center gap-1 transition-colors"
+          >
+            View all <ArrowRight size={12} />
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="animate-pulse">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-5 py-3.5 border-b border-admin-border last:border-0">
+                <div className="h-3 w-28 bg-admin-elevated rounded" />
+                <div className="h-3 flex-1 bg-admin-elevated rounded" />
+                <div className="h-3 w-20 bg-admin-elevated rounded" />
+                <div className="h-5 w-16 bg-admin-elevated rounded-full" />
+              </div>
+            ))}
+          </div>
+        ) : recentBookings.length === 0 ? (
+          <p className="text-sm text-admin-text-3 text-center py-10">No bookings yet</p>
+        ) : (
+          <table className="w-full">
+            <thead>
+              <tr className="bg-admin-elevated border-b border-admin-border">
+                {['Reference', 'Customer', 'Driver', 'Amount', 'Status'].map(h => (
+                  <th key={h} className="px-5 py-3 text-left text-2xs font-medium text-admin-text-2 uppercase tracking-wider">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {recentBookings.map(b => (
+                <tr
+                  key={b._id}
+                  onClick={() => navigate(`/bookings/${b._id}`)}
+                  className="border-b border-admin-border hover:bg-admin-hover transition-colors cursor-pointer last:border-0"
+                >
+                  <td className="px-5 py-3.5 text-sm font-mono text-admin-text-2">{b.bookingReference || b._id?.slice(0, 10).toUpperCase()}</td>
+                  <td className="px-5 py-3.5 text-sm text-admin-text-1">{b.user?.name || '—'}</td>
+                  <td className="px-5 py-3.5 text-sm text-admin-text-2">{b.driver?.user?.name || '—'}</td>
+                  <td className="px-5 py-3.5 text-sm font-mono text-admin-text-1">${b.totalAmount?.toFixed(2) || '0.00'}</td>
+                  <td className="px-5 py-3.5"><StatusBadge status={b.status} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 };

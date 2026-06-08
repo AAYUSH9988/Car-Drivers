@@ -40,77 +40,55 @@ All 37 issues from the original audit were resolved:
 - ✅ Admin `AuthContext.jsx` now calls real API
 - ✅ Admin `api.js` all endpoints corrected
 
-### Remaining Production Gaps (Not Yet Fixed)
+### Remaining Production Gaps — Updated 2026-06-08
 
-| Gap | Risk | Priority |
+| Gap | Status | Notes |
 |---|---|---|
-| File uploads use local disk (`Multer diskStorage`) | Files wiped on every Render deploy (ephemeral filesystem) | 🔴 Critical |
-| No refresh token — JWT expires and user is silently logged out | Poor UX + security gap | 🟠 High |
-| No email verification on registration | Fake accounts, spam | 🟠 High |
-| No admin account creation mechanism | Can only create admin via direct MongoDB edit | 🟠 High |
-| No response compression (`compression` middleware) | Slow API responses on slow networks | 🟡 Medium |
-| No request logging (`morgan`) | Can't debug production issues | 🟡 Medium |
-| No health check endpoint includes DB latency | Render health checks may miss DB failures | 🟡 Medium |
-| `express.json({ limit: '10kb' })` — too small for file metadata requests | Could break legitimate requests | 🟡 Medium |
-| No graceful shutdown handler | Active requests killed abruptly on Render restart | 🟡 Medium |
-| No API versioning (`/api/v1/`) | Breaking changes affect all clients simultaneously | 🔵 Low |
+| File uploads use local disk | ✅ Fixed | Now uses **ImageKit** via `@imagekit/nodejs` + `multer.memoryStorage()` |
+| No refresh token | ✅ Fixed | `refreshToken` stored in User model, `POST /api/auth/refresh` endpoint live |
+| No email verification | ✅ Fixed | `verifyEmail` endpoint + **Brevo** SMTP via `utils/email.js` |
+| No admin account creation | ✅ Fixed | `POST /admin/users` allows admin to create any-role users |
+| No response compression | ✅ Fixed | `compression` middleware in `server.js` |
+| No request logging | ✅ Fixed | `morgan` in `server.js` (dev/combined modes) |
+| No graceful shutdown handler | ✅ Fixed | `SIGTERM`/`SIGINT` handlers in `server.js` |
+| JWT_SECRET minimum length | ✅ Fixed | Startup check enforces 32-char minimum |
+| File type validation on uploads | ✅ Fixed | `fileFilter` in `fileUpload.js` validates MIME + extension |
+| No API versioning (`/api/v1/`) | ⏸ Deferred | Breaking change — do before public launch |
+| `express.json` 10kb limit | ⏸ Deferred | Fine for current payloads; bump to 50kb if multipart issues arise |
 
 ---
 
 ## 2. Security Audit
 
-### Applied Security (Good)
+### Applied Security (Good) — Updated 2026-06-08
 
 ```
 ✅ helmet()                    — 15 HTTP security headers set
 ✅ express-mongo-sanitize()    — strips $operator keys from req.body/params
 ✅ express-rate-limit          — global 100 req/15min, auth 5 req/15min
-✅ bcrypt rounds = 12          — strong password hashing
+✅ bcrypt rounds = 12          — strong password hashing (BCRYPT_ROUNDS constant)
 ✅ JWT in Authorization header — not in cookies (avoids CSRF)
 ✅ Role-based auth middleware   — protect() + authorize('admin')
-✅ Mass assignment prevented   — updateData fields deleted before DB write
+✅ Mass assignment prevented   — updateData fields explicitly whitelisted
 ✅ isDev error gating          — stack traces never sent in production
-✅ CORS whitelist              — only FRONTEND_URL and ADMIN_URL allowed
+✅ CORS whitelist              — reads FRONTEND_URL and ADMIN_URL from .env
 ✅ body limit 10kb             — protects against large payload attacks
+✅ JWT_SECRET minimum 32 chars — startup check, process.exit(1) if too short
+✅ File upload MIME validation  — fileFilter rejects non-image/PDF files
+✅ ImageKit storage            — no ephemeral disk; files survive redeploys
+✅ Brevo email                 — verification and password reset emails live
+✅ Refresh token               — stored in User model, rotated on each use
+✅ Graceful shutdown           — SIGTERM/SIGINT handled, active requests drain
 ```
 
 ### Remaining Security Issues
 
-**S1 — No Rate Limiting on Password Updates**  
-`PUT /api/users/:id/password` is only rate-limited by the global limiter (100 req/15min). A targeted brute-force on password updates is still possible.  
-Fix: Apply `authLimiter` to that route.
-
-**S2 — JWT Secret Minimum Length Not Enforced**  
-`JWT_SECRET` from `.env` is used directly without length validation. A weak secret (e.g., `"secret123"`) would make tokens forgeable.  
-Fix: Add startup check:
-```js
-if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
-  console.error('JWT_SECRET must be at least 32 characters');
-  process.exit(1);
-}
-```
-
-**S3 — File Upload — No File Type Validation**  
-`fileUpload.js` saves files from `req.file.path` (Multer). No MIME type checking — a user could upload a `.js` file renamed as `.jpg`.  
-Fix: Add `fileFilter` to Multer config to validate MIME type with `file-type` package.
-
-**S4 — bankDetails Stored in Plain Text**  
-`Driver.js` stores `accountNumber`, `ifscCode` in plain text in MongoDB.  
-Fix: Encrypt sensitive bank fields at rest, or better: use a payment provider (Razorpay/Stripe) and never store raw bank details.
-
-**S5 — No HTTPS Enforcement**  
-In production, all traffic should be HTTPS-only. Render provides this automatically, but the app should set:
-```js
-app.use((req, res, next) => {
-  if (process.env.NODE_ENV === 'production' && req.header('x-forwarded-proto') !== 'https') {
-    return res.redirect(`https://${req.header('host')}${req.url}`);
-  }
-  next();
-});
-```
-
-**S6 — Missing `SameSite` on Cookies**  
-`cookie-parser` is used but cookies (if any) don't set `SameSite=Strict`.
+| # | Issue | Status |
+|---|-------|--------|
+| S1 | No rate limit on `PUT /api/users/:id/password` | ⚠️ Open — apply `authLimiter` to that route |
+| S4 | `bankDetails` (accountNumber, ifscCode) stored in plain text | ⚠️ Open — use `select: false` at minimum; move to payment provider long-term |
+| S5 | No HTTPS redirect middleware | ⚠️ Open — Render handles HTTPS at edge; add redirect if self-hosting |
+| S6 | `cookie-parser` used but no `SameSite` on cookies | 🔵 Low — JWT is in headers, not cookies; low risk |
 
 ---
 
@@ -544,17 +522,19 @@ ADMIN_SEED_PASSWORD=ChangeMe_Immediately_123!
 
 ## 9. Production Checklist
 
-### Before First Deploy
+### Before First Deploy — Updated 2026-06-08
 
 - [ ] `JWT_SECRET` is at least 32 random characters (use `openssl rand -base64 32`)
 - [ ] `NODE_ENV=production` set on Render
 - [ ] `MONGO_URI` points to MongoDB Atlas (not localhost)
 - [ ] MongoDB Atlas Network Access: Add Render IP or allow `0.0.0.0/0` for free tier
-- [ ] Cloudinary account created, credentials added
+- [x] File storage — **ImageKit** (not Cloudinary) — add `IMAGEKIT_PUBLIC_KEY`, `IMAGEKIT_PRIVATE_KEY`, `IMAGEKIT_URL_ENDPOINT`
+- [x] Email — **Brevo** (not SMTP) — add `BREVO_API_KEY`, `BREVO_FROM_EMAIL`
 - [ ] `FRONTEND_URL` and `ADMIN_URL` set to actual Vercel domains
 - [ ] Dockerfile builds successfully locally (`docker build -t test .`)
 - [ ] `/api/health` returns 200 with DB status
 - [ ] `render.yaml` committed to repo
+- [ ] Apply `authLimiter` to `PUT /api/users/:id/password` route (open security gap S1)
 
 ### After First Deploy
 

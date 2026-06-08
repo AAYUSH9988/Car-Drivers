@@ -142,8 +142,28 @@ export const getDashboardStats = async (req, res) => {
 // User Management
 export const getAllUsers = async (req, res) => {
     try {
-        const users = await User.find({ role: 'user' }).select('-password');
-        res.status(200).json({ success: true, data: users });
+        const { page = 1, limit = 20, search = '', role } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const query = role ? { role } : { role: { $ne: 'admin' } };
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } },
+                { phone: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const [users, total] = await Promise.all([
+            User.find(query).select('-password').sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)),
+            User.countDocuments(query)
+        ]);
+
+        res.status(200).json({
+            success: true,
+            data: users,
+            pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / parseInt(limit)) }
+        });
     } catch (error) {
         res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
@@ -164,8 +184,56 @@ export const getUser = async (req, res) => {
 // Driver Management
 export const getAllDrivers = async (req, res) => {
     try {
-        const drivers = await Driver.find().populate('user', '-password');
-        res.status(200).json({ success: true, data: drivers });
+        const { page = 1, limit = 20, search = '', status } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const query = {};
+        if (status) query.status = status;
+
+        let driversQuery = Driver.find(query)
+            .populate('user', '-password')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+
+        let countQuery = Driver.countDocuments(query);
+
+        if (search) {
+            // Search requires joining with User — use aggregate for name/email search
+            const pipeline = [
+                { $lookup: { from: 'users', localField: 'user', foreignField: '_id', as: 'user' } },
+                { $unwind: '$user' },
+                {
+                    $match: {
+                        ...(status ? { status } : {}),
+                        $or: [
+                            { 'user.name': { $regex: search, $options: 'i' } },
+                            { 'user.email': { $regex: search, $options: 'i' } },
+                            { licenseNumber: { $regex: search, $options: 'i' } }
+                        ]
+                    }
+                },
+                { $sort: { createdAt: -1 } }
+            ];
+
+            const [drivers, countResult] = await Promise.all([
+                Driver.aggregate([...pipeline, { $skip: skip }, { $limit: parseInt(limit) }]),
+                Driver.aggregate([...pipeline, { $count: 'total' }])
+            ]);
+            const total = countResult[0]?.total || 0;
+            return res.status(200).json({
+                success: true,
+                data: drivers,
+                pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / parseInt(limit)) }
+            });
+        }
+
+        const [drivers, total] = await Promise.all([driversQuery, countQuery]);
+        res.status(200).json({
+            success: true,
+            data: drivers,
+            pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / parseInt(limit)) }
+        });
     } catch (error) {
         res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
@@ -190,10 +258,29 @@ export const approveDriver = async (req, res) => {
 // Booking Management
 export const getAllBookings = async (req, res) => {
     try {
-        const bookings = await Booking.find()
-            .populate('user', 'name email')
-            .populate('driver', 'name');
-        res.status(200).json({ success: true, data: bookings });
+        const { page = 1, limit = 20, status, userId, driverId } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const query = {};
+        if (status) query.status = status;
+        if (userId) query.user = userId;
+        if (driverId) query.driver = driverId;
+
+        const [bookings, total] = await Promise.all([
+            Booking.find(query)
+                .populate('user', 'name email phone')
+                .populate({ path: 'driver', select: 'licenseNumber hourlyRate', populate: { path: 'user', select: 'name phone' } })
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            Booking.countDocuments(query)
+        ]);
+
+        res.status(200).json({
+            success: true,
+            data: bookings,
+            pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / parseInt(limit)) }
+        });
     } catch (error) {
         res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
@@ -277,6 +364,45 @@ export const suspendDriver = async (req, res) => {
         res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
 };
+
+export const deleteDriver = async (req, res) => {
+    try {
+        const driver = await Driver.findById(req.params.id);
+        if (!driver) {
+            return res.status(404).json({ success: false, message: 'Driver not found' });
+        }
+        // Delete the linked User account and the Driver document together
+        await Promise.all([
+            User.findByIdAndDelete(driver.user),
+            Driver.findByIdAndDelete(req.params.id),
+        ]);
+        res.status(200).json({ success: true, message: 'Driver deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
+    }
+};
+
+export const updateDriver = async (req, res) => {
+    try {
+        const allowed = ['experience', 'hourlyRate', 'vehicleTypes', 'licenseNumber', 'status', 'isAvailable'];
+        const updates = {};
+        allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
+
+        const driver = await Driver.findByIdAndUpdate(
+            req.params.id,
+            updates,
+            { new: true, runValidators: true }
+        ).populate('user', '-password');
+
+        if (!driver) {
+            return res.status(404).json({ success: false, message: 'Driver not found' });
+        }
+        res.status(200).json({ success: true, data: driver });
+    } catch (error) {
+        res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
+    }
+};
+
 export const updateUser = async (req, res) => {
     try {
         const { id } = req.params;
@@ -587,6 +713,74 @@ const getOverviewAnalytics = async (startDate) => {
     const bookings = await getBookingAnalytics(startDate);
 
     return { revenue, users, drivers, bookings };
+};
+
+// Report helper functions
+const generateRevenueReport = async (start, end) => {
+    const data = await Booking.aggregate([
+        { $match: { status: 'completed', createdAt: { $gte: start, $lte: end } } },
+        {
+            $group: {
+                _id: { day: { $dayOfMonth: '$createdAt' }, month: { $month: '$createdAt' }, year: { $year: '$createdAt' } },
+                revenue: { $sum: '$totalAmount' },
+                bookings: { $sum: 1 },
+                avgValue: { $avg: '$totalAmount' }
+            }
+        },
+        { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1 } }
+    ]);
+    const totals = await Booking.aggregate([
+        { $match: { status: 'completed', createdAt: { $gte: start, $lte: end } } },
+        { $group: { _id: null, totalRevenue: { $sum: '$totalAmount' }, totalBookings: { $sum: 1 } } }
+    ]);
+    return { dailyBreakdown: data, totals: totals[0] || { totalRevenue: 0, totalBookings: 0 } };
+};
+
+const generateUserReport = async (start, end) => {
+    const newUsers = await User.aggregate([
+        { $match: { role: 'user', createdAt: { $gte: start, $lte: end } } },
+        {
+            $group: {
+                _id: { day: { $dayOfMonth: '$createdAt' }, month: { $month: '$createdAt' }, year: { $year: '$createdAt' } },
+                count: { $sum: 1 }
+            }
+        },
+        { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1 } }
+    ]);
+    const total = await User.countDocuments({ role: 'user', createdAt: { $gte: start, $lte: end } });
+    return { newUsers, totalNewUsers: total };
+};
+
+const generateDriverReport = async (start, end) => {
+    const newDrivers = await Driver.aggregate([
+        { $match: { createdAt: { $gte: start, $lte: end } } },
+        {
+            $group: {
+                _id: { status: '$status' },
+                count: { $sum: 1 }
+            }
+        }
+    ]);
+    const total = await Driver.countDocuments({ createdAt: { $gte: start, $lte: end } });
+    return { byStatus: newDrivers, totalNewDrivers: total };
+};
+
+const generateBookingReport = async (start, end) => {
+    const byStatus = await Booking.aggregate([
+        { $match: { createdAt: { $gte: start, $lte: end } } },
+        { $group: { _id: '$status', count: { $sum: 1 }, revenue: { $sum: '$totalAmount' } } }
+    ]);
+    const daily = await Booking.aggregate([
+        { $match: { createdAt: { $gte: start, $lte: end } } },
+        {
+            $group: {
+                _id: { day: { $dayOfMonth: '$createdAt' }, month: { $month: '$createdAt' }, year: { $year: '$createdAt' } },
+                count: { $sum: 1 }
+            }
+        },
+        { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1 } }
+    ]);
+    return { byStatus, daily };
 };
 
 // Report Generation
@@ -900,6 +1094,79 @@ export const sendBulkNotification = async (req, res) => {
 };
 
 // Data Export
+export const createUser = async (req, res) => {
+    try {
+        const bcrypt = (await import('bcrypt')).default;
+        const { name, email, phone, password, role = 'user' } = req.body;
+        if (!name || !email || !password) {
+            return res.status(400).json({ success: false, message: 'Name, email, and password are required' });
+        }
+        if (password.length < 8) {
+            return res.status(400).json({ success: false, message: 'Password must be at least 8 characters' });
+        }
+        const exists = await User.findOne({ email: email.toLowerCase().trim() });
+        if (exists) return res.status(409).json({ success: false, message: 'Email already registered' });
+        const hashed = await bcrypt.hash(password, 12);
+        const user = await User.create({
+            name: name.trim(),
+            email: email.toLowerCase().trim(),
+            password: hashed,
+            phone: phone?.trim() || '',
+            role: ['user', 'admin'].includes(role) ? role : 'user',
+            isEmailVerified: true,
+        });
+        const { password: _, ...userData } = user.toObject();
+        return res.status(201).json({ success: true, data: userData });
+    } catch (error) {
+        console.error('Create user error:', error);
+        return res.status(500).json({ success: false, message: isDev ? error.message : 'Failed to create user' });
+    }
+};
+
+export const createDriver = async (req, res) => {
+    try {
+        const bcrypt = (await import('bcrypt')).default;
+        const {
+            name, email, phone, password,
+            experience, hourlyRate, vehicleType,
+            licenseNumber, dateOfBirth, gender, address,
+        } = req.body;
+        if (!name || !email || !password) {
+            return res.status(400).json({ success: false, message: 'Name, email, and password are required' });
+        }
+        if (password.length < 8) {
+            return res.status(400).json({ success: false, message: 'Password must be at least 8 characters' });
+        }
+        const exists = await User.findOne({ email: email.toLowerCase().trim() });
+        if (exists) return res.status(409).json({ success: false, message: 'Email already registered' });
+        const hashed = await bcrypt.hash(password, 12);
+        const user = await User.create({
+            name: name.trim(),
+            email: email.toLowerCase().trim(),
+            password: hashed,
+            phone: phone?.trim() || '',
+            role: 'driver',
+            isEmailVerified: true,
+            dateOfBirth,
+            gender,
+            address,
+        });
+        const driver = await Driver.create({
+            user: user._id,
+            licenseNumber: licenseNumber || `ADMIN-${user._id.toString().slice(-6).toUpperCase()}`,
+            experience: experience ? Number(experience) : 0,
+            vehicleTypes: vehicleType ? [vehicleType] : ['sedan'],
+            hourlyRate: hourlyRate ? Number(hourlyRate) : 0,
+            documents: { license: 'pending-upload', profilePhoto: 'default-profile.jpg' },
+            status: 'pending',
+        });
+        return res.status(201).json({ success: true, data: { user: user._id, driver: driver._id } });
+    } catch (error) {
+        console.error('Create driver error:', error);
+        return res.status(500).json({ success: false, message: isDev ? error.message : 'Failed to create driver' });
+    }
+};
+
 export const exportData = async (req, res) => {
     try {
         const { type } = req.body;

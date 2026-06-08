@@ -52,37 +52,57 @@ export const authAPI = {
 
 // User endpoints
 export const userAPI = {
-  getAll: (params) => api.get('/admin/users', { params }),
-  getById: (id) => api.get(`/admin/users/${id}`),
-  create: (userData) => api.post('/users', userData),
-  update: (id, userData) => api.put(`/admin/users/${id}`, userData),
-  delete: (id) => api.delete(`/admin/users/${id}`),
+  getAll:    (params) => api.get('/admin/users', { params }),
+  getById:   (id) => api.get(`/admin/users/${id}`),
+  getStats:  (id) => api.get(`/admin/users/${id}/stats`),
+  create:    (userData) => api.post('/admin/users', userData),
+  update:    (id, userData) => api.put(`/admin/users/${id}`, userData),
+  delete:    (id) => api.delete(`/admin/users/${id}`),
+  bulkUpdate: (userIds, updateData) => api.patch('/admin/users/bulk-update', { userIds, updateData }),
 };
 
 // Driver endpoints
 export const driverAPI = {
-  getAll: (params) => api.get('/admin/drivers', { params }),
-  getById: (id) => api.get(`/admin/drivers/${id}`),
-  verify: (id) => api.patch(`/admin/drivers/${id}/approve`),
-  suspend: (id) => api.patch(`/admin/drivers/${id}/suspend`),
-  update: (id, driverData) => api.put(`/admin/drivers/${id}`, driverData),
-  delete: (id) => api.delete(`/admin/drivers/${id}`),
+  getAll:    (params) => api.get('/admin/drivers', { params }),
+  getById:   (id) => api.get(`/admin/drivers/${id}`),
+  getStats:  (id) => api.get(`/admin/drivers/${id}/stats`),
+  create:    (driverData) => api.post('/admin/drivers', driverData),
+  approve:   (id) => api.patch(`/admin/drivers/${id}/approve`),
+  suspend:   (id, reason) => api.patch(`/admin/drivers/${id}/suspend`, { reason }),
+  update:    (id, driverData) => api.put(`/admin/drivers/${id}`, driverData),
+  delete:    (id) => api.delete(`/admin/drivers/${id}`),
+  bulkUpdate: (driverIds, updateData) => api.patch('/admin/drivers/bulk-update', { driverIds, updateData }),
 };
 
 // Booking endpoints
 export const bookingAPI = {
-  getAll: (params) => api.get('/admin/bookings', { params }),
-  getById: (id) => api.get(`/admin/bookings/${id}`),
-  updateStatus: (id, status) => api.patch(`/admin/bookings/${id}/status`, { status }),
-  delete: (id) => api.delete(`/bookings/${id}`),
+  getAll:       (params) => api.get('/admin/bookings', { params }),
+  getById:      (id) => api.get(`/admin/bookings/${id}`),
+  updateStatus: (id, status, note) => api.patch(`/admin/bookings/${id}/status`, { status, note }),
+  delete:       (id) => api.delete(`/bookings/${id}`),
 };
 
-// Dashboard endpoints — mapped to actual backend routes
+// Dashboard endpoints
 export const dashboardAPI = {
-  getSummary: () => api.get('/admin/dashboard/stats'),
-  getRecentBookings: () => api.get('/admin/bookings?limit=10'),
-  getRevenue: (period) => api.get(`/admin/analytics?type=revenue&period=${period}`),
-  getUserGrowth: (period) => api.get(`/admin/analytics?type=users&period=${period}`),
+  getSummary:      () => api.get('/admin/dashboard/stats'),
+  getRecentBookings: (limit = 10) => api.get('/admin/bookings', { params: { limit, page: 1 } }),
+  getAnalytics:    (type, period) => api.get('/admin/analytics', { params: { type, period } }),
+};
+
+// Reports & settings
+export const reportAPI = {
+  generate: (type, startDate, endDate) => api.post('/admin/reports/generate', { type, startDate, endDate }),
+  export:   (type) => api.post('/admin/export', { type }, { responseType: 'blob' }),
+};
+
+export const settingsAPI = {
+  getSystemInfo: () => api.get('/admin/system-info'),
+  update:        (settings) => api.put('/admin/settings', { settings }),
+};
+
+export const profileAPI = {
+  get:    () => api.get('/admin/profile'),
+  update: (data) => api.put('/admin/profile', data),
 };
 
 // Export the full API instance as default

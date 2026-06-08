@@ -1,235 +1,199 @@
-import React, { useState, useContext } from 'react';
-import Card from '../../components/common/Card';
-import Button from '../../components/common/Button';
-import Input from '../../components/common/Input';
+import React, { useState, useContext, useEffect } from 'react';
+import { User, Lock, Save } from 'lucide-react';
 import { AuthContext } from '../../contexts/AuthContext';
+import { profileAPI } from '../../services/api';
+import { toast } from 'sonner';
+
+const INPUT_CLS = 'w-full bg-admin-elevated border border-admin-border rounded-md px-3 py-2.5 text-sm text-admin-text-1 placeholder-admin-text-3 outline-none focus:border-admin-border-alt transition-colors';
+const LABEL_CLS = 'block text-sm text-admin-text-2 mb-1.5';
 
 const Profile = () => {
-  const { user, updateProfile } = useContext(AuthContext);
-  
-  const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    role: user?.role || 'admin',
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
-  
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState(null);
-  
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-  
-  const handleSubmit = async (e) => {
+  const { user } = useContext(AuthContext);
+  const [activeTab, setActiveTab] = useState('profile');
+  const [saving, setSaving] = useState(false);
+
+  const [profileForm, setProfileForm] = useState({ name: '', email: '', phone: '' });
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [showPass, setShowPass] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setProfileForm({ name: user.name || '', email: user.email || '', phone: user.phone || '' });
+    }
+  }, [user]);
+
+  const handleProfileSave = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setSuccess(false);
-    setError(null);
-    
+    if (!profileForm.name.trim()) { toast.error('Name is required'); return; }
+    setSaving(true);
     try {
-      // Validate passwords match if changing password
-      if (formData.newPassword && formData.newPassword !== formData.confirmPassword) {
-        throw new Error('New passwords do not match');
-      }
-      
-      // In a real app, call API here
-      // For demo, just simulate a delay
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Update local storage
-      const userData = JSON.parse(localStorage.getItem('admin_user') || '{}');
-      const updatedUser = {
-        ...userData,
-        name: formData.name,
-        email: formData.email,
-      };
-      localStorage.setItem('admin_user', JSON.stringify(updatedUser));
-      
-      // Update context
-      updateProfile && updateProfile(updatedUser);
-      
-      setSuccess(true);
-      
-      // Reset password fields
-      setFormData(prev => ({
-        ...prev,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      }));
-      
+      const res = await profileAPI.update({ name: profileForm.name, phone: profileForm.phone });
+      const updated = res.data.data;
+      const stored = JSON.parse(localStorage.getItem('admin_user') || '{}');
+      localStorage.setItem('admin_user', JSON.stringify({ ...stored, name: updated.name, phone: updated.phone }));
+      toast.success('Profile updated');
     } catch (err) {
-      setError(err.message || 'Failed to update profile');
+      toast.error(err.response?.data?.message || 'Update failed');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
-  
+
+  const handlePasswordSave = async (e) => {
+    e.preventDefault();
+    const { currentPassword, newPassword, confirmPassword } = passwordForm;
+    if (newPassword !== confirmPassword) { toast.error('Passwords do not match'); return; }
+    if (newPassword.length < 8) { toast.error('Password must be at least 8 characters'); return; }
+    setSaving(true);
+    try {
+      await profileAPI.update({ currentPassword, newPassword });
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      toast.success('Password changed');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Password change failed');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const TABS = [
+    { key: 'profile', label: 'Profile', icon: User },
+    { key: 'security', label: 'Security', icon: Lock },
+  ];
+
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Manage your account information and change your password
-        </p>
+    <div className="space-y-6 max-w-lg">
+      <div>
+        <h1 className="text-xl font-semibold text-admin-text-1">Profile</h1>
+        <p className="text-sm text-admin-text-3 mt-0.5">Manage your admin account</p>
       </div>
-      
-      {success && (
-        <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-green-700">Profile successfully updated</p>
-            </div>
-          </div>
+
+      {/* Avatar */}
+      <div className="bg-admin-surface border border-admin-border rounded-md p-6 flex items-center gap-4">
+        <div className="w-14 h-14 rounded-full bg-admin-accent/20 flex items-center justify-center text-xl font-semibold text-admin-accent">
+          {user?.name?.charAt(0).toUpperCase() || 'A'}
         </div>
-      )}
-      
-      {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-1">
-          <Card>
-            <div className="flex flex-col items-center py-6">
-              <div className="w-24 h-24 rounded-full bg-blue-500 flex items-center justify-center text-white text-3xl font-bold mb-4">
-                {formData.name.charAt(0)}
-              </div>
-              <h3 className="text-lg font-semibold">{formData.name}</h3>
-              <p className="text-gray-600 mb-3 capitalize">{formData.role}</p>
-              <div>
-                <label htmlFor="avatar" className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                  Change Avatar
-                </label>
-                <input id="avatar" type="file" className="hidden" accept="image/*" />
-              </div>
-            </div>
-            <div className="border-t pt-4">
-              <div className="flex justify-between py-2">
-                <span className="text-sm text-gray-500">Member Since</span>
-                <span className="text-sm font-medium">June 15, 2023</span>
-              </div>
-              <div className="flex justify-between py-2">
-                <span className="text-sm text-gray-500">Last Login</span>
-                <span className="text-sm font-medium">Today</span>
-              </div>
-            </div>
-          </Card>
-        </div>
-        
-        <div className="md:col-span-2">
-          <form onSubmit={handleSubmit}>
-            <Card title="Account Information">
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full Name</label>
-                  <Input
-                    id="name"
-                    name="name"
-                    type="text"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="role" className="block text-sm font-medium text-gray-700">Role</label>
-                  <Input
-                    id="role"
-                    name="role"
-                    type="text"
-                    value={formData.role}
-                    disabled
-                  />
-                </div>
-              </div>
-            </Card>
-            
-            <Card title="Change Password" className="mt-6">
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">Current Password</label>
-                  <Input
-                    id="currentPassword"
-                    name="currentPassword"
-                    type="password"
-                    value={formData.currentPassword}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">New Password</label>
-                  <Input
-                    id="newPassword"
-                    name="newPassword"
-                    type="password"
-                    value={formData.newPassword}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirm New Password</label>
-                  <Input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                  />
-                </div>
-                <p className="text-xs text-gray-500">
-                  Leave the password fields empty if you don't want to change your password.
-                </p>
-              </div>
-            </Card>
-            
-            <div className="mt-6 flex justify-end">
-              <Button
-                type="submit"
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-                disabled={loading}
-              >
-                {loading ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </div>
-          </form>
+        <div>
+          <p className="text-base font-semibold text-admin-text-1">{user?.name || 'Admin'}</p>
+          <p className="text-sm text-admin-text-3">{user?.email}</p>
+          <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded text-2xs font-medium bg-violet-400/10 text-violet-400 uppercase tracking-wide">
+            Administrator
+          </span>
         </div>
       </div>
+
+      {/* Tabs */}
+      <div className="flex border-b border-admin-border">
+        {TABS.map(t => (
+          <button
+            key={t.key}
+            onClick={() => setActiveTab(t.key)}
+            className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors relative ${
+              activeTab === t.key ? 'text-admin-accent' : 'text-admin-text-3 hover:text-admin-text-2'
+            }`}
+          >
+            <t.icon size={14} />
+            {t.label}
+            {activeTab === t.key && <span className="absolute bottom-0 left-0 right-0 h-px bg-admin-accent" />}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'profile' && (
+        <form onSubmit={handleProfileSave} className="bg-admin-surface border border-admin-border rounded-md p-6 space-y-4">
+          <div>
+            <label className={LABEL_CLS}>Full Name</label>
+            <input
+              className={INPUT_CLS}
+              value={profileForm.name}
+              onChange={e => setProfileForm(f => ({ ...f, name: e.target.value }))}
+              required
+            />
+          </div>
+          <div>
+            <label className={LABEL_CLS}>Email Address</label>
+            <input className={`${INPUT_CLS} opacity-50 cursor-not-allowed`} value={profileForm.email} disabled />
+            <p className="text-xs text-admin-text-3 mt-1">Email cannot be changed</p>
+          </div>
+          <div>
+            <label className={LABEL_CLS}>Phone</label>
+            <input
+              className={INPUT_CLS}
+              type="tel"
+              value={profileForm.phone}
+              onChange={e => setProfileForm(f => ({ ...f, phone: e.target.value }))}
+              placeholder="Enter phone number"
+            />
+          </div>
+          <div className="flex justify-end pt-2">
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex items-center gap-2 bg-admin-accent hover:bg-admin-accent-dim text-white rounded-md px-5 py-2.5 text-sm font-medium transition-colors disabled:opacity-50"
+            >
+              <Save size={16} />
+              {saving ? 'Saving…' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {activeTab === 'security' && (
+        <form onSubmit={handlePasswordSave} className="bg-admin-surface border border-admin-border rounded-md p-6 space-y-4">
+          <div>
+            <label className={LABEL_CLS}>Current Password</label>
+            <input
+              className={INPUT_CLS}
+              type={showPass ? 'text' : 'password'}
+              value={passwordForm.currentPassword}
+              onChange={e => setPasswordForm(f => ({ ...f, currentPassword: e.target.value }))}
+              required
+              placeholder="Enter current password"
+            />
+          </div>
+          <div>
+            <label className={LABEL_CLS}>New Password</label>
+            <input
+              className={INPUT_CLS}
+              type={showPass ? 'text' : 'password'}
+              value={passwordForm.newPassword}
+              onChange={e => setPasswordForm(f => ({ ...f, newPassword: e.target.value }))}
+              required
+              placeholder="At least 8 characters"
+            />
+          </div>
+          <div>
+            <label className={LABEL_CLS}>Confirm New Password</label>
+            <input
+              className={INPUT_CLS}
+              type={showPass ? 'text' : 'password'}
+              value={passwordForm.confirmPassword}
+              onChange={e => setPasswordForm(f => ({ ...f, confirmPassword: e.target.value }))}
+              required
+              placeholder="Repeat new password"
+            />
+          </div>
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={showPass}
+              onChange={e => setShowPass(e.target.checked)}
+              className="w-4 h-4 rounded border-admin-border bg-admin-elevated text-admin-accent"
+            />
+            <span className="text-sm text-admin-text-2">Show passwords</span>
+          </label>
+          <div className="flex justify-end pt-2">
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex items-center gap-2 bg-admin-accent hover:bg-admin-accent-dim text-white rounded-md px-5 py-2.5 text-sm font-medium transition-colors disabled:opacity-50"
+            >
+              <Lock size={16} />
+              {saving ? 'Changing…' : 'Change Password'}
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 };

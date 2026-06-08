@@ -1,183 +1,147 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Card from '../../components/common/Card';
-import Button from '../../components/common/Button';
+import { ArrowLeft, Calendar, DollarSign, CheckCircle, XCircle } from 'lucide-react';
+import { userAPI } from '../../services/api';
+import { toast } from 'sonner';
+import Breadcrumb from '../../components/layout/Breadcrumb';
+
+const InfoRow = ({ label, value }) => (
+  <div className="flex items-start justify-between py-2.5 border-b border-admin-border last:border-0">
+    <span className="text-sm text-admin-text-3">{label}</span>
+    <span className="text-sm text-admin-text-1 font-medium text-right ml-4">{value || '—'}</span>
+  </div>
+);
+
+const StatCard = ({ icon: Icon, label, value, color }) => (
+  <div className="bg-admin-elevated border border-admin-border rounded-md p-4">
+    <div className="flex items-center gap-2 mb-2">
+      <Icon size={14} className={color} />
+      <span className="text-2xs text-admin-text-3 uppercase tracking-widest">{label}</span>
+    </div>
+    <div className="text-2xl font-semibold font-mono text-admin-text-1">{value}</div>
+  </div>
+);
 
 const UserDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [recentBookings, setRecentBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
+
   useEffect(() => {
-    const fetchUserDetails = async () => {
+    let mounted = true;
+    const load = async () => {
       try {
-        // In a real app, fetch from API
-        // const response = await api.get(`/users/${id}`);
-        // setUser(response.data.user);
-        
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Placeholder data
-        setUser({
-          _id: id,
-          name: 'John Doe',
-          email: 'john@example.com',
-          phone: '555-1234',
-          role: 'user',
-          createdAt: '2023-06-15T10:00:00Z',
-          lastLogin: '2023-06-20T08:45:00Z',
-          bookingStats: {
-            total: 12,
-            completed: 8,
-            cancelled: 1,
-            pending: 3
-          },
-          address: '123 Main St, Anytown, USA'
-        });
-      } catch (err) {
-        console.error(err);
-        setError('Failed to load user details');
+        const [userRes, statsRes] = await Promise.all([
+          userAPI.getById(id),
+          userAPI.getStats(id),
+        ]);
+        if (mounted) {
+          setUser(userRes.data.data);
+          setStats(statsRes.data.data?.stats);
+          setRecentBookings(statsRes.data.data?.recentBookings || []);
+        }
+      } catch {
+        toast.error('Failed to load user');
+        navigate('/users');
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
-    
-    fetchUserDetails();
+    load();
+    return () => { mounted = false; };
   }, [id]);
-  
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+      <div className="space-y-6 animate-pulse">
+        <div className="h-8 w-48 bg-admin-elevated rounded" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="bg-admin-surface border border-admin-border rounded-md h-64" />
+          <div className="lg:col-span-2 bg-admin-surface border border-admin-border rounded-md h-64" />
+        </div>
       </div>
     );
   }
-  
-  if (error || !user) {
-    return (
-      <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-        <p className="text-red-700">{error || 'User not found'}</p>
-      </div>
-    );
-  }
-  
+
+  if (!user) return null;
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-6">
+      <Breadcrumb />
+
+      <div className="flex items-center gap-4">
+        <button onClick={() => navigate('/users')} className="p-2 text-admin-text-3 hover:text-admin-text-1 hover:bg-admin-elevated rounded-md transition-colors">
+          <ArrowLeft size={18} />
+        </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">User Details</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            View and manage user information
-          </p>
+          <h1 className="text-xl font-semibold text-admin-text-1">{user.name}</h1>
+          <p className="text-sm text-admin-text-3 mt-0.5">{user.email}</p>
         </div>
-        <div className="space-x-2">
-          <Button
-            onClick={() => navigate('/users')}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800"
-          >
-            Back to Users
-          </Button>
-          <Button
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            Edit User
-          </Button>
-        </div>
+        <span className={`ml-auto inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${user.role === 'admin' ? 'bg-violet-400/10 text-violet-400' : 'bg-blue-400/10 text-blue-400'}`}>
+          {user.role?.charAt(0).toUpperCase() + user.role?.slice(1)}
+        </span>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="col-span-1">
-          <Card>
-            <div className="flex flex-col items-center pb-6">
-              <div className="w-24 h-24 rounded-full bg-blue-500 flex items-center justify-center text-white text-3xl font-bold mb-4">
-                {user.name.charAt(0)}
-              </div>
-              <h3 className="text-lg font-semibold">{user.name}</h3>
-              <p className="text-gray-600 mb-3">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</p>
-              <div className="flex space-x-2">
-                <button className="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full">
-                  Active
-                </button>
-                <button className="px-3 py-1 text-xs bg-red-100 text-red-800 rounded-full">
-                  Suspend
-                </button>
-              </div>
-            </div>
-            <div className="border-t pt-4">
-              <div className="flex justify-between py-2">
-                <span className="text-sm text-gray-500">Member Since</span>
-                <span className="text-sm font-medium">{new Date(user.createdAt).toLocaleDateString()}</span>
-              </div>
-              <div className="flex justify-between py-2">
-                <span className="text-sm text-gray-500">Last Login</span>
-                <span className="text-sm font-medium">{new Date(user.lastLogin).toLocaleDateString()}</span>
-              </div>
-            </div>
-          </Card>
+
+      {stats && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <StatCard icon={Calendar}     label="Total Bookings" value={stats.totalBookings ?? 0}                         color="text-blue-400"    />
+          <StatCard icon={CheckCircle}  label="Completed"      value={stats.completedBookings ?? 0}                     color="text-emerald-400" />
+          <StatCard icon={XCircle}      label="Cancelled"      value={stats.cancelledBookings ?? 0}                     color="text-red-400"     />
+          <StatCard icon={DollarSign}   label="Total Spent"    value={`$${(stats.totalSpent || 0).toFixed(2)}`}         color="text-amber-400"   />
         </div>
-        
-        <div className="col-span-2">
-          <Card title="User Information">
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">Full Name</p>
-                  <p className="font-medium">{user.name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Email</p>
-                  <p className="font-medium">{user.email}</p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">Phone</p>
-                  <p className="font-medium">{user.phone}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Role</p>
-                  <p className="font-medium capitalize">{user.role}</p>
-                </div>
-              </div>
-              
-              <div>
-                <p className="text-sm text-gray-500">Address</p>
-                <p className="font-medium">{user.address}</p>
-              </div>
-            </div>
-          </Card>
-          
-          <Card title="Booking Statistics" className="mt-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gray-50 p-4 rounded-lg text-center">
-                <p className="text-2xl font-bold text-gray-800">{user.bookingStats.total}</p>
-                <p className="text-sm text-gray-500">Total Bookings</p>
-              </div>
-              <div className="bg-green-50 p-4 rounded-lg text-center">
-                <p className="text-2xl font-bold text-green-600">{user.bookingStats.completed}</p>
-                <p className="text-sm text-gray-500">Completed</p>
-              </div>
-              <div className="bg-yellow-50 p-4 rounded-lg text-center">
-                <p className="text-2xl font-bold text-yellow-600">{user.bookingStats.pending}</p>
-                <p className="text-sm text-gray-500">Pending</p>
-              </div>
-              <div className="bg-red-50 p-4 rounded-lg text-center">
-                <p className="text-2xl font-bold text-red-600">{user.bookingStats.cancelled}</p>
-                <p className="text-sm text-gray-500">Cancelled</p>
-              </div>
-            </div>
-            
-            <div className="mt-6">
-              <Button
-                className="w-full bg-blue-600 text-white hover:bg-blue-700"
-              >
-                View All Bookings
-              </Button>
-            </div>
-          </Card>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="bg-admin-surface border border-admin-border rounded-md p-6">
+          <h2 className="text-2xs font-medium text-admin-text-2 uppercase tracking-widest mb-4">Account Info</h2>
+          <InfoRow label="Full Name"      value={user.name} />
+          <InfoRow label="Email"          value={user.email} />
+          <InfoRow label="Phone"          value={user.phone} />
+          <InfoRow label="Role"           value={user.role} />
+          <InfoRow label="Joined"         value={user.createdAt ? new Date(user.createdAt).toLocaleDateString() : null} />
+          <InfoRow label="Email Verified" value={user.isEmailVerified ? 'Yes' : 'No'} />
+        </div>
+
+        <div className="lg:col-span-2 bg-admin-surface border border-admin-border rounded-md overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-admin-border">
+            <span className="text-sm font-medium text-admin-text-1">Recent Bookings</span>
+            <button
+              onClick={() => navigate(`/bookings?userId=${id}`)}
+              className="text-xs text-admin-accent hover:text-admin-accent-dim transition-colors"
+            >
+              View all →
+            </button>
+          </div>
+          {recentBookings.length === 0 ? (
+            <p className="text-sm text-admin-text-3 text-center py-10">No bookings yet</p>
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="bg-admin-elevated border-b border-admin-border">
+                  {['Reference', 'Date', 'Amount', 'Status'].map(h => (
+                    <th key={h} className="px-4 py-3 text-left text-2xs font-medium text-admin-text-2 uppercase tracking-wider">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {recentBookings.map(b => (
+                  <tr
+                    key={b._id}
+                    onClick={() => navigate(`/bookings/${b._id}`)}
+                    className="border-b border-admin-border hover:bg-admin-hover transition-colors cursor-pointer last:border-0"
+                  >
+                    <td className="px-4 py-3 text-sm font-mono text-admin-text-2">{b.bookingReference || b._id?.slice(0, 10)}</td>
+                    <td className="px-4 py-3 text-sm text-admin-text-3">{b.startTime ? new Date(b.startTime).toLocaleDateString() : '—'}</td>
+                    <td className="px-4 py-3 text-sm font-mono text-admin-text-1">${b.totalAmount?.toFixed(2) || '0.00'}</td>
+                    <td className="px-4 py-3 text-sm text-admin-text-2 capitalize">{b.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>
