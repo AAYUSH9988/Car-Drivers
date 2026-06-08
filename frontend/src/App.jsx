@@ -5,6 +5,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import EnhancedFooter from './components/layout/EnhancedFooter';
 import EnhancedNavbar from './components/layout/EnhancedNavbar';
+import { PageSpinner } from './components/shared/Spinner';
 import { AuthProvider } from './context/AuthContext';
 
 // Eagerly loaded — critical path
@@ -26,14 +27,9 @@ const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword  = lazy(() => import('./pages/ResetPassword'));
 const VerifyEmail    = lazy(() => import('./pages/VerifyEmail'));
 const Profile        = lazy(() => import('./pages/Profile'));
+const Terms          = lazy(() => import('./pages/Terms'));
+const Privacy        = lazy(() => import('./pages/Privacy'));
 
-function PageLoader() {
-  return (
-    <div className="min-h-screen bg-surface flex items-center justify-center">
-      <div className="w-px h-8 bg-primary animate-pulse" />
-    </div>
-  );
-}
 
 function App() {
   return (
@@ -50,7 +46,7 @@ function App() {
         <div className="min-h-screen flex flex-col bg-surface">
           <EnhancedNavbar />
           <main id="main" className="flex-grow pt-16 md:pt-20">
-            <Suspense fallback={<PageLoader />}>
+            <Suspense fallback={<PageSpinner />}>
               <Routes>
                 {/* Public */}
                 <Route path="/"               element={<Home />} />
@@ -68,6 +64,8 @@ function App() {
                 <Route path="/about"                 element={<About />} />
                 <Route path="/contact"               element={<Contact />} />
                 <Route path="/services"              element={<Services />} />
+                <Route path="/terms"                 element={<Terms />} />
+                <Route path="/privacy"               element={<Privacy />} />
 
                 {/* Protected */}
                 <Route path="/booking/success" element={

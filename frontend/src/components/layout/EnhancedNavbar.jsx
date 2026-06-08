@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { FaBars, FaTimes } from 'react-icons/fa';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -95,7 +94,9 @@ const EnhancedNavbar = () => {
             aria-label="Toggle menu"
             aria-expanded={isMobileMenuOpen}
           >
-            {isMobileMenuOpen ? <FaTimes className="h-5 w-5" /> : <FaBars className="h-5 w-5" />}
+            <span className="material-symbols-outlined text-[22px]">
+              {isMobileMenuOpen ? 'close' : 'menu'}
+            </span>
           </button>
         </div>
       </div>

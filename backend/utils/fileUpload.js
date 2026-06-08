@@ -44,7 +44,7 @@ const upload = multer({
  * @returns {{ url: string, fileId: string }}
  */
 export const uploadToImageKit = async (buffer, fileName, folder = 'gopilot/uploads') => {
-  const result = await getImageKit().upload({
+  const result = await getImageKit().files.upload({
     file:     buffer,
     fileName: `${Date.now()}-${fileName}`,
     folder,
@@ -58,7 +58,7 @@ export const uploadToImageKit = async (buffer, fileName, folder = 'gopilot/uploa
  */
 export const deleteFromImageKit = async (fileId) => {
   if (!fileId) return;
-  await getImageKit().deleteFile(fileId);
+  await getImageKit().files.deleteFile(fileId);
 };
 
 export default upload;

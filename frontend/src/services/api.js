@@ -38,7 +38,10 @@ api.interceptors.response.use(
   async (error) => {
     const original = error.config;
 
-    if (error.response?.status === 401 && !original._retry) {
+    // Don't intercept 401 on login endpoint — Login.jsx will handle the error display
+    const isLoginRequest = original.url === '/auth/login';
+
+    if (error.response?.status === 401 && !original._retry && !isLoginRequest) {
       const refreshToken = localStorage.getItem('refreshToken');
 
       // If no refresh token, clear session and redirect
@@ -92,20 +95,28 @@ api.interceptors.response.use(
 
     if (error.response) {
       const message = error.response.data?.message || 'Something went wrong';
+      // Skip global toast for auth endpoints — Login/Register pages handle their own error display
+      const isAuthRequest = original.url?.startsWith('/auth/');
       switch (error.response.status) {
         case 400:
         case 403:
         case 404:
         case 500:
-          toast.error(message);
+          if (!isAuthRequest) toast.error(message);
           break;
         default:
-          if (error.response.status !== 401) toast.error(message);
+          if (error.response.status !== 401 && !isAuthRequest) toast.error(message);
       }
     } else if (error.request) {
-      toast.error('Server not responding. Check your connection.');
+      const isAuthRequest = original.url?.startsWith('/auth/');
+      if (!isAuthRequest) {
+        toast.error('Server not responding. Check your connection.');
+      }
     } else {
-      toast.error(error.message);
+      const isAuthRequest = original.url?.startsWith('/auth/');
+      if (!isAuthRequest) {
+        toast.error(error.message);
+      }
     }
 
     return Promise.reject(error);

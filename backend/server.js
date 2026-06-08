@@ -84,11 +84,8 @@ const startServer = async () => {
     // Body parsers — increased limit for base64 image metadata
     app.use(express.json({ limit: "50kb" }));
     app.use(express.urlencoded({ extended: true, limit: "50kb" }));
-    app.use(cookieParser({
-      sameSite: "strict",
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production"
-    }));
+    // cookieParser takes no security options — those go on each res.cookie() call
+    app.use(cookieParser());
 
     // Strip MongoDB operators from request data (NoSQL injection prevention)
     app.use(mongoSanitize());

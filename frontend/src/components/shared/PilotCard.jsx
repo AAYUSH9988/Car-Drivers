@@ -50,10 +50,10 @@ const PilotCard = ({ pilot, index = 0 }) => {
       {/* Details */}
       <div className="space-y-2 mb-6">
         <p className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant">
-          {pilot.vehicleTypes?.join(' / ') || 'Sedan'}
+          {pilot.vehicleTypes?.length > 0 ? pilot.vehicleTypes.join(' / ') : 'Not specified'}
         </p>
         <p className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant">
-          {pilot.languages?.join(' / ') || 'English'}
+          {pilot.languages?.length > 0 ? pilot.languages.join(' / ') : 'Not specified'}
         </p>
       </div>
 

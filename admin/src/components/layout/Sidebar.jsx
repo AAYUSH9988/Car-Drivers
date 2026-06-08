@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Car, Users, CalendarCheck, BarChart2, Settings, LogOut } from 'lucide-react';
 import { AuthContext } from '../../contexts/AuthContext';

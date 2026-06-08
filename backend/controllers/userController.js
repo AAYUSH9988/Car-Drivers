@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
 import Booking from '../models/Booking.js';
 import User from '../models/User.js';
+import { uploadToImageKit } from '../utils/fileUpload.js';
 
 const BCRYPT_ROUNDS = 12;
 const isDev = process.env.NODE_ENV === 'development';
@@ -445,9 +446,12 @@ export const updateProfilePhoto = async (req, res) => {
       });
     }
 
+    // Upload buffer to ImageKit (multer.memoryStorage doesn't provide .path)
+    const { url } = await uploadToImageKit(req.file.buffer, req.file.originalname, 'gopilot/profiles');
+
     const user = await User.findByIdAndUpdate(
       id,
-      { profilePhoto: req.file.path },
+      { profilePhoto: url },
       { new: true }
     ).select('-password');
 

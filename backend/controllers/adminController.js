@@ -2,7 +2,9 @@ import mongoose from 'mongoose';
 import NodeCache from 'node-cache';
 import Booking from '../models/Booking.js';
 import Driver from '../models/Driver.js';
+import Settings from '../models/Settings.js';
 import User from '../models/User.js';
+import { sendAdminNotificationEmail } from '../utils/email.js';
 
 const cache = new NodeCache({ stdTTL: 300, checkperiod: 60 });
 
@@ -243,7 +245,7 @@ export const approveDriver = async (req, res) => {
     try {
         const driver = await Driver.findByIdAndUpdate(
             req.params.id,
-            { status: 'active' },
+            { status: 'active', isAvailable: true },
             { new: true }
         );
         if (!driver) {
@@ -316,9 +318,17 @@ export const getAdminProfile = async (req, res) => {
 export const updateAdminProfile = async (req, res) => {
     try {
         const { name, email, phone } = req.body;
+        if (email) {
+            const taken = await User.findOne({ email: email.toLowerCase().trim(), _id: { $ne: req.user.id } });
+            if (taken) return res.status(409).json({ success: false, message: 'Email already in use' });
+        }
+        const updates = {};
+        if (name) updates.name = name.trim();
+        if (email) updates.email = email.toLowerCase().trim();
+        if (phone) updates.phone = phone.trim();
         const admin = await User.findByIdAndUpdate(
             req.user.id,
-            { name, email, phone },
+            updates,
             { new: true, runValidators: true }
         ).select('-password');
         res.status(200).json({ success: true, data: admin });
@@ -329,10 +339,14 @@ export const updateAdminProfile = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
     try {
-        const user = await User.findByIdAndDelete(req.params.id);
+        const user = await User.findById(req.params.id);
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
+        await Promise.all([
+            User.findByIdAndDelete(req.params.id),
+            Driver.findOneAndDelete({ user: req.params.id }),
+        ]);
         res.status(200).json({ success: true, message: 'User deleted successfully' });
     } catch (error) {
         res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
@@ -406,11 +420,11 @@ export const updateDriver = async (req, res) => {
 export const updateUser = async (req, res) => {
     try {
         const { id } = req.params;
-        const updates = req.body;
-
-        // Remove password from updates if provided (should be handled separately)
-        if (updates.password) {
-            delete updates.password;
+        const allowed = ['name', 'phone', 'profilePhoto', 'isEmailVerified', 'role'];
+        const updates = {};
+        allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
+        if (updates.role && !['user', 'driver', 'admin'].includes(updates.role)) {
+            return res.status(400).json({ success: false, message: 'Invalid role value' });
         }
 
         const user = await User.findByIdAndUpdate(
@@ -865,6 +879,9 @@ export const bulkUpdateUsers = async (req, res) => {
                 message: 'User IDs array is required'
             });
         }
+        if (userIds.length > 100) {
+            return res.status(400).json({ success: false, message: 'Cannot bulk-update more than 100 users at once' });
+        }
 
         // Whitelist allowed fields to prevent mass-assignment
         const { name, phone, isActive } = updateData || {};
@@ -900,6 +917,9 @@ export const bulkUpdateDrivers = async (req, res) => {
                 success: false,
                 message: 'Driver IDs array is required'
             });
+        }
+        if (driverIds.length > 100) {
+            return res.status(400).json({ success: false, message: 'Cannot bulk-update more than 100 drivers at once' });
         }
 
         // Whitelist allowed fields to prevent mass-assignment
@@ -1029,22 +1049,17 @@ export const getDriverStats = async (req, res) => {
 // Settings Management
 export const updateSystemSettings = async (req, res) => {
     try {
-        const { settings } = req.body;
-        
-        // In a real application, you would store these in a Settings model
-        // For now, we'll just validate and return the settings
-        
-        const validSettings = {
-            ...settings,
-            updatedAt: new Date(),
-            updatedBy: req.user._id
-        };
+        const allowed = ['bookingFeePercent', 'maxBookingDays', 'minHourlyRate', 'maxHourlyRate', 'maintenanceMode', 'allowNewRegistrations'];
+        const updates = { updatedBy: req.user._id };
+        allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
 
-        res.status(200).json({ 
-            success: true, 
-            data: validSettings,
-            message: 'Settings updated successfully' 
-        });
+        const settings = await Settings.findOneAndUpdate(
+            { key: 'global' },
+            updates,
+            { new: true, upsert: true, runValidators: true }
+        );
+
+        res.status(200).json({ success: true, data: settings, message: 'Settings updated successfully' });
     } catch (error) {
         res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });
     }
@@ -1075,18 +1090,20 @@ export const sendBulkNotification = async (req, res) => {
                 });
         }
 
-        // In a real application, you would implement actual notification sending
-        // This is a placeholder for the notification logic
-        
-        res.status(200).json({ 
-            success: true, 
-            data: {
-                title,
-                message,
-                targetCount: targetUsers.length,
-                sentAt: new Date()
-            },
-            message: 'Notification sent successfully' 
+        // Fetch full user records (need email + name) for resolved IDs
+        const userIds = targetUsers.map(u => u._id);
+        const users = await User.find({ _id: { $in: userIds } }).select('name email');
+
+        const results = await Promise.allSettled(
+            users.map(u => sendAdminNotificationEmail({ to: u.email, name: u.name, title, message }))
+        );
+        const sent = results.filter(r => r.status === 'fulfilled').length;
+        const failed = results.filter(r => r.status === 'rejected').length;
+
+        res.status(200).json({
+            success: true,
+            data: { title, message, targetCount: users.length, sent, failed, sentAt: new Date() },
+            message: `Notification sent to ${sent} user(s)${failed ? `, ${failed} failed` : ''}`
         });
     } catch (error) {
         res.status(500).json({ success: false, message: isDev ? error.message : 'Internal server error' });

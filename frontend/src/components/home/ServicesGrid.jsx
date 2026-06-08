@@ -75,10 +75,9 @@ const ServicesGrid = () => {
               </div>
             )}
 
-            <h3
-              className="font-headline-lg-mobile md:font-headline-lg text-primary mb-4"
-              dangerouslySetInnerHTML={{ __html: service.title.replace(/\n/g, '<br/>') }}
-            />
+            <h3 className="font-headline-lg-mobile md:font-headline-lg text-primary mb-4 whitespace-pre-line">
+              {service.title}
+            </h3>
             <p className="font-body-md text-body-md text-on-surface-variant max-w-lg">
               {service.description}
             </p>

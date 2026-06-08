@@ -148,7 +148,7 @@ export const getNearbyDrivers = async (req, res) => {
 // POST /api/drivers/register
 export const registerDriver = async (req, res) => {
   try {
-    const { licenseNumber, experience, vehicleTypes, hourlyRate, languages, certifications, preferredLocations, workingHours } = req.body;
+    let { licenseNumber, experience, vehicleTypes, hourlyRate, languages, certifications, preferredLocations, workingHours } = req.body;
 
     if (!licenseNumber || !experience || !vehicleTypes || !hourlyRate) {
       return res.status(400).json({
@@ -156,6 +156,19 @@ export const registerDriver = async (req, res) => {
         message: 'licenseNumber, experience, vehicleTypes, and hourlyRate are required'
       });
     }
+
+    // Parse JSON-string arrays coming from formdata
+    const parseJsonArray = (val) => {
+      if (Array.isArray(val)) return val;
+      if (typeof val === 'string') {
+        try { return JSON.parse(val); } catch { return [val]; }
+      }
+      return val || [];
+    };
+
+    const parsedVehicleTypes = parseJsonArray(vehicleTypes);
+    const parsedLanguages = parseJsonArray(languages);
+    const parsedPreferredLocations = parseJsonArray(preferredLocations);
 
     const existing = await Driver.findOne({ user: req.user._id });
     if (existing) {
@@ -183,11 +196,11 @@ export const registerDriver = async (req, res) => {
       user: req.user._id,
       licenseNumber: licenseNumber.trim().toUpperCase(),
       experience: parseInt(experience),
-      vehicleTypes: Array.isArray(vehicleTypes) ? vehicleTypes : [vehicleTypes],
+      vehicleTypes: parsedVehicleTypes,
       hourlyRate: parseFloat(hourlyRate),
-      languages: languages || [],
+      languages: parsedLanguages,
       certifications: certifications || [],
-      preferredLocations: preferredLocations || [],
+      preferredLocations: parsedPreferredLocations,
       workingHours: workingHours || { start: '09:00', end: '18:00' },
       documents,
       status: 'pending'
@@ -265,9 +278,16 @@ export const deleteDriver = async (req, res) => {
 // PATCH /api/drivers/:id/location
 export const updateDriverLocation = async (req, res) => {
   try {
-    const { latitude, longitude } = req.body;
+    let latitude, longitude;
 
-    if (!latitude || !longitude) {
+    // Support both { latitude, longitude } and { coordinates: [lng, lat] } formats
+    if (req.body.coordinates && Array.isArray(req.body.coordinates)) {
+      [longitude, latitude] = req.body.coordinates;
+    } else {
+      ({ latitude, longitude } = req.body);
+    }
+
+    if (latitude === undefined || longitude === undefined) {
       return res.status(400).json({ success: false, message: 'Latitude and longitude are required' });
     }
 

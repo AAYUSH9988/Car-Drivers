@@ -76,6 +76,14 @@ dist/
 # Coverage directory used by tools like istanbul
 coverage/
 
+# Internal planning/audit docs (not for public repo)
+BACKEND_AUDIT.md
+BACKEND_ISSUES.md
+FRONTEND_AUDIT.md
+ADMIN_AUDIT.md
+ADMIN_REBUILD.md
+skills-lock.json
+
 # Miscellaneous
 *.pem
 *.p12

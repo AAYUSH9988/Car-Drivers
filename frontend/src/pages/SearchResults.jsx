@@ -27,12 +27,9 @@ const SearchResults = () => {
           }
         }
 
-        console.log('Searching with params:', searchParams);
-
         const results = await driverService.searchDrivers(searchParams);
         setPilots(results);
       } catch (error) {
-        console.error('Error fetching pilots:', error.message);
         setError(`Failed to load available pilots: ${error.message}`);
       } finally {
         setLoading(false);

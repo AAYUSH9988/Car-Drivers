@@ -108,3 +108,18 @@ export const sendBookingCancellationEmail = async (user, booking) => {
     `,
   });
 };
+
+export const sendAdminNotificationEmail = async ({ to, name, title, message }) => {
+  await sendEmail({
+    to,
+    subject: `[GoPilot] ${title}`,
+    html: `
+      <div style="font-family:Inter,sans-serif;max-width:520px;margin:auto;padding:32px">
+        <h2 style="color:#0A0B14">${title}</h2>
+        <p>Hi ${name},</p>
+        <p>${message}</p>
+        <p style="color:#94A3B8;font-size:13px">This is an official notification from GoPilot.</p>
+      </div>
+    `,
+  });
+};

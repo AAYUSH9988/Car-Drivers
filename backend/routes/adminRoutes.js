@@ -45,11 +45,11 @@ router.get('/system-info', getSystemInfo);
 // User Management Routes
 router.get('/users', getAllUsers);
 router.post('/users', createUser);
+router.patch('/users/bulk-update', bulkUpdateUsers);   // must be before /:id
 router.get('/users/:id', getUser);
 router.get('/users/:id/stats', getUserStats);
 router.put('/users/:id', updateUser);
 router.delete('/users/:id', deleteUser);
-router.patch('/users/bulk-update', bulkUpdateUsers);
 
 // Booking Management Routes
 router.get('/bookings', getAllBookings);
@@ -59,13 +59,13 @@ router.patch('/bookings/:id/status', updateBookingStatus);
 // Driver Management Routes
 router.get('/drivers', getAllDrivers);
 router.post('/drivers', createDriver);
+router.patch('/drivers/bulk-update', bulkUpdateDrivers); // must be before /:id
 router.get('/drivers/:id', getDriverDetails);
 router.get('/drivers/:id/stats', getDriverStats);
 router.put('/drivers/:id', updateDriver);
 router.delete('/drivers/:id', deleteDriver);
 router.patch('/drivers/:id/approve', approveDriver);
 router.patch('/drivers/:id/suspend', suspendDriver);
-router.patch('/drivers/bulk-update', bulkUpdateDrivers);
 
 // Admin Profile Routes
 router.get('/profile', getAdminProfile);

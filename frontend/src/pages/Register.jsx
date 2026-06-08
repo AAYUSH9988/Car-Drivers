@@ -64,7 +64,13 @@ const Register = () => {
       });
       navigate('/login');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      // Show detailed validation errors if backend provides them
+      const responseErrors = err.response?.data?.errors;
+      if (Array.isArray(responseErrors) && responseErrors.length > 0) {
+        setError(responseErrors.join('. '));
+      } else {
+        setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }

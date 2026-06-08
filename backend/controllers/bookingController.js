@@ -64,7 +64,7 @@ export const createBooking = async (req, res) => {
       pickupLocation,
       dropLocation: dropLocation || pickupLocation,
       totalAmount: parseFloat(totalAmount) || 0,
-      status: 'confirmed',
+      status: 'pending',
       paymentMethod: 'COD',
       paymentStatus: 'pending'
     });
@@ -195,12 +195,19 @@ export const cancelBooking = async (req, res) => {
     booking.status = 'cancelled';
     await booking.save();
 
-    // Release driver availability
+    // Release driver availability only if no other active bookings remain
     if (booking.driver) {
       const driver = await Driver.findById(booking.driver);
       if (driver) {
-        driver.isAvailable = true;
-        await driver.save();
+        const activeBookings = await Booking.countDocuments({
+          driver: booking.driver,
+          _id: { $ne: booking._id },
+          status: { $in: ['pending', 'confirmed', 'in-progress'] }
+        });
+        if (activeBookings === 0) {
+          driver.isAvailable = true;
+          await driver.save();
+        }
       }
     }
 

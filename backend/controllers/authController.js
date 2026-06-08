@@ -25,8 +25,8 @@ export const register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid email format' });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+    if (password.length < 8) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 8 characters' });
     }
 
     const userExists = await User.findOne({ email: email.toLowerCase().trim() });
@@ -35,6 +35,12 @@ export const register = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
+
+    // Allow admin creation only with a secret key (for seeding)
+    let userRole = 'user';
+    if (req.body.role === 'admin' && req.body.adminSecret === process.env.ADMIN_SECRET) {
+      userRole = 'admin';
+    }
 
     // Email verification token
     const verificationToken   = crypto.randomBytes(32).toString('hex');
@@ -45,7 +51,7 @@ export const register = async (req, res) => {
       email: email.toLowerCase().trim(),
       password: hashedPassword,
       phone: phone.trim(),
-      role: 'user',
+      role: userRole,
       emailVerificationToken:   verificationToken,
       emailVerificationExpires: verificationExpires
     });
@@ -304,8 +310,8 @@ export const resetPassword = async (req, res) => {
   try {
     const { password } = req.body;
 
-    if (!password || password.length < 6) {
-      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+    if (!password || password.length < 8) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 8 characters' });
     }
 
     const user = await User.findOne({

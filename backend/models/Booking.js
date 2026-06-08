@@ -9,8 +9,7 @@ const reviewSchema = new mongoose.Schema({
 const bookingSchema = new mongoose.Schema({
   bookingReference: {
     type: String,
-    unique: true,
-    sparse: true
+    unique: true
   },
   user:   { type: mongoose.Schema.Types.ObjectId, ref: 'User',   required: true },
   driver: { type: mongoose.Schema.Types.ObjectId, ref: 'Driver', required: true },

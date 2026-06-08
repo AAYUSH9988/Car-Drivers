@@ -10,6 +10,7 @@ import {
   updateBooking
 } from '../controllers/bookingController.js';
 import { protect } from '../middleware/auth.js';
+import { validateBookingCreation } from '../middleware/validation.js';
 
 // ✅ CRITICAL: Router MUST be created BEFORE use()
 const router = express.Router();
@@ -19,7 +20,7 @@ router.use(protect);
 
 // ✅ Routes using correct syntax
 router.route('/')
-  .post(createBooking)
+  .post(validateBookingCreation, createBooking)
   .get(getBookings);
 
 router.route('/:id')
