@@ -76,7 +76,7 @@ const BookingFailed = () => {
               {driver && <DetailRow label="Pilot" value={driver.name} />}
               <DetailRow
                 label="Total Amount"
-                value={`$${booking.totalAmount?.toFixed(2) || '0.00'}`}
+                value={`₹${booking.totalAmount?.toFixed(2) || '0.00'}`}
               />
               <DetailRow
                 label="Status"

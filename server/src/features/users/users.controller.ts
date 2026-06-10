@@ -22,3 +22,8 @@ export const uploadProfilePhoto = asyncHandler(async (req: Request, res: Respons
   const user    = await usersService.updateProfilePhoto(req.user!.id as string, url);
   sendSuccess(res, user, 200, { message: 'Profile photo updated' });
 });
+
+export const getStats = asyncHandler(async (req: Request, res: Response) => {
+  const stats = await usersService.getStats(req.user!.id as string);
+  sendSuccess(res, stats);
+});

@@ -1,208 +1,121 @@
 # Deployment Guide
 
-This guide covers deploying the GoPilot platform using **Render** for the backend and **Vercel** for the frontend and admin panel.
+Deploy GoPilot using **Render** for the backend API and **Vercel** for the frontend and admin panel.
 
 ## Prerequisites
 
 - [Render](https://render.com) account
 - [Vercel](https://vercel.com) account
-- [MongoDB Atlas](https://www.mongodb.com/atlas) cluster (or local MongoDB for development)
-- Domain name (optional, for custom domains)
-
----
-
-## Table of Contents
-
-1. [Environment Variables](#environment-variables)
-2. [Backend Deployment (Render)](#backend-deployment-render)
-3. [Frontend Deployment (Vercel)](#frontend-deployment-vercel)
-4. [Admin Deployment (Vercel)](#admin-deployment-vercel)
-5. [Post-Deployment](#post-deployment)
-6. [Troubleshooting](#troubleshooting)
+- [MongoDB Atlas](https://www.mongodb.com/atlas) cluster
 
 ---
 
 ## Environment Variables
 
-All services require environment variables. Create these before deploying:
-
-### Backend (`backend/.env`)
+### Backend (`server/`) — set in Render dashboard
 
 ```env
 NODE_ENV=production
 PORT=4000
 MONGO_URI=your_mongodb_atlas_connection_string
-JWT_SECRET=your_super_secret_jwt_key_min_32_chars
-JWT_REFRESH_SECRET=your_refresh_secret_key
+JWT_SECRET=your-32-char-minimum-secret
+JWT_REFRESH_SECRET=another-32-char-minimum-secret
 JWT_EXPIRE=7d
+JWT_REFRESH_EXPIRE=30d
 FRONTEND_URL=https://your-frontend.vercel.app
 ADMIN_URL=https://your-admin.vercel.app
 IMAGEKIT_PUBLIC_KEY=your_imagekit_public_key
 IMAGEKIT_PRIVATE_KEY=your_imagekit_private_key
-IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your_endpoint
+IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your-id
 BREVO_API_KEY=your_brevo_api_key
-BREVO_FROM_EMAIL=noreply@yourdomain.com
-RAZORPAY_KEY_ID=your_razorpay_test_or_live_key
+BREVO_FROM_EMAIL=noreply@gopilot.app
+RAZORPAY_KEY_ID=rzp_live_xxxxxxxxxxxx
 RAZORPAY_KEY_SECRET=your_razorpay_secret
+ADMIN_SECRET=your-admin-seed-secret
 ```
 
-### Frontend (`frontend/.env`)
+### Frontend & Admin — set in Vercel dashboard
 
 ```env
 VITE_API_URL=https://your-backend.onrender.com/api
 ```
-
-### Admin (`admin/.env`)
-
-```env
-VITE_API_URL=https://your-backend.onrender.com/api
-```
-
-> **Security Note**: Never commit `.env` files to Git. Use `.env.example` for templates.
 
 ---
 
 ## Backend Deployment (Render)
 
-### Option 1: Using Render Blueprint (render.yaml)
+### Option 1: Render Blueprint (recommended)
 
-1. Push your code to a GitHub repository
-2. In Render Dashboard, click **"New +"** > **"Blueprint"**
-3. Connect your GitHub repo
-4. Render will detect `render.yaml` and auto-configure the service
-5. Fill in the `sync: false` environment variables in the Render dashboard
-6. Click **Create Blueprint**
+1. Push your code to GitHub
+2. In Render Dashboard → **New +** → **Blueprint**
+3. Connect your GitHub repo — Render detects `server/render.yaml`
+4. Fill in the `sync: false` environment variables
+5. Click **Create Blueprint**
 
-### Option 2: Manual Docker Deployment
+### Option 2: Manual Docker
 
-1. In Render Dashboard, click **"New +"** > **"Web Service"**
-2. Connect your GitHub dispatch
-3. Select the `backend/Dockerfile` as the build context
-4. Set the following:
-   - **Build Command**: (leave empty, Dockerfile handles it)
-   - **Start Command**: (leave empty, Dockerfile handles it)
-   - **Port**: `4000`
-5. Add all environment variables from the backend `.env` list
-6. Click **Create Web Service**
+1. Render Dashboard → **New +** → **Web Service**
+2. Connect GitHub repo, set **Root Directory** to `server`
+3. Build: `Dockerfile` handles it
+4. Port: `4000`
+5. Add all environment variables above
 
 ### Health Check
 
-The backend Dockerfile includes a health check on `/api/health`. Ensure your backend responds to `GET /api/health` with `200 OK`.
-
-### CORS Configuration
-
-Ensure `FRONTEND_URL` and `ADMIN_URL` are set to your Vercel domains so the backend allows CORS from these origins.
+`GET https://your-backend.onrender.com/api/health` → `200 OK`
 
 ---
 
 ## Frontend Deployment (Vercel)
 
-1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
-2. Click **"Add New Project"**
-3. Import your GitHub repository
-4. Set **Root Directory** to `frontend`
-5. Add environment variable:
-   - `VITE_API_URL` = `https://your-backend.onrender.com/api`
-6. Click **Deploy**
-
-### Frontend `vercel.json`
-
-The `frontend/vercel.json` handles SPA routing and security headers:
-
-```json
-{
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-XSS-Protection", "value": "1; mode=block" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
-      ]
-    },
-    {
-      "source": "/assets/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
-      ]
-    }
-  ]
-}
-```
+1. Vercel Dashboard → **Add New Project**
+2. Import GitHub repo
+3. **Root Directory**: `frontend`
+4. Add env var: `VITE_API_URL=https://your-backend.onrender.com/api`
+5. **Deploy**
 
 ---
 
 ## Admin Deployment (Vercel)
 
-1. In Vercel Dashboard, click **"Add New Project"**
-2. Import the same GitHub repository
-3. Set **Root Directory** to `admin`
-4. Add environment variable:
-   - `VITE_API_URL` = `https://your-backend.onrender.com/api`
-5. Click **Deploy**
+> The admin panel must be a **separate Vercel project** — it is a separate app.
 
-> **Note**: The admin panel must be a **separate Vercel project** because it is a separate React app in a different directory.
-
----
-
-## Post-Deployment
-
-### Verify Backend
-- `GET https://your-backend.onrender.com/api/health` should return `200`
-- Test login with a registered user
-
-### Verify Frontend
-- Visit `https://your-frontend.vercel.app`
-- Browse drivers, attempt a booking
-
-### Verify Admin
-- Visit `https://your-admin.vercel.app`
-- Log in with an admin account
-- Check dashboard stats
-
-### Update `FRONTEND_URL` and `ADMIN_URL`
-
-Once your Vercel deployments have live URLs, go to your **Render Dashboard** > **Backend Service** > **Environment** and update:
-- `FRONTEND_URL` to your frontend Vercel URL
-- `ADMIN_URL` to your admin Vercel URL
-
-Then redeploy the backend service.
+1. Vercel Dashboard → **Add New Project**
+2. Import same GitHub repo
+3. **Root Directory**: `admin`
+4. Add env var: `VITE_API_URL=https://your-backend.onrender.com/api`
+5. **Deploy**
 
 ---
 
-## Troubleshooting
+## Post-Deployment Checklist
 
-### CORS Errors
-- Ensure `FRONTEND_URL` and `ADMIN_URL` exactly match your Vercel domains (including `https://`)
-- Check for trailing slashes
-
-### 404 on Refresh (SPA)
-- `vercel.json` handles this with the rewrite rule
-- If missing, add the rewrite to route all paths to `index.html`
-
-### MongoDB Connection Fails
-- Ensure `MONGO_URI` uses your Atlas cluster (or a production MongoDB instance)
-- Whitelist Render's IP or allow access from anywhere (0.0.0.0/0) for testing
-
-### JWT / Auth Issues
-- Ensure `JWT_SECRET` and `JWT_REFRESH_SECRET` are set and at least 32 characters
-- Check that `NODE_ENV=production` on Render
-
-### Image Upload Fails
-- Verify `IMAGEKIT_*` credentials in Render env vars
-- Ensure the ImageKit URL endpoint ends with `/`
+1. Update `FRONTEND_URL` and `ADMIN_URL` in Render with the live Vercel URLs, then redeploy
+2. `GET https://your-backend.onrender.com/api/health` returns `200`
+3. Register a user on the frontend, then promote to admin in Atlas:
+   ```javascript
+   db.users.updateOne({ email: "you@example.com" }, { $set: { role: "admin" } })
+   ```
+4. Log in to the admin panel and verify dashboard loads
 
 ---
 
 ## Deployment Summary
 
-| Service | Platform | File/Config |
-|---------|----------|-------------|
-| Backend API | Render | `backend/Dockerfile`, `backend/render.yaml` |
+| Service | Platform | Config |
+|---------|----------|--------|
+| Backend API | Render | `server/Dockerfile`, `server/render.yaml` |
 | Frontend | Vercel | `frontend/vercel.json` |
-| Admin | Vercel | `admin/vercel.json` (create if missing) |
+| Admin | Vercel | `admin/vercel.json` |
 
+---
+
+## Troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| CORS errors | Ensure `FRONTEND_URL` / `ADMIN_URL` match Vercel URLs exactly (include `https://`, no trailing slash) |
+| 404 on page refresh | `vercel.json` rewrites handle SPA routing — ensure it is present |
+| MongoDB connection fails | Whitelist Render's IPs in Atlas, or allow `0.0.0.0/0` for testing |
+| JWT auth fails | Ensure `JWT_SECRET` is at least 32 chars and `NODE_ENV=production` on Render |
+| Image upload fails | Verify all `IMAGEKIT_*` vars; `IMAGEKIT_URL_ENDPOINT` must end with `/` |

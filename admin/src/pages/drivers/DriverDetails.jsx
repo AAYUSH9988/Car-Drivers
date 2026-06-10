@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Star, MapPin, Car, Clock, DollarSign, FileText, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Star, MapPin, Car, Clock, IndianRupee, FileText, CheckCircle, XCircle } from 'lucide-react';
 import { driverAPI } from '../../services/api';
 import { toast } from 'sonner';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
@@ -159,7 +159,7 @@ const DriverDetails = () => {
             <InfoRow label="Phone" value={user.phone} />
             <InfoRow label="License Number" value={driver.licenseNumber} />
             <InfoRow label="Experience" value={driver.experience ? `${driver.experience} years` : null} />
-            <InfoRow label="Hourly Rate" value={driver.hourlyRate ? `$${driver.hourlyRate}/hr` : null} />
+            <InfoRow label="Hourly Rate" value={driver.hourlyRate ? `₹${driver.hourlyRate}/hr` : null} />
             <InfoRow label="Vehicle Types" value={driver.vehicleTypes?.join(', ')} />
             <InfoRow label="Languages" value={driver.languages?.join(', ') || 'Not specified'} />
             <InfoRow label="Working Hours" value={driver.workingHours ? `${driver.workingHours.start} – ${driver.workingHours.end}` : null} />
@@ -199,7 +199,7 @@ const DriverDetails = () => {
             </div>
             <div className="space-y-4">
               <StatItem icon={Car} label="Total Trips" value={driver.totalTrips || stats?.totalBookings || 0} />
-              <StatItem icon={DollarSign} label="Total Earnings" value={`$${(stats?.totalEarnings || 0).toLocaleString()}`} />
+              <StatItem icon={IndianRupee} label="Total Earnings" value={`₹${(stats?.totalEarnings || 0).toLocaleString()}`} />
               <StatItem icon={CheckCircle} label="Completed" value={stats?.completedBookings || 0} />
               <StatItem icon={XCircle} label="Cancelled" value={stats?.cancelledBookings || 0} />
             </div>

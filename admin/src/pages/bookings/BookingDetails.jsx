@@ -148,9 +148,9 @@ const BookingDetails = () => {
 
           <div className="bg-admin-surface border border-admin-border rounded-md p-6">
             <h2 className="text-2xs font-medium text-admin-text-2 uppercase tracking-widest mb-4">Payment</h2>
-            <InfoRow label="Total Amount" value={`$${booking.totalAmount?.toFixed(2) || '0.00'}`} />
-            <InfoRow label="Platform Fee" value={booking.platformFee != null ? `$${booking.platformFee.toFixed(2)}` : null} />
-            <InfoRow label="Driver Earning" value={booking.driverEarning != null ? `$${booking.driverEarning.toFixed(2)}` : null} />
+            <InfoRow label="Total Amount" value={`₹${booking.totalAmount?.toFixed(2) || '0.00'}`} />
+            <InfoRow label="Platform Fee" value={booking.platformFee != null ? `₹${booking.platformFee.toFixed(2)}` : null} />
+            <InfoRow label="Driver Earning" value={booking.driverEarning != null ? `₹${booking.driverEarning.toFixed(2)}` : null} />
             <InfoRow label="Payment Method" value={booking.paymentMethod} />
             <InfoRow label="Payment Status" value={booking.paymentStatus?.toUpperCase()} />
           </div>
@@ -217,7 +217,7 @@ const BookingDetails = () => {
               </div>
             </div>
             <InfoRow label="License" value={booking.driver?.licenseNumber} />
-            <InfoRow label="Rate" value={booking.driver?.hourlyRate ? `$${booking.driver.hourlyRate}/hr` : null} />
+            <InfoRow label="Rate" value={booking.driver?.hourlyRate ? `₹${booking.driver.hourlyRate}/hr` : null} />
             {booking.driver?._id && (
               <button
                 onClick={() => navigate(`/drivers/${booking.driver._id}`)}

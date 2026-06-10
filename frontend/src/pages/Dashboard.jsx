@@ -69,7 +69,7 @@ const Dashboard = () => {
     { value: bookings.length, label: 'Total Bookings' },
     { value: upcoming.length, label: 'Upcoming' },
     { value: completed.length, label: 'Completed' },
-    { value: `${bookings.reduce((a, b) => a + (b.totalAmount || 0), 0).toFixed(0)}`, label: 'Total Spent' },
+    { value: `₹${bookings.reduce((a, b) => a + (b.totalAmount || 0), 0).toFixed(0)}`, label: 'Total Spent' },
   ];
 
   if (loading) {
@@ -268,7 +268,7 @@ const BookingRow = ({ booking, cancellingId, onCancel, onReview }) => {
           }`}>
             {STATUS_LABELS[booking.status] || booking.status}
           </span>
-          <span className="font-numbers text-[32px] text-primary leading-none tabular-nums">${booking.totalAmount}</span>
+          <span className="font-numbers text-[32px] text-primary leading-none tabular-nums">₹{booking.totalAmount}</span>
         </div>
 
         <div className="flex flex-wrap gap-3 md:justify-end">

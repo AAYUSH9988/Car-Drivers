@@ -1,4 +1,6 @@
 import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose';
+import Booking from '../../models/Booking.model';
 import { ApiError } from '../../utils/ApiError';
 import { BCRYPT_ROUNDS } from '../../config/constants';
 import * as usersRepo from './users.repository';
@@ -26,4 +28,23 @@ export const updateProfilePhoto = async (userId: string, url: string) => {
   const user = await usersRepo.updateById(userId, { profilePhoto: url });
   if (!user) throw ApiError.notFound('User');
   return user;
+};
+
+export const getStats = async (userId: string) => {
+  const uid = new mongoose.Types.ObjectId(userId);
+  const [bookings, completed, cancelled, revenueResult] = await Promise.all([
+    Booking.countDocuments({ user: uid }),
+    Booking.countDocuments({ user: uid, status: 'completed' }),
+    Booking.countDocuments({ user: uid, status: 'cancelled' }),
+    Booking.aggregate([
+      { $match: { user: uid } },
+      { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+    ]),
+  ]);
+  return {
+    totalBookings:     bookings,
+    completedBookings: completed,
+    cancelledBookings: cancelled,
+    totalSpent:        (revenueResult[0] as { total?: number } | undefined)?.total ?? 0,
+  };
 };

@@ -11,6 +11,7 @@ const router = Router();
 router.use(protect);
 
 router.get('/profile', usersController.getProfile);
+router.get('/stats',   usersController.getStats);
 router.put('/password', authLimiter, validate(updatePasswordSchema), usersController.updatePassword);
 router.put('/profile/photo', upload.single('photo'), usersController.uploadProfilePhoto);
 

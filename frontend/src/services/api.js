@@ -143,29 +143,21 @@ export const endpoints = {
 
   // 👤 USERS
   users: {
-    getProfile:    ()              => api.get('/users/profile/me'),
-    updateProfile: (data)          => api.put('/users/profile/me', data),
-    getAll:        ()              => api.get('/users'),
-    getById:       (id)            => api.get(`/users/${id}`),
-    updateUser:    (id, data)      => api.put(`/users/${id}`, data),
-    deleteUser:    (id)            => api.delete(`/users/${id}`),
-    updatePassword:(id, data)      => api.put(`/users/${id}/password`, data),
-    updatePhoto:   (id, formData)  => api.put(`/users/${id}/photo`, formData, {
+    getProfile:    ()         => api.get('/users/profile'),
+    updateProfile: (data)     => api.put('/auth/profile', data),
+    updatePassword:(data)     => api.put('/users/password', data),
+    updatePhoto:   (formData) => api.put('/users/profile/photo', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     }),
-    getBookings:   (id)            => api.get(`/users/${id}/bookings`),
-    getStats:      (id)            => api.get(`/users/${id}/stats`),
+    getStats:      ()         => api.get('/users/stats'),
   },
 
   // 🚗 DRIVERS
   drivers: {
     getAll:       (params) => api.get('/drivers', { params }),
     getById:      (id)     => api.get(`/drivers/${id}`),
-    getAvailable: ()       => api.get('/drivers/available'),
-    search:       (params) => api.get('/drivers/search', { params }),
-    getNearby:    (params) => api.get('/drivers/nearby', { params }),
-    getAvailability: (id)  => api.get(`/drivers/${id}/availability`),
-    getRatings:   (id)     => api.get(`/drivers/${id}/ratings`),
+    getAvailable: ()       => api.get('/drivers', { params: { isAvailable: 'true' } }),
+    search:       (params) => api.get('/drivers', { params }),
   },
 
   // 📦 BOOKINGS

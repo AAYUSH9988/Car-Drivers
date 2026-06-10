@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Car, CalendarCheck, CheckCircle, DollarSign, TrendingUp, TrendingDown, ArrowRight } from 'lucide-react';
+import { Users, Car, CalendarCheck, CheckCircle, IndianRupee, TrendingUp, TrendingDown, ArrowRight } from 'lucide-react';
 import { dashboardAPI, bookingAPI } from '../../services/api';
 import BookingChart from '../../components/dashboard/BookingChart';
 import StatusBadge from '../../components/common/StatusBadge';
@@ -58,19 +58,14 @@ const Dashboard = () => {
       }
 
       if (bookingsRes.status === 'fulfilled' && bookingsRes.value.data.success) {
-        const b = bookingsRes.value.data.data || [];
-        setRecentBookings(b);
+        setRecentBookings(bookingsRes.value.data.data || []);
       }
 
       if (analyticsRes.status === 'fulfilled') {
-        const monthly = analyticsRes.value.data?.data?.monthly || [];
-        // If backend has monthlyRevenue; otherwise fallback to empty
-        if (monthly.length > 0) {
-          const labels = monthly.map(d => `${d._id.month}/${d._id.day || ''}`);
-          const values = monthly.map(d => d.revenue);
-          setChartData({ labels, values });
+        const daily = analyticsRes.value.data?.data?.daily || [];
+        if (daily.length > 0) {
+          setChartData({ labels: daily.map(d => d._id), values: daily.map(d => d.revenue || d.count || 0) });
         } else {
-          // fallback to mock-like daily if needed
           setChartData({ labels: [], values: [] });
         }
       } else {
@@ -86,14 +81,14 @@ const Dashboard = () => {
   useEffect(() => { load(); }, [load]);
 
   const overview = stats?.overview || {};
-  const revenue = stats?.revenue || {};
+  const revenue  = stats?.revenue  || {};
 
   const cards = [
-    { label: 'Total Users',    value: overview.totalUsers    ?? '—', icon: Users,        iconBg: 'bg-blue-500/10',    iconColor: 'text-blue-400'    },
-    { label: 'Total Drivers',  value: overview.totalDrivers  ?? '—', icon: Car,          iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-400' },
-    { label: 'Active Bookings',value: overview.pendingBookings ?? '—', icon: CalendarCheck, iconBg: 'bg-violet-500/10', iconColor: 'text-violet-400'  },
-    { label: 'Completed Trips',value: overview.completedBookings ?? '—', icon: CheckCircle, iconBg: 'bg-sky-500/10', iconColor: 'text-sky-400'     },
-    { label: 'Total Revenue',  value: revenue.total != null ? `$${Number(revenue.total).toLocaleString()}` : '—', icon: DollarSign, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-400' },
+    { label: 'Total Users',    value: overview.totalUsers        ?? '—', icon: Users,        iconBg: 'bg-blue-500/10',    iconColor: 'text-blue-400'    },
+    { label: 'Total Drivers',  value: overview.totalDrivers      ?? '—', icon: Car,          iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-400' },
+    { label: 'Active Bookings',value: overview.pendingBookings   ?? '—', icon: CalendarCheck, iconBg: 'bg-violet-500/10', iconColor: 'text-violet-400'  },
+    { label: 'Completed Trips',value: overview.completedBookings ?? '—', icon: CheckCircle,  iconBg: 'bg-sky-500/10',    iconColor: 'text-sky-400'     },
+    { label: 'Total Revenue',  value: revenue.total != null ? `₹${Number(revenue.total).toLocaleString('en-IN')}` : '—', icon: IndianRupee, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-400' },
   ];
 
   return (
@@ -118,8 +113,7 @@ const Dashboard = () => {
             onClick={() => navigate('/reports')}
             className="flex items-center gap-2 bg-admin-accent hover:bg-admin-accent-dim text-white rounded-md px-4 py-1.5 text-sm font-medium transition-colors"
           >
-            Reports
-            <ArrowRight size={14} />
+            Reports <ArrowRight size={14} />
           </button>
         </div>
       </div>
@@ -138,46 +132,16 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Chart + Top Drivers */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-admin-surface border border-admin-border rounded-md p-6">
-          <div className="flex items-center justify-between mb-6">
-            <span className="text-sm font-medium text-admin-text-1">Revenue</span>
-            <span className="text-2xs text-admin-text-3 uppercase tracking-widest">Last {period} days</span>
-          </div>
-          {loading
-            ? <div className="h-48 bg-admin-elevated rounded-md animate-pulse" />
-            : <BookingChart data={chartData} />
-          }
+      {/* Chart */}
+      <div className="bg-admin-surface border border-admin-border rounded-md p-6">
+        <div className="flex items-center justify-between mb-6">
+          <span className="text-sm font-medium text-admin-text-1">Revenue (₹)</span>
+          <span className="text-2xs text-admin-text-3 uppercase tracking-widest">Last {period} days</span>
         </div>
-
-        <div className="bg-admin-surface border border-admin-border rounded-md p-6">
-          <span className="text-sm font-medium text-admin-text-1 block mb-4">Top Drivers</span>
-          {loading
-            ? Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3 py-3 animate-pulse">
-                  <div className="w-8 h-8 rounded-full bg-admin-elevated" />
-                  <div className="flex-1">
-                    <div className="h-3 w-24 bg-admin-elevated rounded mb-1.5" />
-                    <div className="h-2.5 w-16 bg-admin-elevated rounded" />
-                  </div>
-                </div>
-              ))
-            : (stats?.performance?.topDrivers || []).length === 0
-              ? <p className="text-sm text-admin-text-3 py-6 text-center">No driver data yet</p>
-              : (stats?.performance?.topDrivers || []).map((d, i) => (
-                  <div key={i} className="flex items-center gap-3 py-2.5 border-b border-admin-border last:border-0">
-                    <div className="w-7 h-7 rounded-full bg-admin-accent/20 flex items-center justify-center text-xs font-semibold text-admin-accent">
-                      {i + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-admin-text-1 truncate">{d.name || 'Unknown'}</p>
-                      <p className="text-xs text-admin-text-3">{d.totalTrips || 0} trips · {d.rating?.toFixed(1) || '—'}</p>
-                    </div>
-                  </div>
-                ))
-          }
-        </div>
+        {loading
+          ? <div className="h-48 bg-admin-elevated rounded-md animate-pulse" />
+          : <BookingChart data={chartData} />
+        }
       </div>
 
       {/* Recent Bookings */}
@@ -224,7 +188,7 @@ const Dashboard = () => {
                   <td className="px-5 py-3.5 text-sm font-mono text-admin-text-2">{b.bookingReference || b._id?.slice(0, 10).toUpperCase()}</td>
                   <td className="px-5 py-3.5 text-sm text-admin-text-1">{b.user?.name || '—'}</td>
                   <td className="px-5 py-3.5 text-sm text-admin-text-2">{b.driver?.user?.name || '—'}</td>
-                  <td className="px-5 py-3.5 text-sm font-mono text-admin-text-1">${b.totalAmount?.toFixed(2) || '0.00'}</td>
+                  <td className="px-5 py-3.5 text-sm font-mono text-admin-text-1">₹{b.totalAmount?.toFixed(2) || '0.00'}</td>
                   <td className="px-5 py-3.5"><StatusBadge status={b.status} /></td>
                 </tr>
               ))}

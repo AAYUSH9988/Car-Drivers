@@ -83,7 +83,7 @@ const AllDrivers = () => {
             {driver.rating?.toFixed(1) || '0.0'}
           </div>
         </td>
-        <td className="px-4 py-3.5 text-sm font-mono text-admin-text-1">${driver.hourlyRate || 0}/hr</td>
+        <td className="px-4 py-3.5 text-sm font-mono text-admin-text-1">₹{driver.hourlyRate || 0}/hr</td>
         <td className="px-4 py-3.5"><StatusBadge status={driver.status} /></td>
         <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
           <div className="relative">

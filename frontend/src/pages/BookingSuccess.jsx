@@ -78,7 +78,7 @@ const BookingSuccess = () => {
               <DetailRow label="Duration" value={`${duration} hours`} />
               <DetailRow label="Pickup" value={booking.pickupLocation} />
               <DetailRow label="Drop-off" value={booking.dropLocation || booking.dropoffLocation || 'N/A'} />
-              <DetailRow label="Total" value={`$${booking.totalAmount?.toFixed(2) || '0.00'}`} />
+              <DetailRow label="Total" value={`₹${booking.totalAmount?.toFixed(2) || '0.00'}`} />
               <DetailRow label="Status" value={booking.status?.toUpperCase() || 'CONFIRMED'} />
             </div>
           </div>

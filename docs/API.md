@@ -2,10 +2,6 @@
 
 Base URL: `https://your-backend.onrender.com/api`
 
----
-
-## Authentication
-
 All protected endpoints require a Bearer token in the `Authorization` header:
 
 ```
@@ -14,426 +10,188 @@ Authorization: Bearer <token>
 
 ### Response Format
 
-All responses follow this structure:
-
 ```json
 {
   "success": true,
-  "message": "Optional message",
   "data": { ... }
 }
 ```
 
----
+Paginated responses include a `pagination` key:
 
-## Auth Endpoints
-
-### POST `/auth/register`
-Register a new user.
-
-**Body:**
 ```json
 {
-  "name": "John Doe",
-  "email": "john@example.com",
-  "phone": "+911234567890",
-  "password": "password123"
+  "success": true,
+  "data": [ ... ],
+  "pagination": { "page": 1, "limit": 20, "total": 100, "totalPages": 5 }
 }
 ```
+
+---
+
+## Auth
+
+### `POST /auth/register`
+
+```json
+{ "name": "Arjun Sharma", "email": "arjun@example.com", "phone": "+911234567890", "password": "secret123" }
+```
+
+### `POST /auth/login`
+
+```json
+{ "email": "arjun@example.com", "password": "secret123" }
+```
+
+Response includes `token` and `refreshToken`.
+
+### `POST /auth/refresh`
+
+```json
+{ "refreshToken": "..." }
+```
+
+### `GET /auth/me` — `protected`
+
+Returns current user.
+
+### `PUT /auth/profile` — `protected`
+
+```json
+{ "name": "Arjun Sharma", "phone": "+919999999999" }
+```
+
+### `POST /auth/logout` — `protected`
+
+### `POST /auth/forgot-password`
+
+```json
+{ "email": "arjun@example.com" }
+```
+
+### `PUT /auth/reset-password/:token`
+
+```json
+{ "password": "newpassword123" }
+```
+
+### `GET /auth/verify-email/:token`
+
+---
+
+## Users — `protected`
+
+All `/users` routes require authentication. The authenticated user's identity comes from the JWT — no user ID in the URL.
+
+### `GET /users/profile`
+Get current user's profile.
+
+### `GET /users/stats`
+Get current user's booking statistics.
 
 **Response:**
 ```json
 {
-  "success": true,
-  "message": "Registration successful! Please log in.",
-  "data": { ... }
+  "totalBookings": 12,
+  "completedBookings": 10,
+  "cancelledBookings": 1,
+  "totalSpent": 45000
 }
 ```
 
----
+### `PUT /users/password`
+Change password.
 
-### POST `/auth/login`
-Authenticate and get tokens.
-
-**Body:**
 ```json
-{
-  "email": "john@example.com",
-  "password": "password123"
-}
+{ "currentPassword": "old", "newPassword": "newpass123" }
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "name": "John Doe",
-    "email": "john@example.com",
-    "role": "user",
-    "_id": "..."
-  },
-  "token": "eyJhbGciOiJIUzI1...",
-  "refreshToken": "..."
-}
-```
-
----
-
-### GET `/auth/me`
-Get current authenticated user.
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "_id": "...",
-    "name": "John Doe",
-    "email": "john@example.com",
-    "role": "user",
-    "phone": "+911234567890"
-  }
-}
-```
-
----
-
-### POST `/auth/refresh`
-Refresh access token using refresh token.
-
-**Body:**
-```json
-{
-  "refreshToken": "..."
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "token": "eyJhbGciOiJIUzI1...",
-  "refreshToken": "..."
-}
-```
-
----
-
-### POST `/auth/logout`
-Logout and invalidate tokens.
-
-**Headers:** `Authorization: Bearer <token>`
-
----
-
-### POST `/auth/forgot-password`
-Request password reset email.
-
-**Body:**
-```json
-{
-  "email": "john@example.com"
-}
-```
-
----
-
-### PUT `/auth/reset-password/:token`
-Reset password using token from email.
-
-**Body:**
-```json
-{
-  "password": "newpassword123"
-}
-```
-
----
-
-### GET `/auth/verify-email/:token`
-Verify email address.
-
----
-
-## Users
-
-Endpoints for managing users.
-
-### GET `/users`
-Get all users (Admin only).
-
-**Query Parameters:**
-- `page` — Page number (default: 1)
-- `limit` — Items per page (default: 10)
-- `role` — Filter by role (`user`, `driver`, `admin`)
-- `search` — Search by name or email
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": [ { ... }, { ... } ],
-  "pagination": {
-    "page": 1,
-    "limit": 10,
-    "totalPages": 5,
-    "total": 50
-  }
-}
-```
-
----
-
-### GET `/users/profile/me`
-Get current user profile.
-
-**Headers:** `Authorization: Bearer <token>`
-
----
-
-### PUT `/users/profile/me`
-Update current user profile.
-
-**Body:**
-```json
-{
-  "name": "John Updated",
-  "phone": "+911111111111"
-}
-```
-
----
-
-### GET `/users/:id`
-Get user by ID.
-
----
-
-### PUT `/users/:id`
-Update user (Admin only).
-
----
-
-### DELETE `/users/:id`
-Delete user (Admin only).
-
----
-
-### PUT `/users/:id/password`
-Update user password.
-
-**Body:**
-```json
-{
-  "currentPassword": "oldpass",
-  "newPassword": "newpass123"
-}
-```
-
----
-
-### PUT `/users/:id/photo`
-Upload profile photo.
-
-**Body:** `multipart/form-data` with `photo` field.
-
----
-
-### GET `/users/:id/bookings`
-Get bookings for a user.
-
----
-
-### GET `/users/:id/stats`
-Get user statistics.
+### `PUT /users/profile/photo`
+Upload profile photo. `multipart/form-data` with `photo` field.
 
 ---
 
 ## Drivers
 
-Endpoints for driver management.
+### `GET /drivers`
 
-### GET `/drivers`
-Get all drivers with filters.
+Query parameters:
+- `isAvailable` — `"true"` or `"false"`
+- `status` — `pending`, `active`, `suspended`, `inactive`
+- `vehicleType` — filter by vehicle type
+- `search` — search by name or location
+- `page`, `limit` — pagination (default `1`, `10`)
 
-**Query Parameters:**
-- `status` — `pending`, `active`, `rejected`
-- `isAvailable` — `true` or `false`
-- `page`, `limit` — Pagination
-- `search` — Search by name or vehicle
+> **Note:** There is no `/drivers/available` or `/drivers/search` route. Use `GET /drivers?isAvailable=true` for available drivers.
 
----
+### `GET /drivers/:id`
+Get driver profile by ID.
 
-### GET `/drivers/:id`
-Get driver by ID.
+### `POST /drivers` — `protected`
+Create driver profile.
 
----
-
-### POST `/drivers`
-Register a new driver.
-
-**Body:**
 ```json
 {
-  "user": "user_id",
   "licenseNumber": "DL1234567890",
   "vehicleModel": "Mercedes S-Class",
   "vehicleType": "luxury",
   "vehicleColor": "Black",
   "vehicleNumber": "MH01AB1234",
   "experience": 5,
-  "hourlyRate": 2000,
-  "languages": ["English", "Hindi"],
-  "preferredLocations": [["Mumbai", "Delhi"]],
-  "phone": "+911234567890",
-  "address": "123 Main St",
-  "bio": "Professional chauffeur with 5+ years experience."
+  "hourlyRate": 1500,
+  "languages": ["English", "Hindi"]
 }
 ```
 
 ---
 
-### GET `/drivers/available`
-Get all available drivers.
+## Bookings — `protected`
 
----
+### `GET /bookings`
+Get current user's bookings.
 
-### GET `/drivers/search`
-Search drivers with query parameters.
+### `POST /bookings`
 
----
-
-### GET `/drivers/nearby`
-Find nearby drivers using geospatial query.
-
-**Query Parameters:**
-- `longitude` — User's longitude
-- `latitude` — User's latitude
-- `maxDistance` — Maximum distance in meters (default: 5000)
-
----
-
-### GET `/drivers/:id/availability`
-Get driver availability schedule.
-
----
-
-### GET `/drivers/:id/ratings`
-Get driver ratings and reviews.
-
----
-
-### PATCH `/drivers/:id/status`
-Update driver status (Admin only).
-
-**Body:**
-```json
-{
-  "status": "approved"
-}
-```
-
----
-
-## Bookings
-
-Endpoints for managing bookings.
-
-### GET `/bookings`
-Get all bookings.
-
-**Query Parameters:**
-- `page`, `limit` — Pagination
-- `status` — Filter by status
-- `user`, `driver` — Filter by user/driver ID
-
----
-
-### POST `/bookings`
-Create a new booking.
-
-**Body:**
 ```json
 {
   "driver": "driver_id",
-  "pickupLocation": "123 Main St, Mumbai",
-  "dropoffLocation": "456 Park Ave, Mumbai",
+  "pickupLocation": "Connaught Place, Delhi",
+  "dropoffLocation": "IGI Airport, Delhi",
   "startTime": "2026-06-15T10:00:00.000Z",
   "endTime": "2026-06-15T14:00:00.000Z",
-  "totalAmount": 8000,
+  "totalAmount": 6000,
   "paymentMethod": "online"
 }
 ```
 
----
+### `GET /bookings/:id`
 
-### GET `/bookings/:id`
-Get booking by ID.
+### `PUT /bookings/:id`
 
----
+### `PATCH /bookings/:id/cancel`
 
-### PUT `/bookings/:id`
-Update booking.
+### `DELETE /bookings/:id`
 
----
+### `POST /bookings/:id/review`
 
-### PATCH `/bookings/:id/cancel`
-Cancel a booking.
-
----
-
-### DELETE `/bookings/:id`
-Delete a booking.
-
----
-
-### POST `/bookings/:id/review`
-Add a review to a booking.
-
-**Body:**
 ```json
-{
-  "rating": 5,
-  "review": "Excellent service!"
-}
+{ "rating": 5, "review": "Excellent service!" }
 ```
 
 ---
 
-## Payments
+## Payments — `protected`
 
-### POST `/payments/create-order`
-Create a Razorpay order.
+### `POST /payments/create-order`
 
-**Body:**
 ```json
-{
-  "amount": 8000,
-  "currency": "INR"
-}
+{ "amount": 6000, "currency": "INR" }
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "order_xxx",
-    "amount": 800000,
-    "currency": "INR"
-  }
-}
-```
+Response includes Razorpay `order_id`.
 
----
+### `POST /payments/verify`
 
-### POST `/payments/verify`
-Verify Razorpay payment signature.
-
-**Body:**
 ```json
 {
   "razorpay_order_id": "order_xxx",
@@ -442,71 +200,100 @@ Verify Razorpay payment signature.
 }
 ```
 
----
-
-### POST `/payments/refund/:bookingId`
-Process a refund for a booking.
+### `POST /payments/refund/:bookingId`
 
 ---
 
-## Admin
+## Admin — `protected` + `authorize('admin')`
 
-All admin endpoints are protected by `authorize('admin')` middleware.
+All admin routes live under `/admin/`. Role `admin` is required.
 
-### GET `/admin/dashboard`
-Get admin dashboard statistics.
+### `GET /admin/dashboard`
 
-**Response:**
 ```json
 {
-  "success": true,
   "data": {
-    "totalUsers": 150,
-    "totalDrivers": 45,
-    "totalBookings": 320,
-    "totalRevenue": 450000,
+    "overview": {
+      "totalUsers": 150,
+      "totalDrivers": 45,
+      "totalBookings": 320,
+      "pendingBookings": 12,
+      "completedBookings": 280
+    },
+    "revenue": { "total": 450000 },
     "recentBookings": [ ... ]
   }
 }
 ```
 
----
+### `GET /admin/analytics?type=revenue&period=30`
 
-### GET `/admin/analytics`
-Get detailed analytics data.
+`type`: `revenue` | `bookings` | `users`
+`period`: number of days (e.g. `7`, `30`, `90`)
 
----
+Response includes `daily` array:
+```json
+{ "daily": [{ "_id": "2026-06-01", "revenue": 12000 }, ...] }
+```
 
-### GET `/admin/system-info`
-Get system information.
+### Users
 
----
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/admin/users` | List users (`?search=&page=&limit=`) |
+| `GET` | `/admin/users/:id` | Get user by ID |
+| `GET` | `/admin/users/:id/stats` | User booking stats |
+| `POST` | `/admin/users` | Create user |
+| `PUT` | `/admin/users/:id` | Update user |
+| `DELETE` | `/admin/users/:id` | Delete user |
+| `PATCH` | `/admin/users/bulk-update` | Bulk update `{ ids, updates }` |
 
-### PUT `/admin/system-settings`
-Update system settings.
+### Drivers
 
----
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/admin/drivers` | List drivers (`?search=&status=&page=&limit=`) |
+| `GET` | `/admin/drivers/:id` | Get driver details |
+| `GET` | `/admin/drivers/:id/stats` | Driver trip & earnings stats |
+| `POST` | `/admin/drivers` | Create driver (creates linked user) |
+| `PUT` | `/admin/drivers/:id` | Update driver profile |
+| `DELETE` | `/admin/drivers/:id` | Delete driver + linked user |
+| `PATCH` | `/admin/drivers/:id/status` | `{ status: 'active' \| 'suspended' }` |
+| `PATCH` | `/admin/drivers/bulk-update` | Bulk update `{ ids, updates }` |
 
-### GET `/admin/reports`
-Generate reports.
+### Bookings
 
----
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/admin/bookings` | List all bookings (`?status=&page=&limit=`) |
+| `GET` | `/admin/bookings/:id` | Get booking with full population |
+| `PATCH` | `/admin/bookings/:id/status` | `{ status, note }` |
 
-### POST `/admin/users/bulk-update`
-Bulk update users.
+### Settings
 
----
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/admin/settings` | Get platform settings |
+| `PUT` | `/admin/settings` | Update settings |
 
-### POST `/admin/drivers/bulk-update`
-Bulk update drivers.
+### Export
 
----
+### `POST /admin/export`
 
-### POST `/admin/notifications/bulk`
-Send bulk notifications.
+```json
+{ "type": "revenue" }
+```
 
----
+`type`: `revenue` | `bookings` | `users` | `drivers`
 
-### POST `/admin/export`
-Export data.
+Returns a JSON file download.
 
+### Notifications
+
+### `POST /admin/notifications/bulk`
+
+```json
+{ "target": "all", "title": "Maintenance", "message": "The platform will be down for 30 minutes." }
+```
+
+`target`: `all` | `users` | `drivers`

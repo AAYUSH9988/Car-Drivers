@@ -254,7 +254,7 @@ const DriverDetails = () => {
                 {/* Details */}
                 <div className="space-y-4 border-t border-primary pt-6 mb-8">
                   <DetailRow label="Experience" value={`${driver.experience || 0} years`} />
-                  <DetailRow label="Hourly Rate" value={`$${driver.hourlyRate || 0}`} />
+                  <DetailRow label="Hourly Rate" value={`₹${driver.hourlyRate || 0}`} />
                   <DetailRow label="Vehicle Types" value={driver.vehicleTypes?.join(' / ') || 'Sedan'} />
                   <DetailRow label="Languages" value={driver.languages?.join(' / ') || 'English'} />
                   {driver.certifications?.length > 0 && (
@@ -291,7 +291,7 @@ const DriverDetails = () => {
               <div className="border-t border-outline-variant pt-6">
                 <div className="flex items-end justify-between mb-6">
                   <div>
-                    <span className="font-display-xl text-[56px] text-primary leading-none">${driver.hourlyRate}</span>
+                    <span className="font-display-xl text-[56px] text-primary leading-none">₹{driver.hourlyRate}</span>
                     <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant ml-2">/hr</span>
                   </div>
                 </div>
@@ -406,7 +406,7 @@ const DriverDetails = () => {
               <div className="border-t border-outline-variant pt-6">
                 <div className="flex items-center justify-between">
                   <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant">Total Amount</span>
-                  <span className="font-display-xl text-[40px] text-primary leading-none">${totalPrice}</span>
+                  <span className="font-display-xl text-[40px] text-primary leading-none">₹{totalPrice}</span>
                 </div>
                 <p className="font-ui-label text-[10px] text-on-surface-variant uppercase tracking-widest mt-2">
                   Paid securely via Razorpay

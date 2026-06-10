@@ -1,8 +1,0 @@
-node_modules
-.env
-.env.*
-*.md
-.git
-.gitignore
-assets/drivers
-assets/vehicles

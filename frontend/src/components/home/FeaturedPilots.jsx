@@ -55,7 +55,7 @@ const PilotCard = ({ pilot, index }) => (
     <div className="flex items-center justify-between border-t border-outline-variant pt-4">
       <div>
         <span className="font-display-xl text-[32px] text-primary leading-none">
-          ${pilot.hourlyRate}
+          ₹{pilot.hourlyRate}
         </span>
         <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant ml-2">
           /hr

@@ -94,7 +94,7 @@ const VerifyDriver = () => {
               ['Phone', user.phone],
               ['License No.', driver.licenseNumber],
               ['Experience', driver.experience ? `${driver.experience} yrs` : '—'],
-              ['Rate', driver.hourlyRate ? `$${driver.hourlyRate}/hr` : '—'],
+              ['Rate', driver.hourlyRate ? `₹${driver.hourlyRate}/hr` : '—'],
               ['Vehicles', driver.vehicleTypes?.join(', ')],
               ['Status', driver.status?.toUpperCase()],
             ].map(([label, value]) => (

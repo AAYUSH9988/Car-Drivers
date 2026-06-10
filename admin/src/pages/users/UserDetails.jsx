@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, DollarSign, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, IndianRupee, CheckCircle, XCircle } from 'lucide-react';
 import { userAPI } from '../../services/api';
 import { toast } from 'sonner';
 import Breadcrumb from '../../components/layout/Breadcrumb';
@@ -90,7 +90,7 @@ const UserDetails = () => {
           <StatCard icon={Calendar}     label="Total Bookings" value={stats.totalBookings ?? 0}                         color="text-blue-400"    />
           <StatCard icon={CheckCircle}  label="Completed"      value={stats.completedBookings ?? 0}                     color="text-emerald-400" />
           <StatCard icon={XCircle}      label="Cancelled"      value={stats.cancelledBookings ?? 0}                     color="text-red-400"     />
-          <StatCard icon={DollarSign}   label="Total Spent"    value={`$${(stats.totalSpent || 0).toFixed(2)}`}         color="text-amber-400"   />
+          <StatCard icon={IndianRupee}   label="Total Spent"    value={`₹${(stats.totalSpent || 0).toFixed(2)}`}         color="text-amber-400"   />
         </div>
       )}
 
@@ -135,7 +135,7 @@ const UserDetails = () => {
                   >
                     <td className="px-4 py-3 text-sm font-mono text-admin-text-2">{b.bookingReference || b._id?.slice(0, 10)}</td>
                     <td className="px-4 py-3 text-sm text-admin-text-3">{b.startTime ? new Date(b.startTime).toLocaleDateString() : '—'}</td>
-                    <td className="px-4 py-3 text-sm font-mono text-admin-text-1">${b.totalAmount?.toFixed(2) || '0.00'}</td>
+                    <td className="px-4 py-3 text-sm font-mono text-admin-text-1">₹{b.totalAmount?.toFixed(2) || '0.00'}</td>
                     <td className="px-4 py-3 text-sm text-admin-text-2 capitalize">{b.status}</td>
                   </tr>
                 ))}

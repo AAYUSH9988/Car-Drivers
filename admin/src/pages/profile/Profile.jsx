@@ -46,7 +46,7 @@ const Profile = () => {
     if (newPassword.length < 8) { toast.error('Password must be at least 8 characters'); return; }
     setSaving(true);
     try {
-      await profileAPI.update({ currentPassword, newPassword });
+      await profileAPI.updatePassword({ currentPassword, newPassword });
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
       toast.success('Password changed');
     } catch (err) {

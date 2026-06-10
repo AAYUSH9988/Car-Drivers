@@ -23,6 +23,11 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
   sendSuccess(res, user);
 });
 
+export const getUserStats = asyncHandler(async (req: Request, res: Response) => {
+  const result = await adminService.getUserStats(req.params['id']!);
+  sendSuccess(res, result);
+});
+
 export const createUser = asyncHandler(async (req: Request, res: Response) => {
   const user = await adminService.createUser(req.body);
   sendCreated(res, user, 'User created successfully');
@@ -49,13 +54,34 @@ export const getAllDrivers = asyncHandler(async (req: Request, res: Response) =>
   const page   = Number(req.query['page'])  || 1;
   const limit  = Number(req.query['limit']) || 20;
   const status = req.query['status'] as string | undefined;
-  const { drivers, total } = await adminService.getAllDrivers(page, limit, status);
+  const search = req.query['search'] as string | undefined;
+  const { drivers, total } = await adminService.getAllDrivers(page, limit, status, search);
   sendSuccess(res, drivers, 200, { pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } });
 });
 
 export const getDriverDetails = asyncHandler(async (req: Request, res: Response) => {
   const driver = await adminService.getDriverDetails(req.params['id']!);
   sendSuccess(res, driver);
+});
+
+export const createDriver = asyncHandler(async (req: Request, res: Response) => {
+  const result = await adminService.createDriver(req.body);
+  sendCreated(res, result, 'Driver created successfully');
+});
+
+export const updateDriver = asyncHandler(async (req: Request, res: Response) => {
+  const driver = await adminService.updateDriver(req.params['id']!, req.body);
+  sendSuccess(res, driver, 200, { message: 'Driver updated' });
+});
+
+export const deleteDriver = asyncHandler(async (req: Request, res: Response) => {
+  await adminService.deleteDriver(req.params['id']!);
+  sendNoContent(res);
+});
+
+export const getDriverStats = asyncHandler(async (req: Request, res: Response) => {
+  const result = await adminService.getDriverStats(req.params['id']!);
+  sendSuccess(res, result);
 });
 
 export const updateDriverStatus = asyncHandler(async (req: Request, res: Response) => {
@@ -78,9 +104,21 @@ export const getAllBookings = asyncHandler(async (req: Request, res: Response) =
   sendSuccess(res, bookings, 200, { pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } });
 });
 
+export const getBookingById = asyncHandler(async (req: Request, res: Response) => {
+  const booking = await adminService.getBookingById(req.params['id']!);
+  sendSuccess(res, booking);
+});
+
 export const updateBookingStatus = asyncHandler(async (req: Request, res: Response) => {
   const booking = await adminService.updateBookingStatus(req.params['id']!, req.body.status as string);
   sendSuccess(res, booking, 200, { message: 'Booking status updated' });
+});
+
+export const getAnalytics = asyncHandler(async (req: Request, res: Response) => {
+  const type   = (req.query['type']   as string) || 'revenue';
+  const period = Number(req.query['period']) || 30;
+  const data   = await adminService.getAnalytics(type, period);
+  sendSuccess(res, data);
 });
 
 // Settings
@@ -92,6 +130,15 @@ export const getSettings = asyncHandler(async (_req: Request, res: Response) => 
 export const updateSettings = asyncHandler(async (req: Request, res: Response) => {
   const settings = await adminService.updateSettings(req.user!.id as string, req.body);
   sendSuccess(res, settings, 200, { message: 'Settings updated' });
+});
+
+// Export
+export const exportData = asyncHandler(async (req: Request, res: Response) => {
+  const { type } = req.body as { type: string };
+  const data = await adminService.exportData(type);
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Content-Disposition', `attachment; filename="${type}-export-${Date.now()}.json"`);
+  res.status(200).send(JSON.stringify(data, null, 2));
 });
 
 // Notifications

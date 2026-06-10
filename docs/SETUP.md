@@ -1,10 +1,8 @@
 # Local Development Setup
 
-This guide covers setting up GoPilot for local development.
-
 ## Prerequisites
 
-- **Node.js** v18+ and npm
+- **Node.js** v18+
 - **MongoDB** (local or Atlas)
 - **Git**
 
@@ -17,12 +15,12 @@ cd Car-Drivers
 
 ## 2. Install Dependencies
 
-Open three separate terminals and run:
+Open three separate terminals:
 
-### Terminal 1 — Backend
+### Terminal 1 — Backend (TypeScript)
 
 ```bash
-cd backend
+cd server
 npm install
 cp .env.example .env
 # Edit .env with your MongoDB URI and secrets
@@ -35,7 +33,6 @@ npm run dev
 cd frontend
 npm install
 cp .env.example .env
-# Set VITE_API_URL=http://localhost:4000/api
 npm run dev
 ```
 
@@ -45,39 +42,40 @@ npm run dev
 cd admin
 npm install
 cp .env.example .env
-# Set VITE_API_URL=http://localhost:4000/api
 npm run dev
 ```
 
-## 3. Configure Environment Variables
+## 3. Environment Variables
 
-### Backend `.env`
+### `server/.env`
 
 ```env
 NODE_ENV=development
 PORT=4000
 MONGO_URI=mongodb://localhost:27017/gopilot
-JWT_SECRET=dev_secret_change_in_production
-JWT_REFRESH_SECRET=dev_refresh_change_in_production
+JWT_SECRET=your-32-char-minimum-jwt-secret-here-change-this
+JWT_REFRESH_SECRET=another-32-char-minimum-secret-here-change-this
 JWT_EXPIRE=7d
+JWT_REFRESH_EXPIRE=30d
 FRONTEND_URL=http://localhost:5173
 ADMIN_URL=http://localhost:5174
 IMAGEKIT_PUBLIC_KEY=your_key
 IMAGEKIT_PRIVATE_KEY=your_secret
-IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your_endpoint
+IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your-id
 BREVO_API_KEY=your_key
-BREVO_FROM_EMAIL=noreply@yourdomain.com
-RAZORPAY_KEY_ID=your_key
-RAZORPAY_KEY_SECRET=your_secret
+BREVO_FROM_EMAIL=noreply@gopilot.app
+RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxx
+RAZORPAY_KEY_SECRET=your_razorpay_secret
+ADMIN_SECRET=a-secret-for-seeding-admin-accounts
 ```
 
-### Frontend `.env`
+### `frontend/.env`
 
 ```env
 VITE_API_URL=http://localhost:4000/api
 ```
 
-### Admin `.env`
+### `admin/.env`
 
 ```env
 VITE_API_URL=http://localhost:4000/api
@@ -87,29 +85,31 @@ VITE_API_URL=http://localhost:4000/api
 
 ### Option A: Local MongoDB
 
-1. Install MongoDB Community Edition
-2. Start the MongoDB service
-3. The default URI is: `mongodb://localhost:27017/gopilot`
+```bash
+# macOS with Homebrew
+brew services start mongodb-community
+```
 
-### Option B: MongoDB Atlas (Cloud)
+Default URI: `mongodb://localhost:27017/gopilot`
+
+### Option B: MongoDB Atlas
 
 1. Create a free cluster at [mongodb.com/atlas](https://www.mongodb.com/atlas)
-2. Create a database user
-3. Whitelist your IP address
-4. Copy the connection string to `MONGO_URI`
+2. Create a database user and whitelist your IP
+3. Copy the connection string into `MONGO_URI`
 
 ## 5. Verify Everything Works
 
 | Service | URL | Expected |
 |---------|-----|----------|
+| Backend | `http://localhost:4000/api/health` | `{"success":true}` |
 | Frontend | `http://localhost:5173` | Home page loads |
 | Admin | `http://localhost:5174` | Admin login page |
-| API | `http://localhost:4000/api/health` | `{"status":"ok"}` |
 
-## 6. Create an Admin User
+## 6. Create an Admin Account
 
 1. Register a user at `http://localhost:5173/register`
-2. In MongoDB, update the user's role to `admin`:
+2. Promote to admin in MongoDB:
 
 ```javascript
 db.users.updateOne(
@@ -118,38 +118,34 @@ db.users.updateOne(
 )
 ```
 
-3. Log in to the admin panel at `http://localhost:5174`
+3. Log in at `http://localhost:5174`
 
 ## Available Scripts
 
-### Backend
-- `npm run dev` — Start with nodemon
-- `npm start` — Start in production mode
-- `npm run build` — (if applicable)
+### Backend (`server/`)
 
-### Frontend
-- `npm run dev` — Development server
-- `npm run build` — Production build
-- `npm run preview` — Preview production build
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Development server with `ts-node-dev` |
+| `npm run build` | Compile TypeScript to `dist/` |
+| `npm start` | Run compiled `dist/server.js` |
 
-### Admin
-- `npm run dev` — Development server
-- `npm run build` — Production build
-- `npm run preview` — Preview production build
+### Frontend & Admin
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Vite dev server |
+| `npm run build` | Production build to `dist/` |
+| `npm run preview` | Preview production build |
 
 ## Troubleshooting
 
 ### Port Already in Use
-Change the port in the respective `.env` file:
-```env
-PORT=4001  # for backend
-```
+Change `PORT` in `server/.env`.
 
 ### CORS Errors
-Ensure `FRONTEND_URL` and `ADMIN_URL` in backend `.env` exactly match your dev server URLs.
+Ensure `FRONTEND_URL` and `ADMIN_URL` in `server/.env` exactly match your dev URLs (no trailing slash).
 
 ### MongoDB Connection Refused
-- Check MongoDB is running: `mongod --version`
-- Verify the connection string in `.env`
-- Check firewall rules
-
+- Local: check `mongod` is running
+- Atlas: verify IP whitelist and connection string

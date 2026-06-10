@@ -157,7 +157,7 @@ const Reports = () => {
                   {analytics.topDriversByRevenue.map((d, i) => (
                     <tr key={i} className="border-b border-admin-border last:border-0">
                       <td className="px-4 py-3 text-sm text-admin-text-1">{d.name || 'Unknown'}</td>
-                      <td className="px-4 py-3 text-sm font-mono text-admin-text-1">${d.revenue?.toFixed(2) || '0.00'}</td>
+                      <td className="px-4 py-3 text-sm font-mono text-admin-text-1">₹{d.revenue?.toFixed(2) || '0.00'}</td>
                       <td className="px-4 py-3 text-sm text-admin-text-2">{d.trips || 0}</td>
                     </tr>
                   ))}
@@ -185,7 +185,7 @@ const Reports = () => {
                       <td className="px-4 py-3 text-sm text-admin-text-1">{u.name || 'Unknown'}</td>
                       <td className="px-4 py-3 text-sm text-admin-text-2">{u.email || '—'}</td>
                       <td className="px-4 py-3 text-sm font-mono text-admin-text-1">{u.bookings || 0}</td>
-                      <td className="px-4 py-3 text-sm font-mono text-admin-text-1">${u.totalSpent?.toFixed(2) || '0.00'}</td>
+                      <td className="px-4 py-3 text-sm font-mono text-admin-text-1">₹{u.totalSpent?.toFixed(2) || '0.00'}</td>
                     </tr>
                   ))}
                 </tbody>

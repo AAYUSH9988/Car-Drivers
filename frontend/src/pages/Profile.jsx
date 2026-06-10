@@ -29,9 +29,8 @@ const Profile = () => {
   }, [user]);
 
   const fetchStats = async () => {
-    if (!user?._id) return;
     try {
-      const res = await endpoints.users.getStats(user._id);
+      const res = await endpoints.users.getStats();
       setStats(res.data?.data || res.data);
     } catch {
       // stats are non-critical
@@ -61,7 +60,7 @@ const Profile = () => {
     if (newPassword.length < 8) { toast.error('Password must be at least 8 characters'); return; }
     setLoading(true);
     try {
-      await endpoints.users.updatePassword(user._id, { currentPassword, newPassword });
+      await endpoints.users.updatePassword({ currentPassword, newPassword });
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       toast.success('Password changed successfully');
     } catch (err) {
@@ -80,8 +79,8 @@ const Profile = () => {
     setPhotoLoading(true);
     try {
       const formData = new FormData();
-      formData.append('profilePhoto', file);
-      const res = await endpoints.users.updatePhoto(user._id, formData);
+      formData.append('photo', file);
+      const res = await endpoints.users.updatePhoto(formData);
       const photoUrl = res.data?.data?.profilePhoto;
       if (photoUrl) {
         const stored = JSON.parse(localStorage.getItem('user') || '{}');
@@ -141,7 +140,7 @@ const Profile = () => {
               { label: 'Total Bookings', value: stats.totalBookings ?? 0 },
               { label: 'Completed', value: stats.completedBookings ?? 0 },
               { label: 'Cancelled', value: stats.cancelledBookings ?? 0 },
-              { label: 'Total Spent', value: `$${stats.totalSpent ?? 0}` },
+              { label: 'Total Spent', value: `₹${stats.totalSpent ?? 0}` },
             ].map((s, i) => (
               <div key={i}>
                 <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-3">{s.label}</span>
