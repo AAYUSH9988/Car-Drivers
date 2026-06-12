@@ -50,22 +50,14 @@ const Reports = () => {
     }
   };
 
-  // Map analytics data to chart format
+  // Map analytics data to chart format — server returns { daily: [{_id, revenue|count}] }
   const getChartData = () => {
-    if (!analytics) return null;
-    if (reportType === 'revenue' && analytics.dailyRevenue) {
-      return {
-        labels: analytics.dailyRevenue.map(d => `${d._id.day}/${d._id.month}`),
-        values: analytics.dailyRevenue.map(d => d.revenue),
-      };
-    }
-    if (reportType === 'users' && analytics.userGrowth) {
-      return {
-        labels: analytics.userGrowth.map(d => `${d._id.day}/${d._id.month}`),
-        values: analytics.userGrowth.map(d => d.newUsers),
-      };
-    }
-    return null;
+    const daily = analytics?.daily;
+    if (!daily?.length) return null;
+    return {
+      labels: daily.map(d => d._id),
+      values: daily.map(d => d.revenue ?? d.count ?? 0),
+    };
   };
 
   const chartData = getChartData();
@@ -124,18 +116,16 @@ const Reports = () => {
         </select>
       </div>
 
-      {/* Chart */}
-      {chartData && (
-        <div className="bg-admin-surface border border-admin-border rounded-md p-6">
-          <span className="text-sm font-medium text-admin-text-1 block mb-6 capitalize">
-            {reportType} — Last {period} days
-          </span>
-          {loading
-            ? <div className="h-48 bg-admin-elevated rounded animate-pulse" />
-            : <BookingChart data={chartData} />
-          }
-        </div>
-      )}
+      {/* Chart — always show container; chart itself shows empty state when no data */}
+      <div className="bg-admin-surface border border-admin-border rounded-md p-6">
+        <span className="text-sm font-medium text-admin-text-1 block mb-6 capitalize">
+          {reportType} — Last {period} days
+        </span>
+        {loading
+          ? <div className="h-52 bg-admin-elevated rounded animate-pulse" />
+          : <BookingChart data={chartData} valuePrefix={reportType === 'revenue' ? '₹' : ''} />
+        }
+      </div>
 
       {/* Top data tables */}
       {!loading && analytics && (

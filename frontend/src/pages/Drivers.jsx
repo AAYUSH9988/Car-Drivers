@@ -36,7 +36,7 @@ const Drivers = () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await driverService.getAvailableDrivers?.() || await driverService.getAllDrivers();
+        const data = await driverService.getAllDrivers();
         if (mounted) {
           setDrivers(data);
           setFiltered(data);

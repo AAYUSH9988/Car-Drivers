@@ -41,14 +41,16 @@ const PilotCard = ({ pilot, index = 0 }) => {
             loading="lazy"
           />
         ) : null}
-        {/* Initials fallback */}
+        {/* Fallback image */}
         <div
           className="absolute inset-0 bg-surface-container flex items-center justify-center"
           style={{ display: hasPhoto ? 'none' : 'flex' }}
         >
-          <span className="font-headline-lg text-[56px] text-on-surface-variant/40 select-none leading-none">
-            {initials}
-          </span>
+          <img
+            src="/driver.png"
+            alt="Driver"
+            className="w-32 h-32 object-contain opacity-20 select-none"
+          />
         </div>
 
         {/* Status pill */}

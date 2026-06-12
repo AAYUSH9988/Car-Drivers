@@ -139,8 +139,8 @@ const Dashboard = () => {
           <span className="text-2xs text-admin-text-3 uppercase tracking-widest">Last {period} days</span>
         </div>
         {loading
-          ? <div className="h-48 bg-admin-elevated rounded-md animate-pulse" />
-          : <BookingChart data={chartData} />
+          ? <div className="h-52 bg-admin-elevated rounded-md animate-pulse" />
+          : <BookingChart data={chartData} valuePrefix="₹" />
         }
       </div>
 

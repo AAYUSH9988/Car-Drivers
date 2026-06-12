@@ -100,7 +100,7 @@ const AllBookings = () => {
                     {b.startTime ? new Date(b.startTime).toLocaleDateString() : '—'}
                   </td>
                   <td className="px-4 py-3.5 text-sm font-mono text-admin-text-1">
-                    ${b.totalAmount?.toFixed(2) || '0.00'}
+                    ₹{(b.totalAmount || 0).toLocaleString('en-IN')}
                   </td>
                   <td className="px-4 py-3.5">
                     <span className={`text-xs font-medium ${b.paymentStatus === 'completed' ? 'text-emerald-400' : b.paymentStatus === 'failed' ? 'text-red-400' : 'text-amber-400'}`}>
