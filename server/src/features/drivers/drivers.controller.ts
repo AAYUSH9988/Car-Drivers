@@ -18,6 +18,20 @@ export const getDriverAvailability = asyncHandler(async (req: Request, res: Resp
   sendSuccess(res, data);
 });
 
+export const getDriverReviews = asyncHandler(async (req: Request, res: Response) => {
+  const page  = Number(req.query['page'])  || 1;
+  const limit = Number(req.query['limit']) || 10;
+  const data  = await driversService.getDriverReviews(req.params['id']!, page, limit);
+  sendSuccess(res, data.reviews, 200, {
+    pagination: { total: data.total, page: data.page, limit: data.limit, totalPages: Math.ceil(data.total / data.limit) },
+  });
+});
+
+export const getMyEarnings = asyncHandler(async (req: Request, res: Response) => {
+  const data = await driversService.getMyEarnings(req.user!.id as string);
+  sendSuccess(res, data);
+});
+
 export const getMyDriverProfile = asyncHandler(async (req: Request, res: Response) => {
   const driver = await driversService.getMyDriverProfile(req.user!.id as string);
   sendSuccess(res, driver);

@@ -27,9 +27,10 @@ const BookingFailed = lazy(() => import('./pages/BookingFailed'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword  = lazy(() => import('./pages/ResetPassword'));
 const VerifyEmail    = lazy(() => import('./pages/VerifyEmail'));
-const Profile        = lazy(() => import('./pages/Profile'));
-const Terms          = lazy(() => import('./pages/Terms'));
-const Privacy        = lazy(() => import('./pages/Privacy'));
+const Profile         = lazy(() => import('./pages/Profile'));
+const DriverDashboard = lazy(() => import('./pages/DriverDashboard'));
+const Terms           = lazy(() => import('./pages/Terms'));
+const Privacy         = lazy(() => import('./pages/Privacy'));
 
 
 function App() {
@@ -81,6 +82,9 @@ function App() {
                 } />
                 <Route path="/profile" element={
                   <ProtectedRoute><Profile /></ProtectedRoute>
+                } />
+                <Route path="/driver-dashboard" element={
+                  <ProtectedRoute><DriverDashboard /></ProtectedRoute>
                 } />
               </Routes>
             </Suspense>

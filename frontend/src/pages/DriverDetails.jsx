@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
@@ -17,20 +17,43 @@ const loadRazorpay = () =>
     document.body.appendChild(script);
   });
 
+// ── Fare calculation ──────────────────────────────────────────────────────────
+const PLATFORM_FEE = 50;
+const NIGHT_RATE   = 0.10;
+
+const isNightTime = (timeStr) => {
+  if (!timeStr) return false;
+  const h = parseInt(timeStr.split(':')[0], 10);
+  return h >= 21 || h < 6;
+};
+
+// ── Calendar helpers ──────────────────────────────────────────────────────────
+const SHORT_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+const next7Days = () =>
+  Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 const DriverDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const location = useLocation();
 
-  const [driver, setDriver] = useState(null);
+  const [driver,       setDriver]       = useState(null);
   const [availability, setAvailability] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [reviews,      setReviews]      = useState([]);
+  const [loading,      setLoading]      = useState(true);
+  const [error,        setError]        = useState(null);
 
-  const [bookingModal, setBookingModal] = useState(false);
+  const [bookingModal,   setBookingModal]   = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
-  const [bookingData, setBookingData] = useState({
+  const [bookingData,    setBookingData]    = useState({
     selectedDate: '',
     selectedTime: '',
     duration: 1,
@@ -38,7 +61,6 @@ const DriverDetails = () => {
     dropoffLocation: '',
   });
 
-  // Fetch driver + availability in parallel
   useEffect(() => {
     let mounted = true;
     const fetchData = async () => {
@@ -47,19 +69,15 @@ const DriverDetails = () => {
         setError(null);
         if (!id) throw new Error('Driver ID not found');
 
-        const [data] = await Promise.all([
-          driverService.getDriverById(id),
-        ]);
+        const data = await driverService.getDriverById(id);
         if (!data) throw new Error('Driver not found');
         if (mounted) setDriver(data);
 
-        // Fetch availability non-blocking
-        try {
-          const availRes = await endpoints.drivers.getAvailability(id);
-          if (mounted) setAvailability(availRes.data?.data);
-        } catch {
-          // availability is optional
-        }
+        // Non-blocking parallel fetches
+        Promise.all([
+          endpoints.drivers.getAvailability(id).then(r => mounted && setAvailability(r.data?.data)),
+          endpoints.drivers.getReviews(id, { limit: 5 }).then(r => mounted && setReviews(r.data?.data || [])),
+        ]).catch(() => {});
       } catch (err) {
         if (mounted) {
           setError(err.message || 'Failed to load driver details');
@@ -72,6 +90,14 @@ const DriverDetails = () => {
     fetchData();
     return () => { mounted = false; };
   }, [id]);
+
+  const fare = useMemo(() => {
+    if (!driver) return null;
+    const base           = driver.hourlyRate * bookingData.duration;
+    const nightSurcharge = isNightTime(bookingData.selectedTime) ? Math.round(base * NIGHT_RATE) : 0;
+    const total          = base + nightSurcharge + PLATFORM_FEE;
+    return { base, nightSurcharge, platformFee: PLATFORM_FEE, total };
+  }, [driver, bookingData.duration, bookingData.selectedTime]);
 
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
@@ -89,34 +115,31 @@ const DriverDetails = () => {
 
     setBookingLoading(true);
     try {
-      // Step 1 — create booking
       const startDateTime = new Date(`${selectedDate}T${selectedTime}`);
-      const endDateTime = new Date(startDateTime);
+      const endDateTime   = new Date(startDateTime);
       endDateTime.setHours(endDateTime.getHours() + parseInt(duration));
 
       const payload = {
-        driverId: driver._id,
-        startTime: startDateTime.toISOString(),
-        endTime: endDateTime.toISOString(),
-        pickupLocation: pickupLocation.trim(),
-        dropLocation: dropoffLocation.trim() || pickupLocation.trim(),
-        totalAmount: driver.hourlyRate * parseInt(duration),
-        paymentMethod: 'Razorpay',
+        driverId:        driver._id,
+        startTime:       startDateTime.toISOString(),
+        endTime:         endDateTime.toISOString(),
+        pickupLocation:  pickupLocation.trim(),
+        dropLocation:    dropoffLocation.trim() || pickupLocation.trim(),
+        totalAmount:     fare.total,
+        paymentMethod:   'Razorpay',
       };
 
       const bookingRes = await endpoints.bookings.create(payload);
       if (!bookingRes.data?.success) throw new Error(bookingRes.data?.message || 'Booking failed');
 
-      const booking = bookingRes.data.data || bookingRes.data.booking;
+      const booking   = bookingRes.data.data || bookingRes.data.booking;
       const bookingId = booking._id;
 
-      // Step 2 — create Razorpay order
       const orderRes = await endpoints.payments.createOrder({ bookingId });
       if (!orderRes.data?.success) throw new Error('Failed to create payment order');
 
       const { orderId, amount, currency, keyId } = orderRes.data.data;
 
-      // Step 3 — open Razorpay checkout
       const scriptLoaded = await loadRazorpay();
       if (!scriptLoaded) {
         toast.error('Payment gateway unavailable. Please try again.');
@@ -125,34 +148,26 @@ const DriverDetails = () => {
       }
 
       const rzOptions = {
-        key: keyId,
+        key:         keyId,
         amount,
         currency,
-        name: 'GoPilot',
+        name:        'GoPilot',
         description: `Booking with ${driver.name}`,
-        order_id: orderId,
-        prefill: {
-          name: user.name,
-          email: user.email,
-          contact: user.phone || '',
-        },
-        theme: { color: '#1b1c1c' },
+        order_id:    orderId,
+        prefill:     { name: user.name, email: user.email, contact: user.phone || '' },
+        theme:       { color: '#1b1c1c' },
         handler: async (paymentResponse) => {
           try {
-            // Step 4 — verify payment
             const verifyRes = await endpoints.payments.verify({
-              razorpay_order_id: paymentResponse.razorpay_order_id,
+              razorpay_order_id:   paymentResponse.razorpay_order_id,
               razorpay_payment_id: paymentResponse.razorpay_payment_id,
-              razorpay_signature: paymentResponse.razorpay_signature,
+              razorpay_signature:  paymentResponse.razorpay_signature,
               bookingId,
             });
-
             if (verifyRes.data?.success) {
               toast.success('Payment successful! Booking confirmed.');
               setBookingModal(false);
-              navigate('/booking/success', {
-                state: { booking: { ...booking, status: 'confirmed' }, driver }
-              });
+              navigate('/booking/success', { state: { booking: { ...booking, status: 'confirmed' }, driver } });
             } else {
               throw new Error('Payment verification failed');
             }
@@ -166,11 +181,7 @@ const DriverDetails = () => {
             setBookingLoading(false);
             setBookingModal(false);
             navigate('/booking/failed', {
-              state: {
-                booking: { ...booking, status: 'pending' },
-                driver,
-                reason: 'Payment cancelled by user. You can retry from your dashboard.'
-              }
+              state: { booking: { ...booking, status: 'pending' }, driver, reason: 'Payment cancelled by user. You can retry from your dashboard.' }
             });
           }
         }
@@ -182,31 +193,25 @@ const DriverDetails = () => {
         setBookingLoading(false);
         setBookingModal(false);
         navigate('/booking/failed', {
-          state: {
-            booking: { ...booking, status: 'pending' },
-            driver,
-            reason: `Payment failed: ${response.error.description}. Please retry.`
-          }
+          state: { booking: { ...booking, status: 'pending' }, driver, reason: `Payment failed: ${response.error.description}. Please retry.` }
         });
       });
       rzp.open();
 
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Failed to create booking';
-      toast.error(msg);
+      toast.error(err.response?.data?.message || err.message || 'Failed to create booking');
       setBookingLoading(false);
     }
   };
 
-  if (loading) return <LoadingState />;
-  if (error && !driver) return <ErrorState error={error} onBack={() => navigate(-1)} />;
-  if (!driver) return <NotFoundState onBack={() => navigate('/pilots')} />;
-
-  const totalPrice = (driver.hourlyRate * bookingData.duration).toFixed(2);
+  if (loading)              return <LoadingState />;
+  if (error && !driver)     return <ErrorState error={error} onBack={() => navigate(-1)} />;
+  if (!driver)              return <NotFoundState onBack={() => navigate('/pilots')} />;
 
   return (
     <div className="w-full bg-surface min-h-screen">
-      {/* Header */}
+
+      {/* ── Header ─────────────────────────────────────────────────────── */}
       <section className="pt-24 md:pt-section-gap pb-16 px-gutter md:px-margin-edge border-b border-outline-variant">
         <div className="max-w-[1440px] mx-auto">
           <Link
@@ -231,6 +236,13 @@ const DriverDetails = () => {
                     <span className="font-ui-label text-ui-label uppercase tracking-widest text-primary">Available</span>
                   </div>
                 )}
+                {/* F14 — Verified badge on photo */}
+                {driver.status === 'active' && (
+                  <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-background/90 backdrop-blur-sm border border-primary px-2.5 py-1.5">
+                    <span className="material-symbols-outlined text-[14px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                    <span className="font-ui-label text-[10px] uppercase tracking-widest text-primary">Document Verified</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -238,11 +250,29 @@ const DriverDetails = () => {
             <div className="lg:col-span-6 lg:col-start-7 flex flex-col justify-between">
               <div>
                 <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-4">Pilot Profile</span>
-                <h1 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-6">{driver.name}</h1>
+                <h1 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-4">{driver.name}</h1>
+
+                {/* F6 — Bio */}
+                {driver.bio && (
+                  <p className="font-body-md text-body-md text-on-surface-variant mb-6 leading-relaxed max-w-prose">
+                    {driver.bio}
+                  </p>
+                )}
+
+                {/* F6 — Specialties */}
+                {driver.specialties?.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {driver.specialties.map(s => (
+                      <span key={s} className="border border-primary/50 px-2.5 py-1 font-ui-label text-[10px] uppercase tracking-widest text-primary">
+                        #{s}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
                 {/* Rating */}
                 <div className="flex items-center gap-4 mb-8">
-                  <span className="font-display-xl text-[48px] text-primary leading-none">{driver.rating?.toFixed(1) || '4.5'}</span>
+                  <span className="font-display-xl text-[48px] text-primary leading-none">{driver.rating?.toFixed(1) || '—'}</span>
                   <div>
                     <div className="flex items-center gap-1 mb-1">{renderStars(driver.rating || 0)}</div>
                     <p className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant">
@@ -253,34 +283,28 @@ const DriverDetails = () => {
 
                 {/* Details */}
                 <div className="space-y-4 border-t border-primary pt-6 mb-8">
-                  <DetailRow label="Experience" value={`${driver.experience || 0} years`} />
-                  <DetailRow label="Hourly Rate" value={`₹${driver.hourlyRate || 0}`} />
+                  <DetailRow label="Experience"    value={`${driver.experience || 0} years`} />
+                  <DetailRow label="Hourly Rate"   value={`₹${driver.hourlyRate || 0}`} />
                   <DetailRow label="Vehicle Types" value={driver.vehicleTypes?.join(' / ') || 'Sedan'} />
-                  <DetailRow label="Languages" value={driver.languages?.join(' / ') || 'English'} />
+                  <DetailRow label="Languages"     value={driver.languages?.join(' / ') || 'English'} />
                   {driver.certifications?.length > 0 && (
                     <DetailRow label="Certifications" value={driver.certifications.join(', ')} />
                   )}
-                  {driver.locations?.length > 0 && (
-                    <DetailRow label="Service Areas" value={driver.locations.join(', ')} />
+                  {driver.preferredLocations?.length > 0 && (
+                    <DetailRow label="Service Areas" value={driver.preferredLocations.join(', ')} />
                   )}
                 </div>
 
-                {/* Availability Info */}
+                {/* F8 — Availability Calendar */}
                 {availability && (
                   <div className="border border-outline-variant p-4 mb-6">
-                    <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-3">
-                      Availability
+                    <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-4">
+                      Next 7 Days
                     </span>
-                    <div className="flex flex-wrap gap-2">
-                      {availability.workingDays?.map(day => (
-                        <span key={day} className="font-ui-label text-[10px] uppercase tracking-widest border border-primary text-primary px-2 py-1">
-                          {day}
-                        </span>
-                      ))}
-                    </div>
-                    {(availability.workingHours?.start && availability.workingHours?.end) && (
-                      <p className="font-body-md text-body-md text-on-surface-variant mt-3">
-                        Hours: {availability.workingHours.start} – {availability.workingHours.end}
+                    <AvailabilityCalendar availability={availability} />
+                    {availability.workingHours?.start && availability.workingHours?.end && (
+                      <p className="font-ui-label text-[10px] uppercase tracking-widest text-on-surface-variant mt-3">
+                        Working Hours: {availability.workingHours.start} – {availability.workingHours.end}
                       </p>
                     )}
                   </div>
@@ -317,60 +341,50 @@ const DriverDetails = () => {
         </div>
       </section>
 
-      {/* Contact Info */}
-      {driver.contactInfo && (
-        <section className="px-gutter md:px-margin-edge py-12 border-b border-outline-variant">
+      {/* ── F12 Reviews ────────────────────────────────────────────────── */}
+      {reviews.length > 0 && (
+        <section className="px-gutter md:px-margin-edge py-16 border-b border-outline-variant">
           <div className="max-w-[1440px] mx-auto">
-            <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-6">Contact</span>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-lg">
-              {driver.contactInfo.phone && (
-                <DetailRow label="Phone" value={driver.contactInfo.phone} />
-              )}
-              {driver.contactInfo.email && (
-                <DetailRow label="Email" value={driver.contactInfo.email} />
-              )}
+            <div className="flex items-baseline justify-between mb-10">
+              <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant">
+                Passenger Reviews
+              </span>
+              <span className="font-numbers text-[20px] text-primary tabular-nums">{driver.totalRatings || 0}</span>
+            </div>
+            <div className="border-t border-primary">
+              {reviews.map((review, i) => (
+                <ReviewRow key={i} review={review} />
+              ))}
             </div>
           </div>
         </section>
       )}
 
-      {/* Booking Modal */}
+      {/* ── Booking Modal ───────────────────────────────────────────────── */}
       {bookingModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-background border border-primary w-full max-w-lg max-h-[85vh] overflow-y-auto p-6 md:p-8"
+            className="bg-background border border-primary w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 md:p-8"
           >
             <div className="flex justify-between items-center mb-8 border-b border-outline-variant pb-4">
               <div>
                 <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-2">Reserve</span>
                 <h2 className="font-headline-lg text-headline-lg-mobile text-primary">Book {driver.name}</h2>
               </div>
-              <button
-                onClick={() => setBookingModal(false)}
-                className="p-2 text-on-surface-variant hover:text-primary transition-colors"
-                aria-label="Close modal"
-              >
+              <button onClick={() => setBookingModal(false)} className="p-2 text-on-surface-variant hover:text-primary transition-colors" aria-label="Close modal">
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
 
             <form onSubmit={handleBookingSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <BookingField
-                  label="Pickup Date"
-                  type="date"
-                  value={bookingData.selectedDate}
+                <BookingField label="Pickup Date" type="date" value={bookingData.selectedDate}
                   min={new Date().toISOString().split('T')[0]}
-                  onChange={v => setBookingData(p => ({ ...p, selectedDate: v }))}
-                />
-                <BookingField
-                  label="Pickup Time"
-                  type="time"
-                  value={bookingData.selectedTime}
-                  onChange={v => setBookingData(p => ({ ...p, selectedTime: v }))}
-                />
+                  onChange={v => setBookingData(p => ({ ...p, selectedDate: v }))} />
+                <BookingField label="Pickup Time" type="time" value={bookingData.selectedTime}
+                  onChange={v => setBookingData(p => ({ ...p, selectedTime: v }))} />
               </div>
 
               <div>
@@ -378,40 +392,36 @@ const DriverDetails = () => {
                   Duration (hours)
                 </label>
                 <input
-                  type="number"
-                  min="1"
-                  max="24"
+                  type="number" min="1" max="24"
                   value={bookingData.duration}
                   onChange={e => setBookingData(p => ({ ...p, duration: parseInt(e.target.value) || 1 }))}
                   className="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 py-2 font-body-md text-body-md text-primary outline-none"
                 />
               </div>
 
-              <BookingField
-                label="Pickup Location *"
-                type="text"
-                placeholder="Enter pickup address"
+              <BookingField label="Pickup Location *" type="text" placeholder="Enter pickup address"
                 value={bookingData.pickupLocation}
-                onChange={v => setBookingData(p => ({ ...p, pickupLocation: v }))}
-              />
-              <BookingField
-                label="Drop-off Location"
-                type="text"
-                placeholder="Optional — defaults to pickup"
+                onChange={v => setBookingData(p => ({ ...p, pickupLocation: v }))} />
+              <BookingField label="Drop-off Location" type="text" placeholder="Optional — defaults to pickup"
                 value={bookingData.dropoffLocation}
-                onChange={v => setBookingData(p => ({ ...p, dropoffLocation: v }))}
-              />
+                onChange={v => setBookingData(p => ({ ...p, dropoffLocation: v }))} />
 
-              {/* Total */}
-              <div className="border-t border-outline-variant pt-6">
-                <div className="flex items-center justify-between">
-                  <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant">Total Amount</span>
-                  <span className="font-display-xl text-[40px] text-primary leading-none">₹{totalPrice}</span>
+              {/* F7 — Smart Fare Estimator */}
+              {fare && (
+                <div className="border border-outline-variant p-4 space-y-3">
+                  <span className="font-ui-label text-[10px] uppercase tracking-widest text-on-surface-variant block">Fare Estimate</span>
+                  <FareLine label={`Base rate (₹${driver.hourlyRate}/hr × ${bookingData.duration}h)`} value={`₹${fare.base}`} />
+                  {fare.nightSurcharge > 0 && (
+                    <FareLine label="Night surcharge (10%)" value={`₹${fare.nightSurcharge}`} highlight />
+                  )}
+                  <FareLine label="Platform fee" value={`₹${fare.platformFee}`} />
+                  <div className="border-t border-outline-variant pt-3 flex items-center justify-between">
+                    <span className="font-ui-label text-ui-label uppercase tracking-widest text-primary">Total</span>
+                    <span className="font-display-xl text-[36px] text-primary leading-none tabular-nums">₹{fare.total}</span>
+                  </div>
+                  <p className="font-ui-label text-[10px] text-on-surface-variant uppercase tracking-widest">No hidden charges</p>
                 </div>
-                <p className="font-ui-label text-[10px] text-on-surface-variant uppercase tracking-widest mt-2">
-                  Paid securely via Razorpay
-                </p>
-              </div>
+              )}
 
               <button
                 type="submit"
@@ -428,7 +438,87 @@ const DriverDetails = () => {
   );
 };
 
-/* ─── Subcomponents ─── */
+/* ─── Subcomponents ─────────────────────────────────────────────────────────── */
+
+// F8 — Availability Calendar
+const AvailabilityCalendar = ({ availability }) => {
+  const days = next7Days();
+  const { bookedSlots = [], workingDays = [] } = availability;
+
+  const isBusy = (date) =>
+    bookedSlots.some(slot => {
+      const start = new Date(slot.startTime);
+      return start.toDateString() === date.toDateString();
+    });
+
+  const isWorkingDay = (date) => {
+    if (!workingDays.length) return true; // if not set, all days are potential working days
+    return workingDays.includes(SHORT_DAYS[date.getDay()]);
+  };
+
+  return (
+    <div className="grid grid-cols-7 gap-1.5">
+      {days.map((day, i) => {
+        const busy    = isBusy(day);
+        const working = isWorkingDay(day);
+        const today   = i === 0;
+
+        let statusClass = 'border-outline-variant text-on-surface-variant/40';
+        if (!working)      statusClass = 'border-outline-variant/30 text-on-surface-variant/30 opacity-50';
+        else if (busy)     statusClass = 'border-error/40 text-error';
+        else               statusClass = 'border-primary/40 text-primary';
+
+        return (
+          <div
+            key={i}
+            className={`border ${statusClass} p-1.5 flex flex-col items-center gap-1 ${today ? 'border-primary' : ''}`}
+          >
+            <span className="font-ui-label text-[8px] uppercase tracking-widest">
+              {SHORT_DAYS[day.getDay()]}
+            </span>
+            <span className="font-numbers text-[16px] leading-none tabular-nums">
+              {day.getDate()}
+            </span>
+            <span className={`w-1.5 h-1.5 rounded-full ${!working ? 'bg-outline-variant/30' : busy ? 'bg-error/60' : 'bg-primary/60'}`} />
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// F12 — Review row
+const ReviewRow = ({ review }) => {
+  const date = review.createdAt ? new Date(review.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+  return (
+    <div className="border-b border-outline-variant py-6 grid grid-cols-1 md:grid-cols-12 gap-4">
+      <div className="md:col-span-3">
+        <p className="font-ui-label text-ui-label uppercase tracking-widest text-primary">{review.user?.name || 'Passenger'}</p>
+        <p className="font-ui-label text-[10px] uppercase tracking-widest text-on-surface-variant mt-1">{date}</p>
+        <div className="flex gap-0.5 mt-2">
+          {Array.from({ length: 5 }, (_, i) => (
+            <span key={i} className={`material-symbols-outlined text-[12px] ${i < review.rating ? 'text-primary' : 'text-outline-variant'}`}
+              style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+          ))}
+        </div>
+      </div>
+      <div className="md:col-span-9">
+        {review.comment
+          ? <p className="font-body-md text-body-md text-on-surface-variant">{review.comment}</p>
+          : <p className="font-ui-label text-[10px] uppercase tracking-widest text-outline-variant">No written review</p>
+        }
+      </div>
+    </div>
+  );
+};
+
+// F7 — Fare breakdown line
+const FareLine = ({ label, value, highlight }) => (
+  <div className="flex items-center justify-between">
+    <span className={`font-ui-label text-[11px] uppercase tracking-widest ${highlight ? 'text-primary' : 'text-on-surface-variant'}`}>{label}</span>
+    <span className={`font-numbers text-[16px] tabular-nums ${highlight ? 'text-primary' : 'text-on-surface-variant'}`}>{value}</span>
+  </div>
+);
 
 const LoadingState = () => (
   <div className="min-h-screen bg-surface flex items-center justify-center">
@@ -485,7 +575,7 @@ const BookingField = ({ label, type, placeholder, value, onChange, min }) => (
       value={value}
       min={min}
       onChange={e => onChange(e.target.value)}
-      required={label.includes('*') || (type !== 'text')}
+      required={label.includes('*') || type !== 'text'}
       className="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 py-2 font-body-md text-body-md text-primary placeholder-outline-variant outline-none transition-colors"
     />
   </div>

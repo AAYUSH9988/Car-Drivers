@@ -52,7 +52,7 @@ const PilotCard = ({ pilot, index = 0 }) => {
         </div>
 
         {/* Status pill */}
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-3 right-3 flex flex-col items-end gap-1.5">
           {pilot.isAvailable ? (
             <span className="inline-flex items-center gap-1.5 bg-background/90 backdrop-blur-sm border border-primary px-2.5 py-1">
               <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />
@@ -62,6 +62,12 @@ const PilotCard = ({ pilot, index = 0 }) => {
             <span className="inline-flex items-center gap-1.5 bg-background/90 backdrop-blur-sm border border-outline-variant px-2.5 py-1">
               <span className="w-1.5 h-1.5 rounded-full bg-outline-variant inline-block" />
               <span className="font-ui-label text-[10px] uppercase tracking-widest text-on-surface-variant">Busy</span>
+            </span>
+          )}
+          {pilot.status === 'active' && (
+            <span className="inline-flex items-center gap-1 bg-background/90 backdrop-blur-sm border border-primary/50 px-2.5 py-1">
+              <span className="material-symbols-outlined text-[11px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+              <span className="font-ui-label text-[9px] uppercase tracking-widest text-primary">Verified</span>
             </span>
           )}
         </div>

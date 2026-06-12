@@ -1,13 +1,18 @@
 import { z } from 'zod';
 
+const WORKING_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
+
 export const registerDriverSchema = z.object({
   licenseNumber:      z.string().min(1, 'License number is required').trim(),
   experience:         z.coerce.number().min(0),
   vehicleTypes:       z.array(z.string().min(1)).min(1, 'At least one vehicle type required'),
   hourlyRate:         z.coerce.number().min(0, 'Hourly rate cannot be negative'),
+  bio:                z.string().max(500).optional().default(''),
+  specialties:        z.array(z.string()).optional().default([]),
   languages:          z.array(z.string()).optional().default([]),
   certifications:     z.array(z.string()).optional().default([]),
   preferredLocations: z.array(z.string()).optional().default([]),
+  workingDays:        z.array(z.enum(WORKING_DAYS)).optional().default([]),
   workingHours: z.object({
     start: z.string().regex(/^\d{2}:\d{2}$/).optional(),
     end:   z.string().regex(/^\d{2}:\d{2}$/).optional(),

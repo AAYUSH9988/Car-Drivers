@@ -25,7 +25,63 @@ export const getDriverAvailability = async (driverId: string) => {
     startTime: { $gte: now, $lte: thirtyDaysLater },
   }).select('startTime endTime status').lean();
 
-  return { driverId, isAvailable: driver.isAvailable, bookedSlots };
+  return {
+    driverId,
+    isAvailable: driver.isAvailable,
+    workingDays: driver.workingDays,
+    workingHours: driver.workingHours,
+    bookedSlots,
+  };
+};
+
+export const getDriverReviews = async (driverId: string, page: number, limit: number) => {
+  const driver = await driversRepo.findById(driverId);
+  if (!driver) throw ApiError.notFound('Driver');
+
+  const skip = (page - 1) * limit;
+  const filter = { driver: driverId, 'review.rating': { $exists: true } };
+
+  const [total, bookings] = await Promise.all([
+    Booking.countDocuments(filter),
+    Booking.find(filter)
+      .populate('user', 'name profilePhoto')
+      .select('review createdAt')
+      .sort({ 'review.createdAt': -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+  ]);
+
+  const reviews = bookings.map(b => ({
+    rating:    b.review?.rating,
+    comment:   b.review?.comment,
+    createdAt: b.review?.createdAt ?? b.createdAt,
+    user:      b.user,
+  }));
+
+  return { reviews, total, page, limit };
+};
+
+export const getMyEarnings = async (userId: string) => {
+  const driver = await driversRepo.findByUserId(userId);
+  if (!driver) throw ApiError.notFound('Driver profile');
+
+  const recentTrips = await Booking.find({ driver: driver._id, status: 'completed' })
+    .populate('user', 'name')
+    .select('bookingReference startTime endTime totalAmount driverEarning pickupLocation dropLocation createdAt')
+    .sort('-createdAt')
+    .limit(20)
+    .lean();
+
+  return {
+    earnings: driver.earnings,
+    stats: {
+      totalTrips:   driver.totalTrips,
+      rating:       driver.rating,
+      totalRatings: driver.totalRatings,
+    },
+    recentTrips,
+  };
 };
 
 export const getMyDriverProfile = async (userId: string) => {

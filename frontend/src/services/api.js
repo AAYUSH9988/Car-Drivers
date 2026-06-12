@@ -158,6 +158,8 @@ export const endpoints = {
     getAll:           (params) => api.get('/drivers', { params }),
     getById:          (id)     => api.get(`/drivers/${id}`),
     getAvailability:  (id)     => api.get(`/drivers/${id}/availability`),
+    getReviews:       (id, params) => api.get(`/drivers/${id}/reviews`, { params }),
+    getMyEarnings:    ()       => api.get('/drivers/me/earnings'),
     getAvailable:     ()       => api.get('/drivers', { params: { isAvailable: 'true' } }),
     search:           (params) => api.get('/drivers', { params }),
   },

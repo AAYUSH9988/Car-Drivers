@@ -10,12 +10,14 @@ const router = Router();
 // Public
 router.get('/', validate(driversQuerySchema, 'query'), driversController.getAllDrivers);
 router.get('/:id/availability', driversController.getDriverAvailability);
-router.get('/:id', driversController.getDriverById);
+router.get('/:id/reviews',      driversController.getDriverReviews);
+router.get('/:id',              driversController.getDriverById);
 
 // Protected
 router.use(protect);
 
-router.get('/me/profile', driversController.getMyDriverProfile);
+router.get('/me/profile',   driversController.getMyDriverProfile);
+router.get('/me/earnings',  driversController.getMyEarnings);
 router.post(
   '/register',
   upload.fields([

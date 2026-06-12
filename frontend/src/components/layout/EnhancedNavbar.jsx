@@ -56,6 +56,14 @@ const EnhancedNavbar = () => {
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <>
+                {user.role === 'driver' && (
+                  <Link
+                    to="/driver-dashboard"
+                    className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors"
+                  >
+                    Earnings
+                  </Link>
+                )}
                 <Link
                   to="/dashboard"
                   className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors"
@@ -114,6 +122,11 @@ const EnhancedNavbar = () => {
             <div className="pt-4 border-t border-outline-variant space-y-3">
               {user ? (
                 <>
+                  {user.role === 'driver' && (
+                    <Link to="/driver-dashboard" className="block font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant">
+                      Earnings
+                    </Link>
+                  )}
                   <Link to="/dashboard" className="block font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant">
                     {user.name}
                   </Link>

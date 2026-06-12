@@ -11,8 +11,11 @@ export interface IDriver {
   totalRatings: number;
   totalTrips: number;
   hourlyRate: number;
+  bio: string;
+  specialties: string[];
   languages: string[];
   certifications: string[];
+  workingDays: string[];
   documents: {
     profilePhoto: string;
     vehiclePhoto: string;
@@ -52,8 +55,11 @@ const driverSchema = new mongoose.Schema<IDriverDocument>(
     totalRatings:  { type: Number, default: 0 },
     totalTrips:    { type: Number, default: 0 },
     hourlyRate:    { type: Number, required: true, min: 0 },
+    bio:           { type: String, default: '' },
+    specialties:   [{ type: String }],
     languages:     [{ type: String }],
     certifications:[{ type: String }],
+    workingDays:   [{ type: String, enum: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] }],
     documents: {
       profilePhoto: { type: String, default: 'default-profile.jpg' },
       vehiclePhoto: { type: String, default: 'default-vehicle.jpg' },
