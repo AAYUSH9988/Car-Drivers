@@ -137,8 +137,9 @@ export const endpoints = {
     forgotPassword: (email)         => api.post('/auth/forgot-password', { email }),
     resetPassword:  (token, pass)   => api.put(`/auth/reset-password/${token}`, { password: pass }),
     refreshToken:   ()              => api.post('/auth/refresh'),
-    verifyEmail:    (token)         => api.get(`/auth/verify-email/${token}`),
-    updateProfile:  (data)          => api.put('/auth/profile', data),
+    verifyEmail:         (token) => api.get(`/auth/verify-email/${token}`),
+    resendVerification:  ()      => api.post('/auth/resend-verification'),
+    updateProfile:       (data)  => api.put('/auth/profile', data),
   },
 
   // 👤 USERS
@@ -154,10 +155,11 @@ export const endpoints = {
 
   // 🚗 DRIVERS
   drivers: {
-    getAll:       (params) => api.get('/drivers', { params }),
-    getById:      (id)     => api.get(`/drivers/${id}`),
-    getAvailable: ()       => api.get('/drivers', { params: { isAvailable: 'true' } }),
-    search:       (params) => api.get('/drivers', { params }),
+    getAll:           (params) => api.get('/drivers', { params }),
+    getById:          (id)     => api.get(`/drivers/${id}`),
+    getAvailability:  (id)     => api.get(`/drivers/${id}/availability`),
+    getAvailable:     ()       => api.get('/drivers', { params: { isAvailable: 'true' } }),
+    search:           (params) => api.get('/drivers', { params }),
   },
 
   // 📦 BOOKINGS

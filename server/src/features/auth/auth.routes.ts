@@ -18,6 +18,7 @@ router.get( '/me',      protect,                                authController.g
 router.put( '/profile', protect, validate(updateProfileSchema), authController.updateProfile);
 
 router.get( '/verify-email/:token',        authController.verifyEmail);
+router.post('/resend-verification', protect, authController.resendVerification);
 router.post('/forgot-password', authLimiter, validate(forgotPasswordSchema), authController.forgotPassword);
 router.put( '/reset-password/:token',      validate(resetPasswordSchema),   authController.resetPassword);
 

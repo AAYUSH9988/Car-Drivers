@@ -13,6 +13,11 @@ export const getDriverById = asyncHandler(async (req: Request, res: Response) =>
   sendSuccess(res, driver);
 });
 
+export const getDriverAvailability = asyncHandler(async (req: Request, res: Response) => {
+  const data = await driversService.getDriverAvailability(req.params['id']!);
+  sendSuccess(res, data);
+});
+
 export const getMyDriverProfile = asyncHandler(async (req: Request, res: Response) => {
   const driver = await driversService.getMyDriverProfile(req.user!.id as string);
   sendSuccess(res, driver);

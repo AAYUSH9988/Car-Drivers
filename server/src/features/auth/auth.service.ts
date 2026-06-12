@@ -147,3 +147,19 @@ export const resetPassword = async (token: string, input: ResetPasswordInput): P
   user.refreshToken         = undefined;
   await user.save({ validateBeforeSave: false });
 };
+
+export const resendVerification = async (userId: string): Promise<void> => {
+  const user = await User.findById(userId)
+    .select('+emailVerificationToken +emailVerificationExpires');
+  if (!user) throw ApiError.notFound('User');
+  if (user.isEmailVerified) throw ApiError.badRequest('Email is already verified');
+
+  const verificationToken   = crypto.randomBytes(32).toString('hex');
+  const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+  user.emailVerificationToken   = verificationToken;
+  user.emailVerificationExpires = verificationExpires;
+  await user.save({ validateBeforeSave: false });
+
+  sendVerificationEmail({ name: user.name, email: user.email }, verificationToken).catch(console.error);
+};

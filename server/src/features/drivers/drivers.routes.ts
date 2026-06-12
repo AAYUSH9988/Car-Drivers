@@ -9,6 +9,7 @@ const router = Router();
 
 // Public
 router.get('/', validate(driversQuerySchema, 'query'), driversController.getAllDrivers);
+router.get('/:id/availability', driversController.getDriverAvailability);
 router.get('/:id', driversController.getDriverById);
 
 // Protected

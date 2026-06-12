@@ -51,3 +51,8 @@ export const resetPassword = asyncHandler(async (req: Request, res: Response) =>
   await authService.resetPassword(req.params['token']!, req.body);
   sendSuccess(res, null, 200, { message: 'Password reset successfully. Please log in.' });
 });
+
+export const resendVerification = asyncHandler(async (req: Request, res: Response) => {
+  await authService.resendVerification(req.user!.id as string);
+  sendSuccess(res, null, 200, { message: 'Verification email sent. Please check your inbox.' });
+});

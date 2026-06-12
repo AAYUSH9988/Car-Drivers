@@ -6,6 +6,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import EnhancedFooter from './components/layout/EnhancedFooter';
 import EnhancedNavbar from './components/layout/EnhancedNavbar';
 import { PageSpinner } from './components/shared/Spinner';
+import VerificationBanner from './components/shared/VerificationBanner';
 import { AuthProvider } from './context/AuthContext';
 
 // Eagerly loaded — critical path
@@ -45,6 +46,7 @@ function App() {
         </a>
         <div className="min-h-screen flex flex-col bg-surface">
           <EnhancedNavbar />
+          <VerificationBanner />
           <main id="main" className="flex-grow pt-16 md:pt-20">
             <Suspense fallback={<PageSpinner />}>
               <Routes>

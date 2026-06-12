@@ -1,6 +1,7 @@
 import { ApiError } from '../../utils/ApiError';
 import { uploadToImageKit } from '../../utils/fileUpload';
 import * as driversRepo from './drivers.repository';
+import Booking from '../../models/Booking.model';
 import type { RegisterDriverInput, UpdateDriverInput, DriversQuery } from './drivers.validator';
 
 export const getAllDrivers = (query: DriversQuery) => driversRepo.findAll(query);
@@ -9,6 +10,22 @@ export const getDriverById = async (id: string) => {
   const driver = await driversRepo.findById(id);
   if (!driver) throw ApiError.notFound('Driver');
   return driver;
+};
+
+export const getDriverAvailability = async (driverId: string) => {
+  const driver = await driversRepo.findById(driverId);
+  if (!driver) throw ApiError.notFound('Driver');
+
+  const now = new Date();
+  const thirtyDaysLater = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+  const bookedSlots = await Booking.find({
+    driver: driverId,
+    status: { $in: ['pending', 'confirmed'] },
+    startTime: { $gte: now, $lte: thirtyDaysLater },
+  }).select('startTime endTime status').lean();
+
+  return { driverId, isAvailable: driver.isAvailable, bookedSlots };
 };
 
 export const getMyDriverProfile = async (userId: string) => {
