@@ -20,15 +20,15 @@ const StarRating = ({ rating }) => (
 const PilotCard = ({ pilot, index = 0 }) => {
   const hasRating   = pilot.rating > 0;
   const hasPhoto    = pilot.profilePhoto && !pilot.profilePhoto.includes('ui-avatars');
-  const initials    = (pilot.name || 'DP').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
   return (
+    <Link to={`/pilot/${pilot._id}`} className="block group">
     <motion.div
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, delay: (index % 3) * 0.08 }}
       viewport={{ once: true }}
-      className="group flex flex-col"
+      className="flex flex-col cursor-pointer"
     >
       {/* ── Image ── */}
       <div className="relative aspect-[3/4] bg-surface-container-high overflow-hidden mb-0">
@@ -110,6 +110,18 @@ const PilotCard = ({ pilot, index = 0 }) => {
           )}
         </div>
 
+        {/* Badges */}
+        {pilot.badges?.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {pilot.badges.slice(0, 3).map(b => (
+              <span key={b} className="inline-flex items-center gap-1 bg-primary/5 border border-primary/30 px-2 py-0.5 font-ui-label text-[9px] uppercase tracking-widest text-primary">
+                <span className="material-symbols-outlined text-[10px]" style={{ fontVariationSettings: "'FILL' 1" }}>emoji_events</span>
+                {b}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Languages */}
         {pilot.languages?.length > 0 && (
           <p className="font-ui-label text-[10px] uppercase tracking-widest text-on-surface-variant/60">
@@ -125,18 +137,16 @@ const PilotCard = ({ pilot, index = 0 }) => {
             </span>
             <span className="font-ui-label text-[10px] uppercase tracking-widest text-on-surface-variant">/hr</span>
           </div>
-          <Link
-            to={`/pilot/${pilot._id}`}
-            className="inline-flex items-center gap-1.5 font-ui-label text-[10px] uppercase tracking-widest text-primary border-b border-transparent hover:border-primary transition-all duration-200 pb-0.5"
-          >
+          <span className="inline-flex items-center gap-1.5 font-ui-label text-[10px] uppercase tracking-widest text-primary group-hover:underline pb-0.5">
             View Profile
             <span className="material-symbols-outlined text-[14px] group-hover:translate-x-1 transition-transform duration-200">
               arrow_forward
             </span>
-          </Link>
+          </span>
         </div>
       </div>
     </motion.div>
+    </Link>
   );
 };
 

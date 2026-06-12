@@ -11,16 +11,24 @@ export const createBooking = async (userId: string, input: CreateBookingInput) =
   const driver = await Driver.findById(input.driverId).populate<{ user: { name: string; email: string } }>('user', 'name email');
   if (!driver)               throw ApiError.notFound('Driver');
   if (driver.status !== 'active') throw ApiError.badRequest('Driver is not active');
-  if (!driver.isAvailable)        throw ApiError.badRequest('Driver is not available');
 
   const startDate = new Date(input.startTime);
   const endDate   = new Date(input.endTime);
 
+  // Allow advance bookings (> 30 min in the future) even when driver is currently busy
+  const isAdvanceBooking = startDate > new Date(Date.now() + 30 * 60 * 1000);
+  if (!isAdvanceBooking && !driver.isAvailable) {
+    throw ApiError.badRequest('Driver is currently on a trip. You can still schedule an advance booking for a future date and time.');
+  }
+
   const conflict = await bookingsRepo.checkConflict(input.driverId, startDate, endDate);
   if (conflict) throw ApiError.badRequest('Driver is not available for this time slot');
 
-  driver.isAvailable = false;
-  driver.totalTrips  = (driver.totalTrips ?? 0) + 1;
+  // Only mark unavailable for immediate bookings; future bookings don't affect current availability
+  if (!isAdvanceBooking) {
+    driver.isAvailable = false;
+  }
+  driver.totalTrips = (driver.totalTrips ?? 0) + 1;
   await driver.save();
 
   const booking = await bookingsRepo.create({
@@ -135,6 +143,12 @@ export const addReview = async (bookingId: string, userId: string, input: Review
   if (driver) await driver.updateRating(input.rating);
 
   return booking.review;
+};
+
+export const getBookingByRef = async (ref: string) => {
+  const booking = await bookingsRepo.findByRef(ref);
+  if (!booking) throw ApiError.notFound('Booking');
+  return booking;
 };
 
 export const deleteBooking = async (bookingId: string, userId: string, isAdmin: boolean) => {

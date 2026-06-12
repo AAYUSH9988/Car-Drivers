@@ -23,7 +23,7 @@ const VerificationBanner = () => {
   };
 
   return (
-    <div className="w-full bg-tertiary-container border-b border-outline-variant px-gutter md:px-margin-edge py-3 flex items-center justify-between gap-4">
+    <div className="w-full sticky top-16 md:top-20 z-40 bg-tertiary-container border-b border-outline-variant px-gutter md:px-margin-edge py-3 flex items-center justify-between gap-4">
       <div className="flex items-center gap-3">
         <span className="material-symbols-outlined text-[18px] text-on-tertiary-container shrink-0">
           mark_email_unread

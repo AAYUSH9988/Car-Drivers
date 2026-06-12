@@ -6,6 +6,9 @@ import { createBookingSchema, updateBookingSchema, reviewSchema } from './bookin
 
 const router = Router();
 
+// Public — no auth required
+router.get('/track/:ref', bookingsController.getBookingByRef);
+
 router.use(protect);
 
 router.post('/',         validate(createBookingSchema), bookingsController.createBooking);

@@ -6,7 +6,7 @@ export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // true until first auth check completes
   const [authError, setAuthError] = useState(null);
 
   useEffect(() => {

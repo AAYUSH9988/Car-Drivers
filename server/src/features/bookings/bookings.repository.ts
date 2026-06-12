@@ -46,3 +46,12 @@ export const checkConflict = (driverId: string, startTime: Date, endTime: Date, 
     endTime:   { $gt: startTime },
     ...(excludeId && { _id: { $ne: excludeId } }),
   });
+
+export const findByRef = (ref: string) =>
+  Booking.findOne({ bookingReference: ref })
+    .populate([
+      { path: 'user',   select: 'name' },
+      { path: 'driver', select: '_id status', populate: { path: 'user', select: 'name' } },
+    ])
+    .select('bookingReference status startTime endTime pickupLocation dropLocation totalAmount createdAt')
+    .lean();

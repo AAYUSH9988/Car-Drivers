@@ -35,6 +35,11 @@ export const addReview = asyncHandler(async (req: Request, res: Response) => {
   sendCreated(res, review, 'Review submitted successfully');
 });
 
+export const getBookingByRef = asyncHandler(async (req: Request, res: Response) => {
+  const booking = await bookingsService.getBookingByRef(req.params['ref']!);
+  sendSuccess(res, booking);
+});
+
 export const deleteBooking = asyncHandler(async (req: Request, res: Response) => {
   const isAdmin = req.user!.role === 'admin';
   await bookingsService.deleteBooking(req.params['id']!, req.user!.id as string, isAdmin);

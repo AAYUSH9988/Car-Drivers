@@ -1,7 +1,7 @@
 import usePageTitle from '../hooks/usePageTitle';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { endpoints } from '../services/api.js';
 import { useAuth } from '../hooks/useAuth.js';
@@ -217,6 +217,7 @@ const STATUS_LABELS = {
 const CANCELLABLE = ['pending', 'confirmed'];
 
 const BookingRow = ({ booking, cancellingId, onCancel, onReview }) => {
+  const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
   const startDate = new Date(booking.startTime);
   const day = startDate.getDate().toString().padStart(2, '0');
@@ -225,6 +226,18 @@ const BookingRow = ({ booking, cancellingId, onCancel, onReview }) => {
   const isCancelling = cancellingId === booking._id;
   const canCancel = CANCELLABLE.includes(booking.status);
   const canReview = booking.status === 'completed' && !booking.review;
+  const canRebook = ['completed', 'cancelled'].includes(booking.status) && booking.driver?._id;
+
+  const handleRebook = () => {
+    navigate(`/pilot/${booking.driver._id}`, {
+      state: {
+        prefill: {
+          pickupLocation:   booking.pickupLocation  || '',
+          dropoffLocation:  booking.dropLocation    || '',
+        }
+      }
+    });
+  };
 
   return (
     <div className="border-b border-outline-variant py-8 grid grid-cols-1 md:grid-cols-12 gap-gutter hover:bg-surface-container-low transition-colors">
@@ -236,8 +249,11 @@ const BookingRow = ({ booking, cancellingId, onCancel, onReview }) => {
 
       {/* Details */}
       <div className="md:col-span-5">
-        <h3 className="font-headline-lg text-headline-lg-mobile text-primary mb-2">
-          {booking.driver?.name || 'Unknown Pilot'}
+        <h3
+          className="font-headline-lg text-headline-lg-mobile text-primary mb-2 hover:underline cursor-pointer"
+          onClick={() => booking.driver?._id && navigate(`/pilot/${booking.driver._id}`)}
+        >
+          {booking.driver?.user?.name || booking.driver?.name || 'Unknown Pilot'}
         </h3>
         <p className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant">
           Ref: {booking.bookingReference || 'N/A'}
@@ -272,6 +288,14 @@ const BookingRow = ({ booking, cancellingId, onCancel, onReview }) => {
         </div>
 
         <div className="flex flex-wrap gap-3 md:justify-end">
+          {canRebook && (
+            <button
+              onClick={handleRebook}
+              className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant border border-outline-variant px-4 py-2 hover:border-primary hover:text-primary transition-colors text-xs"
+            >
+              Re-book
+            </button>
+          )}
           {canReview && (
             <button
               onClick={onReview}
@@ -367,7 +391,7 @@ const ReviewModal = ({ booking, onClose, onSubmit }) => {
           <div>
             <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-2">Review</span>
             <h2 className="font-headline-lg text-headline-lg-mobile text-primary">
-              Rate {booking.driver?.name || 'Your Pilot'}
+              Rate {booking.driver?.user?.name || booking.driver?.name || 'Your Pilot'}
             </h2>
           </div>
           <button onClick={onClose} className="p-2 text-on-surface-variant hover:text-primary transition-colors" aria-label="Close">

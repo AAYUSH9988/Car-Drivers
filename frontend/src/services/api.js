@@ -173,6 +173,7 @@ export const endpoints = {
     cancel:  (id)   => api.patch(`/bookings/${id}/cancel`),
     delete:  (id)   => api.delete(`/bookings/${id}`),
     review:  (id, data) => api.post(`/bookings/${id}/review`, data),
+    track:   (ref)  => api.get(`/bookings/track/${ref}`),
   },
 
   // 💳 PAYMENTS

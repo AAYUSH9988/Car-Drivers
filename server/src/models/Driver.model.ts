@@ -13,6 +13,7 @@ export interface IDriver {
   hourlyRate: number;
   bio: string;
   specialties: string[];
+  badges: string[];
   languages: string[];
   certifications: string[];
   workingDays: string[];
@@ -57,6 +58,7 @@ const driverSchema = new mongoose.Schema<IDriverDocument>(
     hourlyRate:    { type: Number, required: true, min: 0 },
     bio:           { type: String, default: '' },
     specialties:   [{ type: String }],
+    badges:        [{ type: String }],
     languages:     [{ type: String }],
     certifications:[{ type: String }],
     workingDays:   [{ type: String, enum: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] }],

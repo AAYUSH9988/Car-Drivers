@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
@@ -71,7 +71,14 @@ const DriverDetails = () => {
 
         const data = await driverService.getDriverById(id);
         if (!data) throw new Error('Driver not found');
-        if (mounted) setDriver(data);
+        if (mounted) {
+          setDriver(data);
+          // Pre-fill booking form if navigated via Re-book
+          if (location.state?.prefill) {
+            setBookingData(prev => ({ ...prev, ...location.state.prefill }));
+            setBookingModal(true);
+          }
+        }
 
         // Non-blocking parallel fetches
         Promise.all([
@@ -90,6 +97,21 @@ const DriverDetails = () => {
     fetchData();
     return () => { mounted = false; };
   }, [id]);
+
+  // Auto-fill current date+time when modal opens (skip if already pre-filled via re-book)
+  useEffect(() => {
+    if (!bookingModal) return;
+    setBookingData(prev => {
+      if (prev.selectedDate) return prev;
+      const now = new Date();
+      const date = now.toISOString().split('T')[0];
+      const totalMin = now.getHours() * 60 + now.getMinutes();
+      const nextSlot = (Math.floor(totalMin / 15) + 1) * 15;
+      const h = String(Math.floor(nextSlot / 60) % 24).padStart(2, '0');
+      const m = String(nextSlot % 60).padStart(2, '0');
+      return { ...prev, selectedDate: date, selectedTime: `${h}:${m}` };
+    });
+  }, [bookingModal]);
 
   const fare = useMemo(() => {
     if (!driver) return null;
@@ -227,8 +249,12 @@ const DriverDetails = () => {
             <div className="lg:col-span-5">
               <div className="relative aspect-[3/4] bg-surface-container-high overflow-hidden border border-primary">
                 <img
-                  src={driver.profilePhoto || '/src/assets/images/pilots/pilot1.jpg'}
+                  src={driver.profilePhoto || '/driver.png'}
                   alt={driver.name}
+                  onError={e => {
+                    e.target.src = '/driver.png';
+                    e.target.className = 'w-48 h-48 object-contain opacity-20 absolute inset-0 m-auto';
+                  }}
                   className="w-full h-full object-cover grayscale opacity-80"
                 />
                 {driver.isAvailable && (
@@ -261,10 +287,22 @@ const DriverDetails = () => {
 
                 {/* F6 — Specialties */}
                 {driver.specialties?.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-6">
+                  <div className="flex flex-wrap gap-2 mb-4">
                     {driver.specialties.map(s => (
                       <span key={s} className="border border-primary/50 px-2.5 py-1 font-ui-label text-[10px] uppercase tracking-widest text-primary">
                         #{s}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Badges */}
+                {driver.badges?.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {driver.badges.map(b => (
+                      <span key={b} className="inline-flex items-center gap-1.5 bg-primary/5 border border-primary/40 px-2.5 py-1 font-ui-label text-[10px] uppercase tracking-widest text-primary">
+                        <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>emoji_events</span>
+                        {b}
                       </span>
                     ))}
                   </div>
@@ -319,21 +357,36 @@ const DriverDetails = () => {
                     <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant ml-2">/hr</span>
                   </div>
                 </div>
-                <button
-                  onClick={() => driver.isAvailable && setBookingModal(true)}
-                  disabled={!driver.isAvailable}
-                  className={`w-full py-4 font-ui-button text-ui-button uppercase tracking-[0.15em] transition-all duration-300 ${
-                    driver.isAvailable
-                      ? 'bg-primary text-on-primary hover:bg-tertiary-container'
-                      : 'bg-surface-container-high text-on-surface-variant cursor-not-allowed'
-                  }`}
-                >
-                  {driver.isAvailable ? 'Book This Pilot' : 'Currently Unavailable'}
-                </button>
-                {driver.isAvailable && (
-                  <p className="font-ui-label text-[10px] text-on-surface-variant uppercase tracking-widest mt-3 text-center">
-                    Secure payment via Razorpay
-                  </p>
+                {driver.isAvailable ? (
+                  <>
+                    <button
+                      onClick={() => setBookingModal(true)}
+                      className="w-full py-4 bg-primary text-on-primary font-ui-button text-ui-button uppercase tracking-[0.15em] hover:bg-tertiary-container transition-all duration-300"
+                    >
+                      Book This Pilot
+                    </button>
+                    <p className="font-ui-label text-[10px] text-on-surface-variant uppercase tracking-widest mt-3 text-center">
+                      Secure payment via Razorpay
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2 border border-outline-variant/60 px-4 py-2.5 mb-3">
+                      <span className="w-2 h-2 rounded-full bg-outline-variant flex-shrink-0" />
+                      <span className="font-ui-label text-[11px] uppercase tracking-widest text-on-surface-variant">
+                        Currently on a trip
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setBookingModal(true)}
+                      className="w-full py-4 border border-primary text-primary font-ui-button text-ui-button uppercase tracking-[0.15em] hover:bg-primary hover:text-on-primary transition-all duration-300"
+                    >
+                      Schedule Advance Booking
+                    </button>
+                    <p className="font-ui-label text-[10px] text-on-surface-variant uppercase tracking-widest mt-3 text-center">
+                      Book for a future date — no immediate conflict
+                    </p>
+                  </>
                 )}
               </div>
             </div>
@@ -362,75 +415,125 @@ const DriverDetails = () => {
 
       {/* ── Booking Modal ───────────────────────────────────────────────── */}
       {bookingModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 32 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-background border border-primary w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 md:p-8"
+            className="bg-background border border-primary w-full sm:max-w-lg flex flex-col max-h-[95vh] sm:max-h-[90vh] rounded-t-2xl sm:rounded-none"
           >
-            <div className="flex justify-between items-center mb-8 border-b border-outline-variant pb-4">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center px-6 pt-6 pb-4 border-b border-outline-variant shrink-0">
               <div>
-                <span className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-2">Reserve</span>
+                <span className="font-ui-label text-[10px] uppercase tracking-widest text-on-surface-variant block mb-1">
+                  {driver.isAvailable ? 'Reserve' : 'Advance Booking'}
+                </span>
                 <h2 className="font-headline-lg text-headline-lg-mobile text-primary">Book {driver.name}</h2>
               </div>
-              <button onClick={() => setBookingModal(false)} className="p-2 text-on-surface-variant hover:text-primary transition-colors" aria-label="Close modal">
-                <span className="material-symbols-outlined">close</span>
+              <button
+                onClick={() => setBookingModal(false)}
+                className="w-9 h-9 flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-high rounded-full transition-colors"
+                aria-label="Close modal"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
             </div>
 
-            <form onSubmit={handleBookingSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <BookingField label="Pickup Date" type="date" value={bookingData.selectedDate}
-                  min={new Date().toISOString().split('T')[0]}
-                  onChange={v => setBookingData(p => ({ ...p, selectedDate: v }))} />
-                <BookingField label="Pickup Time" type="time" value={bookingData.selectedTime}
-                  onChange={v => setBookingData(p => ({ ...p, selectedTime: v }))} />
-              </div>
+            {/* Modal Body — scrollable */}
+            <div className="flex-1 overflow-y-auto">
+              <form onSubmit={handleBookingSubmit} className="px-6 py-5 space-y-5">
 
-              <div>
-                <label className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-2">
-                  Duration (hours)
-                </label>
-                <input
-                  type="number" min="1" max="24"
-                  value={bookingData.duration}
-                  onChange={e => setBookingData(p => ({ ...p, duration: parseInt(e.target.value) || 1 }))}
-                  className="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 py-2 font-body-md text-body-md text-primary outline-none"
-                />
-              </div>
-
-              <BookingField label="Pickup Location *" type="text" placeholder="Enter pickup address"
-                value={bookingData.pickupLocation}
-                onChange={v => setBookingData(p => ({ ...p, pickupLocation: v }))} />
-              <BookingField label="Drop-off Location" type="text" placeholder="Optional — defaults to pickup"
-                value={bookingData.dropoffLocation}
-                onChange={v => setBookingData(p => ({ ...p, dropoffLocation: v }))} />
-
-              {/* F7 — Smart Fare Estimator */}
-              {fare && (
-                <div className="border border-outline-variant p-4 space-y-3">
-                  <span className="font-ui-label text-[10px] uppercase tracking-widest text-on-surface-variant block">Fare Estimate</span>
-                  <FareLine label={`Base rate (₹${driver.hourlyRate}/hr × ${bookingData.duration}h)`} value={`₹${fare.base}`} />
-                  {fare.nightSurcharge > 0 && (
-                    <FareLine label="Night surcharge (10%)" value={`₹${fare.nightSurcharge}`} highlight />
-                  )}
-                  <FareLine label="Platform fee" value={`₹${fare.platformFee}`} />
-                  <div className="border-t border-outline-variant pt-3 flex items-center justify-between">
-                    <span className="font-ui-label text-ui-label uppercase tracking-widest text-primary">Total</span>
-                    <span className="font-display-xl text-[36px] text-primary leading-none tabular-nums">₹{fare.total}</span>
+                {/* When section */}
+                <div>
+                  <p className="font-ui-label text-[10px] uppercase tracking-widest text-on-surface-variant/60 mb-3">When</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <BookingField label="Date" type="date" value={bookingData.selectedDate}
+                      min={new Date().toISOString().split('T')[0]}
+                      onChange={v => setBookingData(p => ({ ...p, selectedDate: v }))} />
+                    <BookingField label="Time" type="time" value={bookingData.selectedTime}
+                      onChange={v => setBookingData(p => ({ ...p, selectedTime: v }))} />
                   </div>
-                  <p className="font-ui-label text-[10px] text-on-surface-variant uppercase tracking-widest">No hidden charges</p>
                 </div>
-              )}
 
-              <button
-                type="submit"
-                disabled={bookingLoading}
-                className="w-full py-4 bg-primary text-on-primary font-ui-button text-ui-button uppercase tracking-[0.15em] hover:bg-tertiary-container transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {bookingLoading ? 'Processing...' : 'Proceed to Payment'}
-              </button>
-            </form>
+                {/* Duration */}
+                <div>
+                  <label className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-2">
+                    Duration
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <button type="button"
+                      onClick={() => setBookingData(p => ({ ...p, duration: Math.max(1, p.duration - 1) }))}
+                      className="w-8 h-8 border border-outline-variant text-primary hover:border-primary flex items-center justify-center font-body-lg transition-colors"
+                    >−</button>
+                    <span className="font-numbers text-[22px] text-primary tabular-nums w-8 text-center">{bookingData.duration}</span>
+                    <button type="button"
+                      onClick={() => setBookingData(p => ({ ...p, duration: Math.min(24, p.duration + 1) }))}
+                      className="w-8 h-8 border border-outline-variant text-primary hover:border-primary flex items-center justify-center font-body-lg transition-colors"
+                    >+</button>
+                    <span className="font-ui-label text-[11px] uppercase tracking-widest text-on-surface-variant ml-1">
+                      {bookingData.duration === 1 ? 'hour' : 'hours'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Where section */}
+                <div>
+                  <p className="font-ui-label text-[10px] uppercase tracking-widest text-on-surface-variant/60 mb-3">Where</p>
+                  <div className="space-y-4">
+                    <LocationInput
+                      label="Pickup Location *"
+                      placeholder="Search city or address…"
+                      value={bookingData.pickupLocation}
+                      onChange={v => setBookingData(p => ({ ...p, pickupLocation: v }))}
+                    />
+                    <LocationInput
+                      label="Drop-off Location"
+                      placeholder="Optional — defaults to pickup"
+                      value={bookingData.dropoffLocation}
+                      onChange={v => setBookingData(p => ({ ...p, dropoffLocation: v }))}
+                    />
+                  </div>
+                </div>
+
+                {/* F7 — Smart Fare Estimator */}
+                {fare && (
+                  <div className="bg-surface-container-low border border-outline-variant p-4 space-y-2.5">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-ui-label text-[10px] uppercase tracking-widest text-on-surface-variant">Fare Estimate</span>
+                      {fare.nightSurcharge > 0 && (
+                        <span className="font-ui-label text-[9px] uppercase tracking-widest text-primary border border-primary/40 px-2 py-0.5">Night Rate</span>
+                      )}
+                    </div>
+                    <FareLine label={`₹${driver.hourlyRate}/hr × ${bookingData.duration}h`} value={`₹${fare.base}`} />
+                    {fare.nightSurcharge > 0 && (
+                      <FareLine label="Night surcharge (10%)" value={`+₹${fare.nightSurcharge}`} highlight />
+                    )}
+                    <FareLine label="Platform fee" value={`₹${fare.platformFee}`} />
+                    <div className="border-t border-outline-variant pt-3 flex items-center justify-between">
+                      <span className="font-ui-label text-ui-label uppercase tracking-widest text-primary">Total</span>
+                      <span className="font-numbers text-[32px] text-primary leading-none tabular-nums">₹{fare.total}</span>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={bookingLoading}
+                  className="w-full py-4 bg-primary text-on-primary font-ui-button text-ui-button uppercase tracking-[0.15em] hover:bg-tertiary-container transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {bookingLoading ? 'Processing…' : 'Proceed to Payment'}
+                </button>
+
+                {/* Cancellation policy */}
+                <div className="border border-outline-variant/40 px-4 py-3 space-y-1">
+                  <p className="font-ui-label text-[10px] uppercase tracking-widest text-on-surface-variant">Cancellation Policy</p>
+                  <p className="font-body-md text-[12px] text-on-surface-variant leading-relaxed">
+                    Free cancellation up to <span className="text-primary font-medium">24 hours</span> before start. Cancellations within 24 hours are non-refundable.
+                  </p>
+                </div>
+
+                <div className="pb-2" />
+              </form>
+            </div>
           </motion.div>
         </div>
       )}
@@ -565,6 +668,68 @@ const DetailRow = ({ label, value }) => (
     <span className="font-body-md text-body-md text-primary text-right">{value}</span>
   </div>
 );
+
+const LocationInput = ({ label, value, onChange, placeholder }) => {
+  const [suggestions, setSuggestions] = useState([]);
+  const timerRef = useRef(null);
+
+  const search = async (q) => {
+    if (q.length < 3) { setSuggestions([]); return; }
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=in&limit=5&accept-language=en`,
+        { signal: AbortSignal.timeout(5000) }
+      );
+      const data = await res.json();
+      setSuggestions(
+        data.map(d => {
+          const parts = d.display_name.split(', ');
+          return parts.slice(0, Math.min(3, parts.length)).join(', ');
+        })
+      );
+    } catch { setSuggestions([]); }
+  };
+
+  useEffect(() => () => clearTimeout(timerRef.current), []);
+
+  const handleChange = (v) => {
+    onChange(v);
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => search(v), 450);
+  };
+
+  const handleSelect = (s) => { onChange(s); setSuggestions([]); };
+
+  return (
+    <div>
+      <label className="font-ui-label text-ui-label uppercase tracking-widest text-on-surface-variant block mb-2">{label}</label>
+      <input
+        type="text"
+        placeholder={placeholder}
+        value={value}
+        autoComplete="off"
+        onChange={e => handleChange(e.target.value)}
+        onBlur={() => setTimeout(() => setSuggestions([]), 150)}
+        className="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 py-2 font-body-md text-body-md text-primary placeholder-outline-variant outline-none transition-colors"
+      />
+      {suggestions.length > 0 && (
+        <div className="border border-primary border-t-0 bg-background">
+          {suggestions.map((s, i) => (
+            <button
+              key={i}
+              type="button"
+              onMouseDown={() => handleSelect(s)}
+              className="w-full text-left px-3 py-2.5 font-body-md text-[13px] text-primary hover:bg-surface-container transition-colors border-b border-outline-variant/30 last:border-0 flex items-start gap-2"
+            >
+              <span className="material-symbols-outlined text-[14px] text-on-surface-variant mt-0.5 shrink-0">location_on</span>
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const BookingField = ({ label, type, placeholder, value, onChange, min }) => (
   <div>

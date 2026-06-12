@@ -31,6 +31,7 @@ const Profile         = lazy(() => import('./pages/Profile'));
 const DriverDashboard = lazy(() => import('./pages/DriverDashboard'));
 const Terms           = lazy(() => import('./pages/Terms'));
 const Privacy         = lazy(() => import('./pages/Privacy'));
+const BookingTrack    = lazy(() => import('./pages/BookingTrack'));
 
 
 function App() {
@@ -47,8 +48,8 @@ function App() {
         </a>
         <div className="min-h-screen flex flex-col bg-surface">
           <EnhancedNavbar />
-          <VerificationBanner />
           <main id="main" className="flex-grow pt-16 md:pt-20">
+            <VerificationBanner />
             <Suspense fallback={<PageSpinner />}>
               <Routes>
                 {/* Public */}
@@ -69,6 +70,7 @@ function App() {
                 <Route path="/services"              element={<Services />} />
                 <Route path="/terms"                 element={<Terms />} />
                 <Route path="/privacy"               element={<Privacy />} />
+                <Route path="/track/:ref"            element={<BookingTrack />} />
 
                 {/* Protected */}
                 <Route path="/booking/success" element={

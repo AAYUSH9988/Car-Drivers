@@ -46,7 +46,7 @@ const EnhancedNavbar = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex gap-8 items-center">
             <NavLink to="/" active={isActive('/')}>Home</NavLink>
-            <NavLink to="/pilots" active={isActive('/pilots')}>Fleet</NavLink>
+            <NavLink to="/pilots" active={isActive('/pilots')}>Pilots</NavLink>
             <NavLink to="/services" active={isActive('/services')}>Services</NavLink>
             <NavLink to="/about" active={isActive('/about')}>About</NavLink>
             <NavLink to="/contact" active={isActive('/contact')}>Contact</NavLink>
@@ -114,7 +114,7 @@ const EnhancedNavbar = () => {
         <div className="md:hidden bg-surface border-t border-outline-variant">
           <div className="px-gutter py-6 space-y-4">
             <MobileNavLink to="/" active={isActive('/')}>Home</MobileNavLink>
-            <MobileNavLink to="/pilots" active={isActive('/pilots')}>Fleet</MobileNavLink>
+            <MobileNavLink to="/pilots" active={isActive('/pilots')}>Pilots</MobileNavLink>
             <MobileNavLink to="/services" active={isActive('/services')}>Services</MobileNavLink>
             <MobileNavLink to="/about" active={isActive('/about')}>About</MobileNavLink>
             <MobileNavLink to="/contact" active={isActive('/contact')}>Contact</MobileNavLink>
